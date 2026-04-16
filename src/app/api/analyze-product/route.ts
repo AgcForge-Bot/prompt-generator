@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 					parts = [createPartFromUri(url!, mediaType ?? "image/jpeg"), createPartFromText(finalPrompt)];
 				}
 				const response = await geminiClient.models.generateContent({
-					model: modelId ?? "gemini-2.0-flash",
+					model: modelId ?? "gemini-2.5-flash-lite",
 					contents: [{ role: "user", parts }],
 				});
 				const description = response.text ?? "";
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
 
 				const response = await openRouterClient.chat.send({
 					chatRequest: {
-						model: modelId ?? "google/gemini-2.0-flash-exp:free",
+						model: modelId ?? "google/gemini-2.5-flash-lite",
 						maxTokens: 600,
 						messages: [{
 							role: "user",

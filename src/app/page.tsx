@@ -5,6 +5,7 @@ import ForestBuildPrimitiveCraftForm from "@/components/forms/ForestBuildPrimiti
 import AsmrTimelapseConstructorForm from "@/components/forms/AsmrTimelapseConstructorForm";
 import CarMusicVideoClipForm from "@/components/forms/CarMusicVideoClipForm";
 import WarMusicVideoClipForm from "@/components/forms/WarMusicVideoClipForm";
+import RelaxingMusicVideoForm from "@/components/forms/RelaxingMusicVideoForm";
 import ProductPromoVideoForm from "@/components/forms/product-promo-video/ProductPromoVideoForm";
 
 type HomeToolKey =
@@ -89,6 +90,13 @@ export default function Home() {
 	const tools = useMemo<ToolMeta[]>(
 		() => [
 			{
+				key: "product-promo-video",
+				label: "Promo Video Iklan Produk",
+				title: "Product Promo Video — AI Prompt Generator",
+				description:
+					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi, dan generate prompt siap pakai untuk semua platform.",
+			},
+			{
 				key: "forest-build-primitive-craft",
 				label: "Forest Build Primitive Craft",
 				title: "Forest Build Primitive Craft — AI Prompt Generator",
@@ -100,43 +108,34 @@ export default function Home() {
 				label: "ASMR timelapse constuctor",
 				title: "ASMR Timelapse Constructor — AI Prompt Generator",
 				description:
-					"Generator prompt untuk ASMR timelapse constructor. Form masih placeholder dan siap kamu lanjutkan.",
+					"Generator prompt untuk ASMR timelapse constructor: DNA lock, timeline 12 scene, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 			},
 			{
 				key: "car-music-video-clip",
 				label: "Car Music Video Clip",
 				title: "Car Music Video Clip — AI Prompt Generator",
 				description:
-					"Generator prompt untuk car music video clip. Form masih placeholder dan siap kamu lanjutkan.",
+					"Generator prompt untuk car music video clip: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 			},
 			{
 				key: "war-music-video-clip",
 				label: "War Music Video Clip",
 				title: "War Music Video Clip — AI Prompt Generator",
 				description:
-					"Generator prompt untuk war music video clip. Form masih placeholder dan siap kamu lanjutkan.",
+					"Generator prompt untuk war cinematic × DJ battle zone: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 			},
 			{
 				key: "relaxing-music-video-clip",
 				label: "Relaxing Music Video Clip",
 				title: "Relaxing Music Video Clip — AI Prompt Generator",
 				description:
-					"Generator prompt untuk relaxing music video clip. Form masih placeholder dan siap kamu lanjutkan.",
-			},
-			{
-				key: "product-promo-video",
-				label: "Promo Video Iklan Produk",
-				title: "Product Promo Video — AI Prompt Generator",
-				description:
-					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi, dan generate prompt siap pakai untuk semua platform.",
+					"Generator prompt untuk relaxing nature drone music clip: time-of-day, timeline 12 scene, scene type, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 			},
 		],
 		[],
 	);
 
-	const [selected, setSelected] = useState<HomeToolKey>(
-		"forest-build-primitive-craft",
-	);
+	const [selected, setSelected] = useState<HomeToolKey>("product-promo-video");
 
 	const activeMeta = tools.find((t) => t.key === selected) ?? tools[0];
 
@@ -190,8 +189,12 @@ export default function Home() {
 							<CarMusicVideoClipForm />
 						) : selected === "product-promo-video" ? (
 							<ProductPromoVideoForm />
-						) : (
+						) : selected === "relaxing-music-video-clip" ? (
+							<RelaxingMusicVideoForm />
+						) : selected === "war-music-video-clip" ? (
 							<WarMusicVideoClipForm />
+						) : (
+							<ProductPromoVideoForm />
 						)}
 					</div>
 				</div>
