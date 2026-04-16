@@ -406,8 +406,8 @@ export const DEFAULT_PROMO_DNA: PromoDNA = {
 export const VISION_MODEL_DEFAULTS: Record<ModelType, string> = {
 	CLAUDE: "claude-opus-4-5",
 	OPENAI: "gpt-4o",
-	GEMINI: "gemini-2.0-flash",
-	OPENROUTER: "google/gemini-2.0-flash-exp:free",
+	GEMINI: "gemini-2.5-flash-lite",
+	OPENROUTER: "google/gemini-2.5-flash-lite",
 };
 
 export function getDefaultVisionModelId(provider: ModelType): string {

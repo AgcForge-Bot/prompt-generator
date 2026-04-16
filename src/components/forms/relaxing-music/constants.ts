@@ -4,24 +4,28 @@ export const SEC_PER_SCENE = 10;
 export const TOD_DATA = {
 	morning: {
 		label: "Morning / Pagi",
+		emoji: "🌅",
 		lighting:
 			"warm golden sunrise light, low angle rays, mist on valley floor, fresh crisp air",
 		sky: "pale gold and amber horizon, soft pink-peach sky gradient, light mist lingering",
 	},
 	day: {
 		label: "Midday / Siang",
+		emoji: "☀️",
 		lighting:
 			"bright high sun, vivid colors, maximum saturation, clear visibility",
 		sky: "deep blue sky, white cumulus clouds, strong light, sharp shadows",
 	},
 	afternoon: {
 		label: "Golden Hour / Sore",
+		emoji: "🌇",
 		lighting:
 			"magical golden hour warmth, long horizontal rays, everything bathed in amber-orange",
 		sky: "stunning orange-pink-purple sunset gradient, dramatic clouds lit from below",
 	},
 	night: {
 		label: "Dusk & Night / Malam",
+		emoji: "🌙",
 		lighting:
 			"blue hour twilight, cool blue-violet light, soft shadow, stars appearing",
 		sky: "deep indigo fading to black, first stars visible, crescent moon low",

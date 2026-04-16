@@ -73,6 +73,7 @@ export const TOD_DATA = {
 	morning: {
 		label: "MORNING (Pagi)",
 		timeRange: "04:30–09:00",
+		emoji: "🌅",
 		hint: "🌅 Pagi — Warm golden sunrise light, long soft shadows, dew on materials, mist lifting, birds singing, workers arriving.",
 		lighting:
 			"warm golden sunrise — low-angle soft raking light, long shadow stretch, sky from deep orange to pale blue",
@@ -92,6 +93,7 @@ export const TOD_DATA = {
 	noon: {
 		label: "NOON (Siang)",
 		timeRange: "09:00–15:00",
+		emoji: "☀️",
 		hint: "☀️ Siang — Harsh midday sun, strong contrast shadows, high visibility construction detail, workers at peak activity.",
 		lighting:
 			"harsh midday sun — overhead high-angle, strong direct illumination, deep under-structure shadows",
@@ -112,6 +114,7 @@ export const TOD_DATA = {
 	afternoon: {
 		label: "AFTERNOON (Sore)",
 		timeRange: "15:00–19:00",
+		emoji: "🌇",
 		hint: "🌇 Sore — Warm golden magic hour, long dramatic shadows, amber-orange atmosphere, beautiful cinematic light on materials.",
 		lighting:
 			"warm afternoon golden hour — low-angle amber light, dramatic long shadows, materials glowing rich",
@@ -132,6 +135,7 @@ export const TOD_DATA = {
 	night: {
 		label: "NIGHT (Malam)",
 		timeRange: "19:00–04:30",
+		emoji: "🌙",
 		hint: "🌙 Malam — Night construction site, powerful work floodlights, dramatic light pools against dark sky, stars visible.",
 		lighting:
 			"construction site night floodlights — powerful artificial work lamps, warm light pools against deep blue-black sky",

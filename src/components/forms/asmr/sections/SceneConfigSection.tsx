@@ -8,7 +8,11 @@ import LightingTab from "./tabs/LightingTab";
 import NarrationTab from "./tabs/NarrationTab";
 import TimelapseTab from "./tabs/TimelapseTab";
 
-export default function SceneConfigSection({ gen }: { gen: AsmrTimelapseGenerator }) {
+export default function SceneConfigSection({
+	gen,
+}: {
+	gen: AsmrTimelapseGenerator;
+}) {
 	return (
 		<section className="card mb-5">
 			<div className="section-label">🧩 Konfigurasi Per-Scene</div>
@@ -41,4 +45,3 @@ export default function SceneConfigSection({ gen }: { gen: AsmrTimelapseGenerato
 		</section>
 	);
 }
-
