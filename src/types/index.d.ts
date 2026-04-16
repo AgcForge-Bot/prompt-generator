@@ -5,6 +5,7 @@ declare global {
 
 	type ProjectType = 'survival-build' | 'restoration'
 	type ModelGender = 'male' | 'female'
+	type ModelType = "CLAUDE" | "OPENAI" | "GEMINI" | "OPENROUTER";
 	type TravelMode = 'foot' | 'camper-van' | 'snowfox' | 'bicycle' | 'motorbike'
 	type TimeOfDay = 'morning' | 'noon' | 'afternoon' | 'night'
 	type ScenePhaseKey =
@@ -135,4 +136,5 @@ declare global {
 		description?: string
 		error?: string
 	}
+
 }

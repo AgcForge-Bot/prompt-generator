@@ -3,15 +3,22 @@ import Anthropic from '@anthropic-ai/sdk'
 import { OpenRouter } from '@openrouter/sdk'
 import { GoogleGenAI, createPartFromBase64, createPartFromText, createPartFromUri } from '@google/genai'
 
-const claudeClient = new Anthropic({
-	apiKey: process.env.ANTHROPIC_API_KEY,
-})
-const geminiClient = new GoogleGenAI({
-	apiKey: process.env.GEMINI_API_KEY
-});
-const openRouterClient = new OpenRouter({
-	apiKey: process.env.OPENROUTER_API_KEY
-});
+function getClaudeClient() {
+	if (!process.env.ANTHROPIC_API_KEY) return null
+	return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
+
+function getGeminiClient() {
+	if (!process.env.GEMINI_API_KEY) return null
+	return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+}
+
+function getOpenRouterClient() {
+	if (!process.env.OPENROUTER_API_KEY) return null
+	return new OpenRouter({ apiKey: process.env.OPENROUTER_API_KEY })
+}
+
+
 
 const VISION_PROMPT = `You are a cinematography and visual reference analyst for AI video generation prompts, specializing in ASMR survival build documentary content.
 
@@ -51,6 +58,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeImageR
 		switch (provider) {
 			case 'CLAUDE': {
 				if (!process.env.ANTHROPIC_API_KEY) {
+					return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured in environment variables.' }, { status: 500 })
+				}
+				const claudeClient = getClaudeClient()
+				if (!claudeClient) {
 					return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured in environment variables.' }, { status: 500 })
 				}
 
@@ -99,6 +110,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeImageR
 
 			case 'GEMINI': {
 				if (!process.env.GEMINI_API_KEY) {
+					return NextResponse.json({ error: 'GEMINI_API_KEY not configured in environment variables.' }, { status: 500 })
+				}
+				const geminiClient = getGeminiClient()
+				if (!geminiClient) {
 					return NextResponse.json({ error: 'GEMINI_API_KEY not configured in environment variables.' }, { status: 500 })
 				}
 
@@ -163,6 +178,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeImageR
 
 			case 'OPENROUTER': {
 				if (!process.env.OPENROUTER_API_KEY) {
+					return NextResponse.json({ error: 'OPENROUTER_API_KEY not configured in environment variables.' }, { status: 500 })
+				}
+				const openRouterClient = getOpenRouterClient()
+				if (!openRouterClient) {
 					return NextResponse.json({ error: 'OPENROUTER_API_KEY not configured in environment variables.' }, { status: 500 })
 				}
 

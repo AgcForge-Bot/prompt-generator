@@ -5,13 +5,15 @@ import ForestBuildPrimitiveCraftForm from "@/components/forms/ForestBuildPrimiti
 import AsmrTimelapseConstructorForm from "@/components/forms/AsmrTimelapseConstructorForm";
 import CarMusicVideoClipForm from "@/components/forms/CarMusicVideoClipForm";
 import WarMusicVideoClipForm from "@/components/forms/WarMusicVideoClipForm";
+import ProductPromoVideoForm from "@/components/forms/product-promo-video/ProductPromoVideoForm";
 
 type HomeToolKey =
 	| "forest-build-primitive-craft"
 	| "asmr-timelapse-constructor"
 	| "car-music-video-clip"
 	| "war-music-video-clip"
-	| "relaxing-music-video-clip";
+	| "relaxing-music-video-clip"
+	| "product-promo-video";
 
 type ToolMeta = {
 	key: HomeToolKey;
@@ -121,6 +123,13 @@ export default function Home() {
 				description:
 					"Generator prompt untuk relaxing music video clip. Form masih placeholder dan siap kamu lanjutkan.",
 			},
+			{
+				key: "product-promo-video",
+				label: "Promo Video Iklan Produk",
+				title: "Product Promo Video — AI Prompt Generator",
+				description:
+					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi, dan generate prompt siap pakai untuk semua platform.",
+			},
 		],
 		[],
 	);
@@ -179,6 +188,8 @@ export default function Home() {
 							<AsmrTimelapseConstructorForm />
 						) : selected === "car-music-video-clip" ? (
 							<CarMusicVideoClipForm />
+						) : selected === "product-promo-video" ? (
+							<ProductPromoVideoForm />
 						) : (
 							<WarMusicVideoClipForm />
 						)}
