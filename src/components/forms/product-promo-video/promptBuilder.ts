@@ -36,6 +36,15 @@ function buildConsistencyNote(dna: PromoDNA, images: ImageRef[]): string {
 		note += `\n• Referensi visual produk dari AI: ${imageDescriptions.substring(0, 300)}...`;
 	}
 
+	// Tambahkan visual reference dari structured spec jika ada
+	const spec = dna.productSpec;
+	if (spec.isTransformed && spec.visual) {
+		note += `\n• Deskripsi visual produk: ${spec.visual}`;
+	}
+	if (spec.isTransformed && spec.specs) {
+		note += `\n• Spesifikasi teknis: ${spec.specs}`;
+	}
+
 	return note;
 }
 
@@ -140,10 +149,22 @@ export function buildScenePrompt(
 	const consistencyNote = buildConsistencyNote(dna, images);
 	const catMeta = PRODUCT_CATEGORIES[dna.productCategory];
 
-	// Product description from AI analysis
-	const prodDescBlock = dna.productDescription
-		? `\n🔍 ANALISA PRODUK (AI Vision):\n${dna.productDescription}`
-		: "";
+	// Product spec block — gunakan structured spec jika sudah di-transform, fallback ke productDescription
+	const spec = dna.productSpec;
+	const hasStructuredSpec = spec.isTransformed && (spec.visual || spec.usp || spec.specs);
+
+	const prodDescBlock = hasStructuredSpec
+		? `
+🔍 ANALISA PRODUK (TERSTRUKTUR):
+• VISUAL    : ${spec.visual || "—"}
+• USP       : ${spec.usp || "—"}
+• SPESIFIKASI: ${spec.specs || "—"}
+• TARGET    : ${spec.targetAudience || "—"}
+• NARASI KUNCI: "${spec.keyNarration || "—"}"
+• MASALAH DISELESAIKAN: ${spec.problemSolved || "—"}`
+		: dna.productDescription
+			? `\n🔍 ANALISA PRODUK:\n${dna.productDescription}`
+			: "";
 
 	// Scene-specific content
 	let sceneContent = "";
@@ -153,9 +174,10 @@ export function buildScenePrompt(
 			sceneContent = `
 🎭 ADEGAN MASALAH / BEFORE:
 ${dna.videoStyle !== "review-only"
-					? `Model menunjukkan ekspresi frustrasi, kesulitan, atau ketidakpuasan. Situasi: ${dna.problemDescription || `kondisi sebelum menggunakan ${dna.productName} — tampilkan masalah yang relevan dengan produk ${catMeta.label}`}`
-					: `Narasi voice over mendeskripsikan masalah: "${dna.problemDescription || `Pernah merasa kesulitan atau tidak puas dengan produk ${catMeta.label} yang ada?`}" — kamera menampilkan visual masalah yang relevan`
+					? `Model menunjukkan ekspresi frustrasi, kesulitan, atau ketidakpuasan. Situasi: ${dna.problemDescription || (dna.productSpec.isTransformed && dna.productSpec.problemSolved ? dna.productSpec.problemSolved : `kondisi sebelum menggunakan ${dna.productName} — tampilkan masalah yang relevan dengan produk ${catMeta.label}`)}`
+					: `Narasi voice over mendeskripsikan masalah: "${dna.problemDescription || (dna.productSpec.isTransformed && dna.productSpec.problemSolved ? dna.productSpec.problemSolved : `Pernah merasa kesulitan atau tidak puas dengan produk ${catMeta.label} yang ada?`)}" — kamera menampilkan visual masalah yang relevan`
 				}
+${dna.productSpec.isTransformed && dna.productSpec.targetAudience ? `Target audience: ${dna.productSpec.targetAudience}` : ""}
 Durasi adegan: ${scene.duration} detik
 Nada: dramatis ringan, empati, relatable untuk target audience`;
 			break;
@@ -175,8 +197,9 @@ Durasi: ${scene.duration} detik`;
 			sceneContent = `
 ⭐ FITUR & KEUNGGULAN UTAMA:
 Sorot fitur unggulan pertama dan terpenting dari ${dna.productName}
+${dna.productSpec.isTransformed && dna.productSpec.usp ? `USP Produk: ${dna.productSpec.usp}` : ""}
 ${productAction}
-Narasi dialog (Bahasa Indonesia): Jelaskan dengan antusias keunggulan utama produk — material, kualitas, fungsi, atau keunikan yang membuat produk ini spesial dibanding kompetitor
+Narasi dialog (Bahasa Indonesia): ${dna.productSpec.isTransformed && dna.productSpec.keyNarration ? `Gunakan tagline: "${dna.productSpec.keyNarration}" — lalu elaborasi keunggulan utama produk` : "Jelaskan dengan antusias keunggulan utama produk — material, kualitas, fungsi, atau keunikan yang membuat produk ini spesial dibanding kompetitor"}
 ${catMeta.isFashion ? "Tampilkan detail bahan/material dari dekat, cara fitting/pakai yang mudah" : "Demonstrasi langsung fungsi utama produk secara nyata"}
 Durasi: ${scene.duration} detik`;
 			break;
@@ -205,12 +228,13 @@ Durasi: ${scene.duration} detik`;
 			sceneContent = `
 🔍 DETAIL EXTREME CLOSE-UP:
 Extreme macro shot pada detail terpenting ${dna.productName}
+${dna.productSpec.isTransformed && dna.productSpec.specs ? `Spesifikasi yang harus terlihat: ${dna.productSpec.specs}` : ""}
 ${catMeta.isFashion
 					? `Detail: tekstur kain/material, jahitan presisi, aksesoris, logo, warna actual product`
 					: `Detail: port/tombol, material build quality, branding, packaging detail`
 				}
 Kamera: macro lens atau extreme close-up, tripod statis, pencahayaan merata
-Narasi: voice-over singkat menjelaskan detail yang terlihat, membangun kepercayaan kualitas
+Narasi: voice-over singkat menjelaskan spesifikasi yang terlihat, membangun kepercayaan kualitas
 Durasi: ${scene.duration} detik`;
 			break;
 

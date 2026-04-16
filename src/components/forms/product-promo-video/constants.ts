@@ -10,6 +10,7 @@ import type {
 	SceneTypeKey,
 	ModelType,
 	PromoDNA,
+	ProductSpec,
 } from "./types";
 
 // ─── PRODUCT CATEGORIES ──────────────────────────────────────────────────────
@@ -348,11 +349,25 @@ export const LIGHTING_STYLES = [
 	{ value: "window-natural", label: "Cahaya Jendela Natural" },
 ];
 
+// ─── DEFAULT PRODUCT SPEC ────────────────────────────────────────────────────
+
+export const DEFAULT_PRODUCT_SPEC: ProductSpec = {
+	rawMarketplaceText: "",
+	visual: "",
+	usp: "",
+	specs: "",
+	targetAudience: "",
+	keyNarration: "",
+	problemSolved: "",
+	isTransformed: false,
+};
+
 // ─── DEFAULT DNA ──────────────────────────────────────────────────────────────
 
 export const DEFAULT_PROMO_DNA: PromoDNA = {
 	productName: "",
 	productDescription: "",
+	productSpec: { ...DEFAULT_PRODUCT_SPEC },
 	productCategory: "fashion-wanita",
 	productSubcategory: "baju",
 	isFashionProduct: true,

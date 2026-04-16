@@ -125,8 +125,8 @@ export function getDefaultVisionModelId(provider: ModelType) {
 		case "OPENAI":
 			return "gpt-4o-mini";
 		case "GEMINI":
-			return "gemini-2.0-flash";
+			return "gemini-2.5-flash-lite";
 		case "OPENROUTER":
-			return "openai/gpt-4o-mini";
+			return "google/gemini-2.5-flash-lite";
 	}
 }

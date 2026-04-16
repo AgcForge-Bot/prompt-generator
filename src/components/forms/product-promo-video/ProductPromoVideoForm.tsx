@@ -15,16 +15,20 @@ import {
 	CTASection,
 } from "./sections/ConfigSections";
 import SceneOutputSection from "./sections/SceneOutputSection";
-
-type TabKey = "setup" | "scenes" | "output";
+import { PRODUCT_CATEGORIES } from "./constants";
 
 export default function ProductPromoVideoForm() {
 	const gen = useProductPromoGenerator();
 
-	const tabs: { key: TabKey; label: string; emoji: string }[] = [
-		{ key: "setup", label: "Konfigurasi", emoji: "⚙️" },
-		{ key: "scenes", label: "Prompt & Output", emoji: "🎬" },
+	const tabs = [
+		{ key: "setup" as const, label: "Konfigurasi", emoji: "⚙️" },
+		{ key: "scenes" as const, label: "Prompt & Output", emoji: "🎬" },
 	];
+
+	const catMeta = PRODUCT_CATEGORIES[gen.dna.productCategory];
+	const specReady =
+		gen.dna.productSpec.isTransformed &&
+		(gen.dna.productSpec.usp || gen.dna.productSpec.visual);
 
 	return (
 		<div>
@@ -34,7 +38,7 @@ export default function ProductPromoVideoForm() {
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 						<div>
 							<div className="flex items-center gap-2 mb-3">
-								<span className="text-leaf text-sm">🛍️</span>
+								<span className="text-sm">🛍️</span>
 								<span className="font-mono text-[9px] tracking-[0.2em] uppercase text-leaf">
 									Product Promo · AI Video Prompt Generator
 								</span>
@@ -45,11 +49,13 @@ export default function ProductPromoVideoForm() {
 								<em className="text-leaf2 italic">Iklan Produk</em>
 							</h1>
 							<p className="font-mono text-[11px] text-stone2 leading-relaxed">
-								Generate prompt iklan produk yang siap untuk AI Video
+								Generate prompt video iklan produk siap pakai untuk AI Video
 								<br />
 								Kling · Runway · Pika · Sora · Hailuo · VEO · Grok
 							</p>
 						</div>
+
+						{/* Stats badges */}
 						<div className="flex flex-col gap-2 sm:items-end">
 							{[
 								["Total Scene", `${gen.dna.totalScenes}`],
@@ -64,27 +70,43 @@ export default function ProductPromoVideoForm() {
 									{k}: <span className="text-leaf2 font-bold">{v}</span>
 								</div>
 							))}
+							{gen.dna.productName && (
+								<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-amber/30 bg-amber/10 text-amber2 max-w-[200px] truncate">
+									📦 {gen.dna.productName}
+								</div>
+							)}
 						</div>
 					</div>
 				</header>
 
 				{/* ── AUTO GENERATE PANEL ── */}
-				<section className="card mb-6 border-amber/30 bg-amber/5">
+				<section
+					className="card mb-6"
+					style={{
+						border: "1px solid rgba(212,148,26,0.3)",
+						background: "rgba(212,148,26,0.04)",
+					}}
+				>
 					<div className="section-label" style={{ color: "var(--amber2)" }}>
 						🚀 Auto Generate — Mode Cepat
 					</div>
+
 					<p className="font-mono text-[10px] text-stone2 mb-4 leading-relaxed">
-						Upload foto produk → pilih durasi → klik{" "}
-						<strong className="text-amber2">Generate Otomatis</strong>. AI akan
-						menganalisa produk dan membuat semua prompt scene secara otomatis.
-						Atau atur manual di tab Konfigurasi untuk kontrol penuh.
+						Upload foto produk <strong className="text-cream">+</strong> isi
+						nama <strong className="text-cream">+</strong> pilih durasi →{" "}
+						<strong className="text-amber2">klik Generate Otomatis</strong>.
+						Untuk kontrol penuh gunakan tab{" "}
+						<strong className="text-cream">Konfigurasi</strong>.
 					</p>
 
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
 						{/* Quick upload */}
 						<div>
 							<label className="field-label">📸 Upload Foto Produk</label>
-							<label className="flex items-center gap-3 border-2 border-dashed border-amber/30 rounded-xl p-3 cursor-pointer hover:border-amber/60 hover:bg-amber/5 transition-all">
+							<label
+								className="flex items-center gap-3 border-2 border-dashed border-amber/30 rounded-xl p-3 cursor-pointer hover:border-amber/60 hover:bg-amber/5 transition-all"
+								style={{ minHeight: 64 }}
+							>
 								<input
 									type="file"
 									className="hidden"
@@ -99,33 +121,37 @@ export default function ProductPromoVideoForm() {
 										)
 									}
 								/>
-								<span className="text-2xl">📁</span>
+								<span className="text-2xl">
+									{gen.imgAnalyzing ? "⏳" : "📁"}
+								</span>
 								<div>
 									<div className="font-mono text-[10px] text-amber2 font-bold">
 										{gen.imgAnalyzing
 											? gen.imgProgress
-											: "Klik untuk upload foto"}
+											: gen.productImages.length > 0
+												? `${gen.productImages.length} foto dipilih ✓`
+												: "Klik untuk upload foto produk"}
 									</div>
 									<div className="font-mono text-[9px] text-stone2">
-										{gen.productImages.length > 0
-											? `${gen.productImages.length} foto dipilih ✓`
-											: "JPG · PNG · WEBP"}
+										JPG · PNG · WEBP · Multiple OK
 									</div>
 								</div>
 							</label>
 						</div>
 
-						{/* Quick product name */}
-						<div>
-							<label className="field-label">📦 Nama Produk</label>
-							<input
-								className="forest-input"
-								placeholder='Contoh: "Hijab Cerutti Premium"'
-								value={gen.dna.productName}
-								onChange={(e) => gen.setDna({ productName: e.target.value })}
-							/>
-							<div className="mt-2">
-								<label className="field-label">⏱️ Durasi Video</label>
+						{/* Quick name + duration */}
+						<div className="flex flex-col gap-2">
+							<div>
+								<label className="field-label">📦 Nama Produk</label>
+								<input
+									className="forest-input"
+									placeholder='Contoh: "Hijab Cerutti Premium"'
+									value={gen.dna.productName}
+									onChange={(e) => gen.setDna({ productName: e.target.value })}
+								/>
+							</div>
+							<div>
+								<label className="field-label">⏱️ Durasi Total</label>
 								<div className="flex gap-1.5 flex-wrap">
 									{[30, 60, 90, 120].map((sec) => (
 										<button
@@ -134,13 +160,16 @@ export default function ProductPromoVideoForm() {
 											onClick={() =>
 												gen.setDna({
 													totalDurationSec: sec,
-													totalScenes: Math.floor(sec / gen.dna.secPerScene),
+													totalScenes: Math.max(
+														2,
+														Math.floor(sec / gen.dna.secPerScene),
+													),
 												})
 											}
-											className={`rounded-lg border px-2.5 py-1 font-mono text-[10px] transition-all ${
+											className={`rounded-lg border px-3 py-1.5 font-mono text-[10px] transition-all ${
 												gen.dna.totalDurationSec === sec
 													? "border-amber/60 bg-amber/20 text-amber2 font-bold"
-													: "border-leaf/15 bg-bark/25 text-stone2 hover:border-leaf/30"
+													: "border-leaf/15 bg-bark/25 text-stone2 hover:border-leaf/30 hover:text-cream"
 											}`}
 										>
 											{sec}s
@@ -151,20 +180,48 @@ export default function ProductPromoVideoForm() {
 						</div>
 					</div>
 
+					{/* Status bar spec */}
+					<div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-forest/40 border border-leaf/10">
+						<div className="flex items-center gap-2 flex-1 min-w-0">
+							<span
+								className={`w-2 h-2 rounded-full flex-shrink-0 ${specReady ? "bg-leaf" : "bg-stone/50"}`}
+							/>
+							<span className="font-mono text-[9px] text-stone2 truncate">
+								{specReady
+									? `✓ Deskripsi terstruktur siap — "${gen.dna.productSpec.keyNarration || gen.dna.productSpec.usp?.substring(0, 40)}..."`
+									: "Belum ada deskripsi terstruktur — isi di tab Konfigurasi atau paste dari marketplace"}
+							</span>
+						</div>
+						<span
+							className={`font-mono text-[9px] px-2 py-0.5 rounded-full border flex-shrink-0 ${
+								catMeta.isFashion
+									? "border-amber/30 text-amber2 bg-amber/10"
+									: "border-leaf/25 text-leaf2 bg-moss/15"
+							}`}
+						>
+							{catMeta.emoji} {catMeta.label}
+						</span>
+					</div>
+
 					<button
 						type="button"
 						disabled={gen.isGeneratingAll || gen.imgAnalyzing}
 						onClick={gen.autoGenerate}
 						className="w-full rounded-xl font-bold py-3 px-6 transition-all duration-150 font-sans text-sm"
 						style={{
-							background: gen.isGeneratingAll
-								? "rgba(212,148,26,0.2)"
-								: "linear-gradient(135deg, #d4941a, #e8ab30)",
+							background:
+								gen.isGeneratingAll || gen.imgAnalyzing
+									? "rgba(212,148,26,0.2)"
+									: "linear-gradient(135deg, #d4941a, #e8ab30)",
 							border: "none",
-							color: "#1a2e1a",
-							boxShadow: gen.isGeneratingAll
-								? "none"
-								: "0 4px 18px rgba(212,148,26,0.35)",
+							color:
+								gen.isGeneratingAll || gen.imgAnalyzing
+									? "var(--amber)"
+									: "#1a2e1a",
+							boxShadow:
+								gen.isGeneratingAll || gen.imgAnalyzing
+									? "none"
+									: "0 4px 18px rgba(212,148,26,0.35)",
 						}}
 					>
 						{gen.isGeneratingAll
@@ -179,14 +236,19 @@ export default function ProductPromoVideoForm() {
 						<button
 							key={tab.key}
 							type="button"
-							onClick={() => gen.setActiveTab(tab.key as "setup" | "scenes")}
-							className={`flex-1 rounded-lg py-2.5 font-bold text-xs transition-all font-sans ${
+							onClick={() => gen.setActiveTab(tab.key)}
+							className={`flex-1 rounded-lg py-2.5 font-bold text-xs transition-all font-sans flex items-center justify-center gap-1.5 ${
 								gen.activeTab === tab.key
 									? "bg-moss/50 text-leaf2 shadow-sm"
 									: "text-stone2 hover:text-cream"
 							}`}
 						>
 							{tab.emoji} {tab.label}
+							{tab.key === "scenes" && gen.generatedCount > 0 && (
+								<span className="font-mono text-[8px] px-1.5 py-0.5 rounded-full bg-leaf/20 text-leaf2 border border-leaf/20">
+									{gen.generatedCount}/{gen.scenes.length}
+								</span>
+							)}
 						</button>
 					))}
 				</div>
@@ -237,17 +299,25 @@ export default function ProductPromoVideoForm() {
 						<AspectRatioSection dna={gen.dna} setDna={gen.setDna} />
 						<CTASection dna={gen.dna} setDna={gen.setDna} />
 
-						{/* Proceed to generate */}
+						{/* Bottom actions */}
 						<div className="flex gap-3 mt-2 mb-8">
 							<button
 								type="button"
-								className="btn-primary flex-1 py-3"
+								className="btn-primary flex-1 py-3 text-sm"
 								onClick={() => {
 									gen.rebuildScenes();
 									gen.setActiveTab("scenes");
 								}}
 							>
 								Lanjut ke Generate Prompt →
+							</button>
+							<button
+								type="button"
+								className="btn-ghost py-3 px-4 text-sm"
+								onClick={gen.resetAll}
+								title="Reset semua ke default"
+							>
+								🔄 Reset
 							</button>
 						</div>
 					</div>
@@ -261,6 +331,7 @@ export default function ProductPromoVideoForm() {
 						currentScene={gen.currentScene}
 						setCurrentScene={gen.setCurrentScene}
 						generatedCount={gen.generatedCount}
+						progressPct={gen.progressPct}
 						isGeneratingSingle={gen.isGeneratingSingle}
 						isGeneratingAll={gen.isGeneratingAll}
 						allPrompts={gen.allPrompts}
@@ -270,13 +341,18 @@ export default function ProductPromoVideoForm() {
 						onGenerateAll={gen.generateAll}
 						onCopySingle={gen.copyPrompt}
 						onCopyAll={gen.copyAllPrompts}
+						onDownload={gen.downloadAllPrompts}
 					/>
 				)}
 			</div>
 
 			{/* ── TOAST ── */}
 			<div
-				className={`toast-base ${gen.toast.visible ? "bg-moss/90 text-leaf2 opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+				className={`toast-base transition-all duration-300 ${
+					gen.toast.visible
+						? "bg-moss/90 text-leaf2 opacity-100 translate-y-0"
+						: "opacity-0 translate-y-4 pointer-events-none"
+				}`}
 			>
 				{gen.toast.msg}
 			</div>

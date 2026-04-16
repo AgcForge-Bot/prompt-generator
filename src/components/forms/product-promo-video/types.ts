@@ -103,12 +103,35 @@ export type SceneConfig = {
 	generatedPrompt?: string;
 };
 
+// ─── PRODUCT SPEC (structured description) ───────────────────────────────────
+//
+// Digunakan untuk menyimpan deskripsi produk dalam format terstruktur
+// yang sudah di-transform dari raw marketplace text menjadi format
+// cinematik & storytelling yang optimal untuk prompt video AI.
+
+export type ProductSpec = {
+	// RAW — paste langsung dari marketplace (Tokopedia, Shopee, dll)
+	rawMarketplaceText: string;
+
+	// TRANSFORMED — hasil transform AI atau isi manual
+	visual: string;           // tampilan fisik: warna, material, tekstur, bentuk
+	usp: string;              // keunggulan utama & unique selling point
+	specs: string;            // spesifikasi teknis: ukuran, berat, bahan, dll
+	targetAudience: string;   // siapa yang cocok menggunakan produk ini
+	keyNarration: string;     // kalimat kunci narasi / tagline produk
+	problemSolved: string;    // masalah apa yang diselesaikan produk ini
+
+	// Status transform
+	isTransformed: boolean;   // sudah di-transform atau belum
+};
+
 // ─── PROMO DNA (konfigurasi utama) ───────────────────────────────────────────
 
 export type PromoDNA = {
 	// Info produk
 	productName: string;
-	productDescription: string;          // dari analisa AI
+	productDescription: string;          // dari analisa AI (legacy / fallback)
+	productSpec: ProductSpec;            // structured description (NEW)
 	productCategory: ProductCategoryKey;
 	productSubcategory: string;
 	isFashionProduct: boolean;           // auto-set berdasar kategori

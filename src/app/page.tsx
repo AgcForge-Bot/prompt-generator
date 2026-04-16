@@ -21,6 +21,7 @@ type ToolMeta = {
 	label: string;
 	title: string;
 	description: string;
+	badge?: string;
 };
 
 function setMetaTitleAndDescription(title: string, description: string) {
@@ -45,10 +46,12 @@ function setMetaTitleAndDescription(title: string, description: string) {
 function RadioCard({
 	checked,
 	label,
+	badge,
 	onSelect,
 }: {
 	checked: boolean;
 	label: string;
+	badge?: string;
 	onSelect: () => void;
 }) {
 	return (
@@ -63,19 +66,26 @@ function RadioCard({
 		>
 			<div className="flex items-center gap-3">
 				<span
-					className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+					className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${
 						checked ? "border-leaf bg-leaf/20" : "border-leaf/25"
 					}`}
 				>
 					<span
-						className={`w-2 h-2 rounded-full ${
+						className={`w-2 h-2 rounded-full transition-all ${
 							checked ? "bg-leaf2" : "bg-transparent"
 						}`}
 					/>
 				</span>
-				<div>
-					<div className="font-playfair text-base text-cream font-bold">
-						{label}
+				<div className="flex-1 min-w-0">
+					<div className="flex items-center gap-2">
+						<div className="font-playfair text-base text-cream font-bold truncate">
+							{label}
+						</div>
+						{badge && (
+							<span className="flex-shrink-0 font-mono text-[8px] px-1.5 py-0.5 rounded-full bg-amber/20 border border-amber/40 text-amber2 uppercase tracking-wider">
+								{badge}
+							</span>
+						)}
 					</div>
 					<div className="font-mono text-[10px] text-stone2">
 						{checked ? "AKTIF" : "Klik untuk pilih"}
@@ -92,9 +102,10 @@ export default function Home() {
 			{
 				key: "product-promo-video",
 				label: "Promo Video Iklan Produk",
+				badge: "NEW",
 				title: "Product Promo Video — AI Prompt Generator",
 				description:
-					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi, dan generate prompt siap pakai untuk semua platform.",
+					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi — generate prompt scene-by-scene siap untuk Kling, Runway, Pika, VEO, dan lainnya.",
 			},
 			{
 				key: "forest-build-primitive-craft",
@@ -158,6 +169,11 @@ export default function Home() {
 							Home
 							<span className="text-leaf2"> · </span>
 							<span className="text-leaf2 italic">{activeMeta.label}</span>
+							{activeMeta.badge && (
+								<span className="ml-3 font-mono text-xs px-2 py-0.5 rounded-full bg-amber/20 border border-amber/40 text-amber2 uppercase tracking-wider align-middle">
+									{activeMeta.badge}
+								</span>
+							)}
 						</h1>
 						<p className="font-mono text-[11px] text-stone2 leading-relaxed max-w-3xl">
 							{activeMeta.description}
@@ -165,21 +181,24 @@ export default function Home() {
 					</div>
 				</header>
 
-				<div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
+				<div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
+					{/* ── SIDEBAR TOOL SELECTOR ── */}
 					<section className="card h-fit">
-						<div className="section-label">🎛️ Pilih Form</div>
+						<div className="section-label">🎛️ Pilih Tools</div>
 						<div className="flex flex-col gap-2">
 							{tools.map((t) => (
 								<RadioCard
 									key={t.key}
 									checked={selected === t.key}
 									label={t.label}
+									badge={t.badge}
 									onSelect={() => setSelected(t.key)}
 								/>
 							))}
 						</div>
 					</section>
 
+					{/* ── FORM AREA ── */}
 					<div>
 						{selected === "forest-build-primitive-craft" ? (
 							<ForestBuildPrimitiveCraftForm />
@@ -187,14 +206,12 @@ export default function Home() {
 							<AsmrTimelapseConstructorForm />
 						) : selected === "car-music-video-clip" ? (
 							<CarMusicVideoClipForm />
-						) : selected === "product-promo-video" ? (
-							<ProductPromoVideoForm />
-						) : selected === "relaxing-music-video-clip" ? (
-							<RelaxingMusicVideoForm />
 						) : selected === "war-music-video-clip" ? (
 							<WarMusicVideoClipForm />
-						) : (
+						) : selected === "product-promo-video" ? (
 							<ProductPromoVideoForm />
+						) : (
+							<RelaxingMusicVideoForm />
 						)}
 					</div>
 				</div>

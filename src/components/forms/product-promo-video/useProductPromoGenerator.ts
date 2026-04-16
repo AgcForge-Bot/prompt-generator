@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 "use client";
 
 import { useState, useCallback } from "react";
 import type { PromoDNA, SceneConfig, SceneTypeKey } from "./types";
 import {
 	DEFAULT_PROMO_DNA,
+	DEFAULT_PRODUCT_SPEC,
+	PRODUCT_CATEGORIES,
 	calculateSceneOrder,
-	SCENE_TYPE_META,
 } from "./constants";
 import { buildScenePrompt, buildAllScenePrompts } from "./promptBuilder";
 import useProductPromoImageState from "./useProductPromoImageState";
@@ -14,11 +14,14 @@ import useProductPromoImageState from "./useProductPromoImageState";
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 
 function useToast() {
-	const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: "", visible: false });
+	const [toast, setToast] = useState<{ msg: string; visible: boolean }>({
+		msg: "",
+		visible: false,
+	});
 
 	function showToast(msg: string) {
 		setToast({ msg, visible: true });
-		setTimeout(() => setToast({ msg: "", visible: false }), 3000);
+		setTimeout(() => setToast({ msg: "", visible: false }), 3200);
 	}
 
 	return { toast, showToast };
@@ -46,47 +49,67 @@ export default function useProductPromoGenerator() {
 	const { toast, showToast } = useToast();
 
 	const [dna, setDnaState] = useState<PromoDNA>(DEFAULT_PROMO_DNA);
-	const [scenes, setScenes] = useState<SceneConfig[]>(buildScenes(DEFAULT_PROMO_DNA));
+	const [scenes, setScenes] = useState<SceneConfig[]>(
+		buildScenes(DEFAULT_PROMO_DNA)
+	);
 	const [currentScene, setCurrentScene] = useState(1);
 	const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 	const [isGeneratingSingle, setIsGeneratingSingle] = useState(false);
-	const [activeTab, setActiveTab] = useState<"setup" | "scenes" | "output">("setup");
+	const [activeTab, setActiveTab] = useState<"setup" | "scenes">("setup");
 	const [showAllPrompts, setShowAllPrompts] = useState(false);
 	const [allPrompts, setAllPrompts] = useState<string[]>([]);
 
 	const imgState = useProductPromoImageState(showToast);
 
-	// ─── DNA SETTER (recalculate scenes on key changes) ─────────────────────────
+	// ─── DNA SETTER ─────────────────────────────────────────────────────────────
+	// Recalculate totalScenes & isFashionProduct secara otomatis
 
 	function setDna(updates: Partial<PromoDNA>) {
 		setDnaState((prev) => {
 			const next = { ...prev, ...updates };
 
 			// Recalculate totalScenes jika durasi atau secPerScene berubah
-			if (updates.totalDurationSec !== undefined || updates.secPerScene !== undefined) {
-				next.totalScenes = Math.floor(next.totalDurationSec / next.secPerScene);
-				if (next.totalScenes < 2) next.totalScenes = 2;
+			if (
+				updates.totalDurationSec !== undefined ||
+				updates.secPerScene !== undefined
+			) {
+				next.totalScenes = Math.max(
+					2,
+					Math.floor(next.totalDurationSec / next.secPerScene)
+				);
 			}
 
-			// Auto-set isFashionProduct
+			// Auto-set isFashionProduct berdasar kategori (no require() — pakai import)
 			if (updates.productCategory !== undefined) {
-				const { PRODUCT_CATEGORIES } = require("./constants");
-				next.isFashionProduct = PRODUCT_CATEGORIES[next.productCategory]?.isFashion ?? false;
+				next.isFashionProduct =
+					PRODUCT_CATEGORIES[next.productCategory]?.isFashion ?? false;
 			}
 
 			return next;
 		});
 	}
 
-	// Rebuild scenes whenever DNA core changes
-	function rebuildScenes(updatedDna?: PromoDNA) {
-		const d = updatedDna ?? dna;
+	// ─── REBUILD SCENES ──────────────────────────────────────────────────────────
+
+	function rebuildScenes(overrideDna?: PromoDNA) {
+		const d = overrideDna ?? dna;
 		setScenes(buildScenes(d));
 		setAllPrompts([]);
 		setCurrentScene(1);
 	}
 
-	// ─── GENERATE SINGLE SCENE ──────────────────────────────────────────────────
+	// ─── RESET SEMUA ─────────────────────────────────────────────────────────────
+
+	function resetAll() {
+		setDnaState(DEFAULT_PROMO_DNA);
+		setScenes(buildScenes(DEFAULT_PROMO_DNA));
+		setAllPrompts([]);
+		setCurrentScene(1);
+		imgState.setProductImages([]);
+		showToast("🔄 Form direset ke default.");
+	}
+
+	// ─── GENERATE SINGLE SCENE ───────────────────────────────────────────────────
 
 	const generatePrompt = useCallback(
 		async (sceneId?: number) => {
@@ -104,7 +127,9 @@ export default function useProductPromoGenerator() {
 					imgState.productImages
 				);
 				setScenes((prev) =>
-					prev.map((s) => (s.id === targetId ? { ...s, generatedPrompt: prompt } : s))
+					prev.map((s) =>
+						s.id === targetId ? { ...s, generatedPrompt: prompt } : s
+					)
 				);
 				showToast(`✅ Prompt Scene ${targetId} berhasil di-generate!`);
 			} finally {
@@ -114,9 +139,13 @@ export default function useProductPromoGenerator() {
 		[currentScene, scenes, dna, imgState.productImages, showToast]
 	);
 
-	// ─── GENERATE ALL SCENES ────────────────────────────────────────────────────
+	// ─── GENERATE ALL SCENES ─────────────────────────────────────────────────────
 
 	const generateAll = useCallback(async () => {
+		if (scenes.length === 0) {
+			showToast("⚠ Rebuild scenes terlebih dahulu.");
+			return;
+		}
 		setIsGeneratingAll(true);
 		try {
 			const prompts = buildAllScenePrompts(dna, scenes, imgState.productImages);
@@ -125,47 +154,73 @@ export default function useProductPromoGenerator() {
 			);
 			setAllPrompts(prompts);
 			setShowAllPrompts(true);
-			setActiveTab("output");
-			showToast(`🎬 Semua ${scenes.length} prompt berhasil di-generate!`);
+			setActiveTab("scenes");
+			showToast(`🎬 ${scenes.length} prompt berhasil di-generate!`);
 		} finally {
 			setIsGeneratingAll(false);
 		}
-	}, [dna, scenes, imgState.productImages, showToast]);
+	}, [scenes, showToast, dna, imgState.productImages]);
 
-	// ─── AUTO GENERATE (dari upload produk saja) ────────────────────────────────
+	// ─── AUTO GENERATE ───────────────────────────────────────────────────────────
+	// Mode cepat: hanya butuh foto produk / nama produk + durasi → generate semua
 
 	const autoGenerate = useCallback(async () => {
-		if (!dna.productName && imgState.productImages.length === 0) {
-			showToast("⚠ Upload foto produk atau masukkan nama produk terlebih dahulu!");
+		const hasPhoto = imgState.productImages.length > 0;
+		const hasName = dna.productName.trim().length > 0;
+		const hasSpec =
+			dna.productSpec.isTransformed &&
+			(dna.productSpec.visual || dna.productSpec.usp);
+
+		if (!hasPhoto && !hasName && !hasSpec) {
+			showToast(
+				"⚠ Upload foto produk atau isi nama produk terlebih dahulu!"
+			);
 			return;
 		}
 
-		// Set product description dari AI analysis jika sudah ada
-		const firstAnalysis = imgState.productImages.find(
-			(img) => img.aiDescription && img.status === "done"
-		);
-		if (firstAnalysis?.aiDescription) {
-			setDna({ productDescription: firstAnalysis.aiDescription });
-		}
-
-		// Rebuild scenes dulu
-		const updatedDna = {
-			...dna,
-			productDescription: firstAnalysis?.aiDescription ?? dna.productDescription,
-		};
-
-		const freshScenes = buildScenes(updatedDna);
-		setScenes(freshScenes);
-
-		// Generate semua
 		setIsGeneratingAll(true);
 		try {
-			const prompts = buildAllScenePrompts(updatedDna, freshScenes, imgState.productImages);
+			// Sync productDescription dari hasil AI image analysis (jika foto diupload)
+			const firstAnalyzed = imgState.productImages.find(
+				(img) => img.aiDescription && img.status === "done"
+			);
+
+			// Bangun DNA yang dipakai untuk generate (snapshot saat ini + enrichment)
+			const enrichedDna: PromoDNA = {
+				...dna,
+				// Jika ada analisa foto AI tapi belum ada structured spec, masukkan ke description
+				productDescription:
+					firstAnalyzed?.aiDescription ?? dna.productDescription,
+				// Jika structured spec belum ada tapi ada analisa foto, coba isi visual
+				productSpec:
+					!dna.productSpec.isTransformed && firstAnalyzed?.aiDescription
+						? {
+							...DEFAULT_PRODUCT_SPEC,
+							visual: firstAnalyzed.aiDescription,
+							usp: "",
+							isTransformed: false,
+						}
+						: dna.productSpec,
+			};
+
+			// Rebuild scenes berdasar DNA terkini
+			const freshScenes = buildScenes(enrichedDna);
+			setScenes(freshScenes);
+
+			// Generate semua prompt
+			const prompts = buildAllScenePrompts(
+				enrichedDna,
+				freshScenes,
+				imgState.productImages
+			);
+
 			setScenes(freshScenes.map((s, i) => ({ ...s, generatedPrompt: prompts[i] })));
 			setAllPrompts(prompts);
 			setShowAllPrompts(true);
-			setActiveTab("output");
-			showToast(`🚀 Auto-generate selesai! ${freshScenes.length} scene prompt siap!`);
+			setActiveTab("scenes");
+			showToast(
+				`🚀 Auto-generate selesai! ${freshScenes.length} scene prompt siap!`
+			);
 		} finally {
 			setIsGeneratingAll(false);
 		}
@@ -177,7 +232,7 @@ export default function useProductPromoGenerator() {
 		const id = sceneId ?? currentScene;
 		const scene = scenes.find((s) => s.id === id);
 		if (!scene?.generatedPrompt) {
-			showToast("⚠ Generate prompt dulu!");
+			showToast("⚠ Generate prompt scene ini dulu!");
 			return;
 		}
 		await navigator.clipboard.writeText(scene.generatedPrompt);
@@ -189,20 +244,44 @@ export default function useProductPromoGenerator() {
 			showToast("⚠ Generate semua prompt dulu!");
 			return;
 		}
-		await navigator.clipboard.writeText(allPrompts.join("\n\n"));
+		await navigator.clipboard.writeText(allPrompts.join("\n\n" + "=".repeat(50) + "\n\n"));
 		showToast("📋 Semua prompt disalin ke clipboard!");
+	}
+
+	// ─── DOWNLOAD TXT ────────────────────────────────────────────────────────────
+
+	function downloadAllPrompts() {
+		if (!allPrompts.length) {
+			showToast("⚠ Generate semua prompt dulu!");
+			return;
+		}
+		const separator = "\n\n" + "=".repeat(60) + "\n\n";
+		const header = `PRODUCT PROMO VIDEO PROMPTS\nProduk: ${dna.productName}\nKategori: ${dna.productCategory} › ${dna.productSubcategory}\nDurasi: ${dna.totalDurationSec} detik | Per scene: ${dna.secPerScene} detik | Total: ${dna.totalScenes} scene\nFormat: ${dna.aspectRatio}\nGenerated: ${new Date().toLocaleString("id-ID")}\n\n` + "=".repeat(60) + "\n\n";
+		const content = header + allPrompts.join(separator);
+		const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `promo-${dna.productName.replace(/\s+/g, "-").toLowerCase() || "produk"}-${Date.now()}.txt`;
+		a.click();
+		URL.revokeObjectURL(url);
+		showToast("💾 File .txt berhasil didownload!");
 	}
 
 	// ─── COMPUTED ────────────────────────────────────────────────────────────────
 
-	const currentSceneData = scenes.find((s) => s.id === currentScene) ?? scenes[0];
+	const currentSceneData =
+		scenes.find((s) => s.id === currentScene) ?? scenes[0];
 	const generatedCount = scenes.filter((s) => s.generatedPrompt).length;
+	const progressPct =
+		scenes.length > 0 ? Math.round((generatedCount / scenes.length) * 100) : 0;
 
 	return {
 		// DNA
 		dna,
 		setDna,
 		rebuildScenes,
+		resetAll,
 
 		// Scenes
 		scenes,
@@ -211,6 +290,7 @@ export default function useProductPromoGenerator() {
 		setCurrentScene,
 		currentSceneData,
 		generatedCount,
+		progressPct,
 
 		// Generate
 		generatePrompt,
@@ -225,6 +305,7 @@ export default function useProductPromoGenerator() {
 		setShowAllPrompts,
 		copyPrompt,
 		copyAllPrompts,
+		downloadAllPrompts,
 
 		// UI
 		activeTab,
@@ -232,7 +313,7 @@ export default function useProductPromoGenerator() {
 		toast,
 		showToast,
 
-		// Image
+		// Image state (spread semua dari useProductPromoImageState)
 		...imgState,
 	};
 }
