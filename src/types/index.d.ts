@@ -129,10 +129,10 @@ declare global {
 		scope: 'global' | 'scene'
 		sceneNum?: number
 		model: ModelType
+		modelId?: string
 	}
 	interface AnalyzeImageResponse {
 		description?: string
 		error?: string
 	}
 }
-
