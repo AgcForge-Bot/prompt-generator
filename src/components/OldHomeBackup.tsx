@@ -1,6 +1,15 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import type {
+	ModelType,
+	SceneConfig,
+	ScenePhaseKey,
+	SceneTypeKey,
+	ProjectDNA,
+	TimeOfDay,
+	ImageRef,
+} from "@/components/forms/forest-build/types";
 import {
 	DNA_DEFAULTS,
 	PHASE_META,
@@ -13,9 +22,13 @@ import {
 	TRAVEL_MODE_OPTIONS,
 	GENDER_OPTIONS,
 	FILM_STYLE_OPTIONS,
-} from "@/lib/data";
-import { computePhases, generateScenes } from "@/lib/scene-generator";
-import { buildScenePrompt } from "@/lib/prompt-builder";
+} from "@/components/forms/forest-build/utils";
+import {
+	computePhases,
+	generateScenes,
+} from "@/components/forms/forest-build/sceneGenerator";
+import { buildScenePrompt } from "@/components/forms/forest-build/promptBuilder";
+import { redirectToLogin } from "@/lib/auth/redirectToLogin";
 
 // ─── HELPER: SELECT OPTIONS ──────────────────────────────────────────────────
 
@@ -447,6 +460,10 @@ export default function Home() {
 						modelId: imgModelId || undefined,
 					}),
 				});
+				if (res.status === 401) {
+					redirectToLogin();
+					return;
+				}
 				const data = await res.json();
 				desc = data.description;
 			} catch {
@@ -504,6 +521,10 @@ export default function Home() {
 					modelId: imgModelId || undefined,
 				}),
 			});
+			if (res.status === 401) {
+				redirectToLogin();
+				return;
+			}
 			const data = await res.json();
 			desc = data.description;
 		} catch {

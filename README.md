@@ -13,6 +13,7 @@ prompt-video-generator/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── eslint.config.mjs
+├── middleware.ts
 ├── next.config.ts
 ├── package.json
 ├── pnpm-lock.yaml
@@ -41,6 +42,10 @@ prompt-video-generator/
     │   ├── globals.css
     │   ├── layout.tsx
     │   ├── page.tsx
+    │   ├── login/page.tsx
+    │   ├── forgot-password/page.tsx
+    │   ├── reset-password/page.tsx
+    │   └── auth/callback/route.ts
     │   └── api/
     │       ├── analyze-image/
     │       │   └── route.ts
@@ -50,12 +55,18 @@ prompt-video-generator/
     │           └── route.ts
     ├── types/
     │   └── index.d.ts
-    ├── lib/
-    │   ├── data.ts
-    │   ├── prompt-builder.ts
-    │   └── scene-generator.ts
+    ├── lib/supabase/
+    │   ├── client.ts                      ← browser client
+    │   ├── server.ts                      ← server component client
+    │   └── middleware.ts                  ← session refresh + route guard
     └── components/
         ├── OldHomeBackup.tsx
+        ├── auth/
+        │   ├── AuthCard.tsx                   ← layout wrapper
+        │   ├── AuthInput.tsx                  ← input reusable
+        │   ├── AuthButton.tsx                 ← button primary/outline
+        │   ├── AuthAlert.tsx                  ← pesan error/sukses
+        │   └── UserNav.tsx                    ← dropdown user + logout
         └── forms/
             ├── AsmrTimelapseConstructorForm.tsx
             ├── CarMusicVideoClipForm.tsx

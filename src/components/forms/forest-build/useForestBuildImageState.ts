@@ -6,6 +6,7 @@ import {
 	getVisionProviderLabel,
 } from "@/components/forms/forest-build/constants";
 import type { SceneConfig, ModelType, ImageRef } from "./types";
+import { redirectToLogin } from "@/lib/auth/redirectToLogin";
 
 export default function useForestBuildImageState({
 	currentScene,
@@ -71,6 +72,10 @@ export default function useForestBuildImageState({
 						modelId: imgModelId || undefined,
 					}),
 				});
+				if (res.status === 401) {
+					redirectToLogin();
+					return;
+				}
 				const data = await res.json();
 				desc = data.description;
 			} catch {
@@ -128,6 +133,10 @@ export default function useForestBuildImageState({
 					modelId: imgModelId || undefined,
 				}),
 			});
+			if (res.status === 401) {
+				redirectToLogin();
+				return;
+			}
 			const data = await res.json();
 			desc = data.description;
 		} catch {
@@ -186,4 +195,3 @@ export default function useForestBuildImageState({
 		urlInput,
 	};
 }
-

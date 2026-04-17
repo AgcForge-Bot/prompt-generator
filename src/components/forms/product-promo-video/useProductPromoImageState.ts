@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ImageRef, ModelType } from "./types";
 import { getDefaultVisionModelId, getVisionProviderLabel } from "./constants";
+import { redirectToLogin } from "@/lib/auth/redirectToLogin";
 
 export default function useProductPromoImageState(showToast: (msg: string) => void) {
 	const [productImages, setProductImages] = useState<ImageRef[]>([]);
@@ -29,6 +30,10 @@ export default function useProductPromoImageState(showToast: (msg: string) => vo
 				modelId: imgModelId || undefined,
 			}),
 		});
+		if (res.status === 401) {
+			redirectToLogin();
+			return undefined;
+		}
 		const data = await res.json();
 		return data.description;
 	}

@@ -1,21 +1,21 @@
 "use client";
 
-import useProductPromoGenerator from "./useProductPromoGenerator";
-import ProductInfoSection from "./sections/ProductInfoSection";
+import useProductPromoGenerator from "./product-promo-video/useProductPromoGenerator";
+import ProductInfoSection from "./product-promo-video/sections/ProductInfoSection";
 import {
 	CategorySection,
 	VideoStyleSection,
 	ModelSection,
-} from "./sections/CategoryAndModelSections";
+} from "./product-promo-video/sections/CategoryAndModelSections";
 import {
 	NarrationSection,
 	LocationSection,
 	DurationSection,
 	AspectRatioSection,
 	CTASection,
-} from "./sections/ConfigSections";
-import SceneOutputSection from "./sections/SceneOutputSection";
-import { PRODUCT_CATEGORIES } from "./constants";
+} from "./product-promo-video/sections/ConfigSections";
+import SceneOutputSection from "./product-promo-video/sections/SceneOutputSection";
+import { PRODUCT_CATEGORIES } from "./product-promo-video/constants";
 
 export default function ProductPromoVideoForm() {
 	const gen = useProductPromoGenerator();
@@ -71,7 +71,7 @@ export default function ProductPromoVideoForm() {
 								</div>
 							))}
 							{gen.dna.productName && (
-								<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-amber/30 bg-amber/10 text-amber2 max-w-[200px] truncate">
+								<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-amber/30 bg-amber/10 text-amber2 max-w-50 truncate">
 									📦 {gen.dna.productName}
 								</div>
 							)}
@@ -184,7 +184,7 @@ export default function ProductPromoVideoForm() {
 					<div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-forest/40 border border-leaf/10">
 						<div className="flex items-center gap-2 flex-1 min-w-0">
 							<span
-								className={`w-2 h-2 rounded-full flex-shrink-0 ${specReady ? "bg-leaf" : "bg-stone/50"}`}
+								className={`w-2 h-2 rounded-full shrink-0 ${specReady ? "bg-leaf" : "bg-stone/50"}`}
 							/>
 							<span className="font-mono text-[9px] text-stone2 truncate">
 								{specReady
@@ -193,7 +193,7 @@ export default function ProductPromoVideoForm() {
 							</span>
 						</div>
 						<span
-							className={`font-mono text-[9px] px-2 py-0.5 rounded-full border flex-shrink-0 ${
+							className={`font-mono text-[9px] px-2 py-0.5 rounded-full border shrink-0 ${
 								catMeta.isFashion
 									? "border-amber/30 text-amber2 bg-amber/10"
 									: "border-leaf/25 text-leaf2 bg-moss/15"

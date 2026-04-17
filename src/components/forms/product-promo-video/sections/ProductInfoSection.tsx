@@ -8,6 +8,7 @@ import {
 	getDefaultVisionModelId,
 	getVisionProviderLabel,
 } from "../constants";
+import { redirectToLogin } from "@/lib/auth/redirectToLogin";
 
 type Props = {
 	dna: PromoDNA;
@@ -156,6 +157,10 @@ export default function ProductInfoSection({
 					modelId: imgModelId || undefined,
 				}),
 			});
+			if (res.status === 401) {
+				redirectToLogin();
+				return;
+			}
 			const data = await res.json();
 			if (data.error) {
 				setTransformError(data.error);
@@ -418,7 +423,7 @@ Bumil & Busui Friendly`}</pre>
 						</div>
 
 						<textarea
-							className="forest-input resize-none min-h-[160px] mb-3 font-mono text-[11px] leading-relaxed"
+							className="forest-input resize-none min-h-40 mb-3 font-mono text-[11px] leading-relaxed"
 							placeholder={`Paste deskripsi produk dari marketplace di sini...\n\nContoh:\nLD: 108cm | PJ: 132cm | BB: 55-65kg\nBahan: Katun Micro Salur\nBumil & Busui Friendly\nTampil fashionable & kekinian...`}
 							value={spec.rawMarketplaceText}
 							onChange={(e) =>
@@ -550,7 +555,7 @@ Bumil & Busui Friendly`}</pre>
 										/>
 									) : (
 										<textarea
-											className={`forest-input resize-none ${field.rows === 2 ? "min-h-[72px]" : "min-h-[100px]"}`}
+											className={`forest-input resize-none ${field.rows === 2 ? "min-h-18" : "min-h-25"}`}
 											placeholder={field.placeholder}
 											value={spec[field.key] as string}
 											onChange={(e) =>
