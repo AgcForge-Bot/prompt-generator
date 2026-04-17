@@ -1,6 +1,5 @@
 "use client";
 
-import { SEC_PER_SCENE, TOTAL_SCENES } from "../constants";
 import type { RelaxingMusicVideoGenerator } from "../types";
 
 export default function TimelineSection({
@@ -12,7 +11,7 @@ export default function TimelineSection({
 		<section className="card mb-5">
 			<div className="section-label">🧩 Timeline Scene</div>
 			<div className="flex flex-wrap gap-2">
-				{Array.from({ length: TOTAL_SCENES }).map((_, i) => {
+				{Array.from({ length: gen.totalScenes }).map((_, i) => {
 					const n = i + 1;
 					const has = Boolean(gen.getSceneConfig(n).generatedPrompt);
 					return (
@@ -28,7 +27,7 @@ export default function TimelineSection({
 										: "border-leaf/15 text-stone2 bg-bark/20 hover:border-leaf/35 hover:bg-moss/10"
 							}`}
 						>
-							S{n} ({i * SEC_PER_SCENE}s)
+							S{n} ({i * gen.secPerScene}s)
 						</button>
 					);
 				})}
@@ -36,4 +35,3 @@ export default function TimelineSection({
 		</section>
 	);
 }
-

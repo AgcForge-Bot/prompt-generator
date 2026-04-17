@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { OPTIONS, RANDOM_GROUP_FIELDS, SCENE_TYPES, TOD_DATA, TOTAL_SCENES } from "./constants";
+import { OPTIONS, RANDOM_GROUP_FIELDS, SCENE_TYPES, TOD_DATA } from "./constants";
 import { buildPrompt } from "./promptBuilder";
 import type { RandomGroupKey, RelaxingMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, TodKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
@@ -27,7 +27,14 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 
 	const [activeTab, setActiveTab] = useState<TabKey>("nature");
 	const [timeOfDay, setTimeOfDay] = useState<TodKey>("morning");
+	const [totalMinutes, setTotalMinutes] = useState(2);
+	const [secPerScene, setSecPerScene] = useState(10);
 	const [currentScene, setCurrentScene] = useState(1);
+
+	const totalScenes = Math.max(
+		2,
+		Math.floor((totalMinutes * 60) / Math.max(1, secPerScene)),
+	);
 	const [sceneTypes, setSceneTypes] = useState<Record<number, SceneTypeKey>>(
 		() => getDefaultTypes(),
 	);
@@ -67,7 +74,14 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	function generatePromptFor(sceneNum: number) {
 		const sceneType = sceneTypes[sceneNum] ?? "mountain";
 		const config = getSceneConfig(sceneNum);
-		const prompt = buildPrompt({ sceneNum, sceneType, timeOfDay, config });
+		const prompt = buildPrompt({
+			sceneNum,
+			totalScenes,
+			secPerScene,
+			sceneType,
+			timeOfDay,
+			config,
+		});
 		setPromptOutput(prompt);
 		updateSceneConfig(sceneNum, { generatedPrompt: prompt });
 	}
@@ -78,7 +92,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	}
 
 	function nextScene() {
-		const next = currentScene < TOTAL_SCENES ? currentScene + 1 : 1;
+		const next = currentScene < totalScenes ? currentScene + 1 : 1;
 		setCurrentScene(next);
 		setTimeout(() => generatePromptFor(next), 50);
 	}
@@ -92,10 +106,17 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	function generateAll() {
 		const prompts: string[] = [];
 		const updated: Record<number, SceneConfig> = { ...sceneConfigs };
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = sceneTypes[s] ?? "mountain";
 			const config = getSceneConfig(s);
-			const prompt = buildPrompt({ sceneNum: s, sceneType, timeOfDay, config });
+			const prompt = buildPrompt({
+				sceneNum: s,
+				totalScenes,
+				secPerScene,
+				sceneType,
+				timeOfDay,
+				config,
+			});
 			prompts.push(prompt);
 			updated[s] = { ...config, generatedPrompt: prompt };
 		}
@@ -103,7 +124,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		setAllPrompts(prompts);
 		setShowAllPrompts(true);
 		setPromptOutput(prompts[currentScene - 1] ?? "");
-		showToast(`✓ ${TOTAL_SCENES} prompt berhasil di-generate!`);
+		showToast(`✓ ${totalScenes} prompt berhasil di-generate!`);
 	}
 
 	function copyAll() {
@@ -112,7 +133,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 			return;
 		}
 		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
-		showToast(`📋 Semua ${TOTAL_SCENES} prompt tersalin!`);
+		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
 	}
 
 	function randomizeCurrentScene() {
@@ -186,7 +207,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 			OPTIONS as unknown as Record<keyof SceneConfig, readonly string[]>;
 		const nextTypes: Record<number, SceneTypeKey> = {};
 		const nextConfigs: Record<number, SceneConfig> = {};
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			nextTypes[s] = Math.random() > 0.4 ? rnd(keys) : keys[s % keys.length];
 			const base = getDefaultSceneConfig();
 			const updates: Partial<SceneConfig> = {};
@@ -203,8 +224,26 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		}
 		setSceneTypes(nextTypes);
 		setSceneConfigs(nextConfigs);
-		showToast("🎰 Semua 12 scene di-randomize!");
+		showToast(`🎰 Semua ${totalScenes} scene di-randomize!`);
 		setTimeout(() => generateAll(), 50);
+	}
+
+	function onDurationChange(min: number, sec: number) {
+		const safeMin = Math.max(1, Math.floor(min));
+		const safeSec = Math.max(1, Math.floor(sec));
+		const nextTotalScenes = Math.max(
+			2,
+			Math.floor((safeMin * 60) / Math.max(1, safeSec)),
+		);
+
+		setTotalMinutes(safeMin);
+		setSecPerScene(safeSec);
+		setCurrentScene(1);
+		setSceneTypes(getDefaultTypes());
+		setAllPrompts([]);
+		setShowAllPrompts(false);
+		setTimeout(() => generatePromptFor(1), 50);
+		showToast(`⏱ Durasi update: ${safeMin} menit · ${safeSec}s/scene = ${nextTotalScenes} scene`);
 	}
 
 	function setTimeOfDaySafe(next: TodKey) {
@@ -213,8 +252,9 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	}
 
 	function setCurrentSceneSafe(sceneNum: number) {
-		setCurrentScene(sceneNum);
-		setTimeout(() => generatePromptFor(sceneNum), 50);
+		const safe = Math.min(totalScenes, Math.max(1, sceneNum));
+		setCurrentScene(safe);
+		setTimeout(() => generatePromptFor(safe), 50);
 	}
 
 	function setSceneTypeForScene(sceneNum: number, next: SceneTypeKey) {
@@ -224,12 +264,17 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 
 	const scType = sceneTypes[currentScene] ?? "mountain";
 	const scTypeLabel = getSceneTypeLabel(scType);
-	const progressPct = Math.round((currentScene / TOTAL_SCENES) * 100);
+	const progressPct = Math.round((currentScene / totalScenes) * 100);
 
 	return {
 		tabs,
 		activeTab,
 		setActiveTab,
+
+		totalMinutes,
+		secPerScene,
+		totalScenes,
+		onDurationChange,
 
 		timeOfDay,
 		setTimeOfDaySafe,

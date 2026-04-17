@@ -1,21 +1,23 @@
-import { SEC_PER_SCENE, SCENE_TYPES, TOD_DATA, TOTAL_SCENES } from "./constants";
+import { SCENE_TYPES, TOD_DATA } from "./constants";
 import type { SceneConfig, SceneTypeKey, TodKey } from "./types";
 import { mmss } from "./utils";
 
 export function buildPrompt(args: {
 	sceneNum: number;
+	totalScenes: number;
+	secPerScene: number;
 	sceneType: SceneTypeKey;
 	timeOfDay: TodKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, sceneType, timeOfDay, config } = args;
-	const start = (sceneNum - 1) * SEC_PER_SCENE;
-	const end = start + SEC_PER_SCENE;
+	const { sceneNum, totalScenes, secPerScene, sceneType, timeOfDay, config } = args;
+	const start = (sceneNum - 1) * secPerScene;
+	const end = start + secPerScene;
 	const tod = TOD_DATA[timeOfDay];
 	const typeLabel = SCENE_TYPES[sceneType] ?? sceneType;
 
 	return `═══════════════════════════════════════════════════════════════
-[SCENE ${sceneNum}/${TOTAL_SCENES} | ${mmss(start)} – ${mmss(end)} | ${typeLabel}]
+[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ${typeLabel}]
 ═══════════════════════════════════════════════════════════════
 
 THEME: Relaxing Music Video Clip — European Nature Drone Cinematic
@@ -82,4 +84,3 @@ DELIVERABLE:
 Generate a single cohesive AI video prompt for this scene in vivid detail, cinematic language, and relaxing tone.
 `;
 }
-

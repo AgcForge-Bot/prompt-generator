@@ -64,6 +64,11 @@ export type SceneConfig = {
 export type AsmrTimelapseGenerator = {
 	tabs: { key: TabKey; label: string }[];
 
+	totalMinutes: number;
+	secPerScene: number;
+	totalScenes: number;
+	onDurationChange: (min: number, sec: number) => void;
+
 	projectType: ProjectTypeKey;
 	setProjectTypeSafe: (next: ProjectTypeKey) => void;
 

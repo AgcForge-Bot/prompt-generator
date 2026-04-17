@@ -1,6 +1,5 @@
 "use client";
 
-import { SEC_PER_SCENE, TOTAL_SCENES } from "../constants";
 import type { RelaxingMusicVideoGenerator } from "../types";
 
 export default function HeaderSection({
@@ -17,12 +16,13 @@ export default function HeaderSection({
 				</div>
 				<div className="flex flex-wrap gap-2 sm:justify-end">
 					<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
-						Durasi: <span className="text-leaf2 font-bold">2 menit</span>
+						Durasi:{" "}
+						<span className="text-leaf2 font-bold">{gen.totalMinutes} menit</span>
 					</div>
 					<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
 						Scene:{" "}
 						<span className="text-leaf2 font-bold">
-							{TOTAL_SCENES} × {SEC_PER_SCENE} detik
+							{gen.totalScenes} × {gen.secPerScene} detik
 						</span>
 					</div>
 					<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
@@ -34,4 +34,3 @@ export default function HeaderSection({
 		</section>
 	);
 }
-

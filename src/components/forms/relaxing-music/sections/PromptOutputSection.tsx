@@ -1,6 +1,6 @@
 "use client";
 
-import { SCENE_TYPES, TOTAL_SCENES } from "../constants";
+import { SCENE_TYPES } from "../constants";
 import type { RelaxingMusicVideoGenerator } from "../types";
 
 export default function PromptOutputSection({
@@ -13,7 +13,7 @@ export default function PromptOutputSection({
 			<div className="section-label">📝 Generated Prompt</div>
 			<div className="flex items-center gap-2 mb-3">
 				<span className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/15 bg-bark/25 text-stone2">
-					Scene {gen.currentScene} / {TOTAL_SCENES}
+					Scene {gen.currentScene} / {gen.totalScenes}
 				</span>
 				<span className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/15 bg-moss/15 text-leaf2">
 					{SCENE_TYPES[gen.scType]}
@@ -37,4 +37,3 @@ export default function PromptOutputSection({
 		</section>
 	);
 }
-

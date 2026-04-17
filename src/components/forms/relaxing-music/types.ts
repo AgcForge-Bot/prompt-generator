@@ -63,6 +63,11 @@ export type RelaxingMusicVideoGenerator = {
 	activeTab: TabKey;
 	setActiveTab: (tab: TabKey) => void;
 
+	totalMinutes: number;
+	secPerScene: number;
+	totalScenes: number;
+	onDurationChange: (min: number, sec: number) => void;
+
 	timeOfDay: TodKey;
 	setTimeOfDaySafe: (next: TodKey) => void;
 
@@ -99,4 +104,3 @@ export type RelaxingMusicVideoGenerator = {
 
 	toast: { msg: string; show: boolean };
 };
-

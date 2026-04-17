@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { DNA_OPTIONS, OPTIONS, SCENE_TYPES, TOTAL_SCENES } from "./constants";
+import { DNA_OPTIONS, OPTIONS, SCENE_TYPES } from "./constants";
 import { buildPrompt } from "./promptBuilder";
 import type { AsmrTimelapseGenerator, DnaState, ProjectTypeKey, RandomGroupKey, SceneConfig, SceneTypeKey, TabKey, TodKey } from "./types";
 import { getDefaultSceneConfig, getDefaultSceneTypes, getSceneTypeLabel, rnd } from "./utils";
@@ -26,13 +26,20 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		"male",
 	);
 	const [timeOfDay, setTimeOfDay] = useState<TodKey>("noon");
+	const [totalMinutes, setTotalMinutes] = useState(3);
+	const [secPerScene, setSecPerScene] = useState(15);
 	const [dnaLocked, setDnaLocked] = useState(false);
 	const [dnaPreviewOpen, setDnaPreviewOpen] = useState(false);
 	const [currentScene, setCurrentScene] = useState(1);
 	const [activeTab, setActiveTab] = useState<TabKey>("timelapse");
 
+	const totalScenes = Math.max(
+		2,
+		Math.floor((totalMinutes * 60) / Math.max(1, secPerScene)),
+	);
+
 	const [sceneTypes, setSceneTypes] = useState<Record<number, SceneTypeKey>>(
-		() => getDefaultSceneTypes("restoration"),
+		() => getDefaultSceneTypes("restoration", totalScenes),
 	);
 
 	const [dna, setDna] = useState<DnaState>(() => ({
@@ -78,10 +85,16 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		}));
 	}
 
-	function generatePromptFor(sceneNum: number, ptOverride?: ProjectTypeKey) {
+	function generatePromptFor(
+		sceneNum: number,
+		ptOverride?: ProjectTypeKey,
+		durOverride?: { totalScenes: number; secPerScene: number },
+	) {
+		const effectiveTotalScenes = durOverride?.totalScenes ?? totalScenes;
+		const effectiveSecPerScene = durOverride?.secPerScene ?? secPerScene;
 		if (!dnaLocked) {
 			setPromptOutput(
-				'⚠️ Kunci Project DNA terlebih dahulu!\n\nKlik tombol "🔒 Kunci Project DNA" untuk memastikan semua 12 scene menggunakan proyek yang sama dan sinkron.',
+				`⚠️ Kunci Project DNA terlebih dahulu!\n\nKlik tombol "🔒 Kunci Project DNA" untuk memastikan semua ${effectiveTotalScenes} scene menggunakan proyek yang sama dan sinkron.`,
 			);
 			return;
 		}
@@ -94,6 +107,8 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		const config = getSceneConfig(sceneNum);
 		const prompt = buildPrompt({
 			sceneNum,
+			totalScenes: effectiveTotalScenes,
+			secPerScene: effectiveSecPerScene,
 			sceneType,
 			projectType: projectType2,
 			narratorGender,
@@ -112,7 +127,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 
 	function nextScene() {
 		if (!dnaLocked) return;
-		const next = currentScene < TOTAL_SCENES ? currentScene + 1 : 1;
+		const next = currentScene < totalScenes ? currentScene + 1 : 1;
 		setCurrentScene(next);
 		setTimeout(() => generatePromptFor(next), 50);
 	}
@@ -132,10 +147,12 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		const updated: Record<number, SceneConfig> = { ...sceneConfigs };
 		const fallbackSceneType =
 			projectType === "restoration" ? "assess" : "groundwork";
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = (sceneTypes[s] ?? fallbackSceneType) as SceneTypeKey;
 			const prompt = buildPrompt({
 				sceneNum: s,
+				totalScenes,
+				secPerScene,
 				sceneType,
 				projectType,
 				narratorGender,
@@ -150,7 +167,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		setAllPrompts(prompts);
 		setShowAllPrompts(true);
 		setPromptOutput(prompts[currentScene - 1] ?? "");
-		showToast(`✓ ${TOTAL_SCENES} prompt berhasil di-generate!`);
+		showToast(`✓ ${totalScenes} prompt berhasil di-generate!`);
 	}
 
 	function copyAll() {
@@ -159,7 +176,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			return;
 		}
 		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
-		showToast(`📋 Semua ${TOTAL_SCENES} prompt tersalin!`);
+		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
 	}
 
 	function randomizeDNA() {
@@ -178,7 +195,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	function lockDNA() {
 		setDnaLocked(true);
 		setDnaPreviewOpen(true);
-		showToast("🔒 Project DNA terkunci! Semua 12 scene akan sinkron.");
+		showToast(`🔒 Project DNA terkunci! Semua ${totalScenes} scene akan sinkron.`);
 		setTimeout(() => generatePromptFor(currentScene), 50);
 	}
 
@@ -243,7 +260,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			return;
 		}
 		const nextConfigs: Record<number, SceneConfig> = {};
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			const base = getDefaultSceneConfig();
 			const updates: Partial<SceneConfig> = {};
 			if (randomGroups.timelapse) {
@@ -287,13 +304,44 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			nextConfigs[s] = { ...base, ...updates };
 		}
 		setSceneConfigs(nextConfigs);
-		showToast("🎰 Semua 12 scene di-randomize dengan DNA yang sama!");
+		showToast(`🎰 Semua ${totalScenes} scene di-randomize dengan DNA yang sama!`);
 		setTimeout(() => generateAll(), 50);
+	}
+
+	function onDurationChange(min: number, sec: number) {
+		const safeMin = Math.max(1, Math.floor(min));
+		const safeSec = Math.max(1, Math.floor(sec));
+		const nextTotalScenes = Math.max(
+			2,
+			Math.floor((safeMin * 60) / Math.max(1, safeSec)),
+		);
+
+		setTotalMinutes(safeMin);
+		setSecPerScene(safeSec);
+		setCurrentScene(1);
+		setSceneTypes(getDefaultSceneTypes(projectType, nextTotalScenes));
+		setAllPrompts([]);
+		setShowAllPrompts(false);
+
+		if (dnaLocked) {
+			setTimeout(
+				() =>
+					generatePromptFor(1, undefined, {
+						totalScenes: nextTotalScenes,
+						secPerScene: safeSec,
+					}),
+				50,
+			);
+		} else {
+			setPromptOutput(
+				"🔒 Kunci Project DNA terlebih dahulu, lalu klik ⚡ Generate Prompt.",
+			);
+		}
 	}
 
 	function setProjectTypeSafe(next: ProjectTypeKey) {
 		setProjectType(next);
-		setSceneTypes(getDefaultSceneTypes(next));
+		setSceneTypes(getDefaultSceneTypes(next, totalScenes));
 		if (dnaLocked) setTimeout(() => generatePromptFor(currentScene, next), 50);
 	}
 
@@ -308,8 +356,9 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	}
 
 	function setCurrentSceneSafe(sceneNum: number) {
-		setCurrentScene(sceneNum);
-		if (dnaLocked) setTimeout(() => generatePromptFor(sceneNum), 50);
+		const safe = Math.min(totalScenes, Math.max(1, sceneNum));
+		setCurrentScene(safe);
+		if (dnaLocked) setTimeout(() => generatePromptFor(safe), 50);
 	}
 
 	function setSceneTypeForScene(sceneNum: number, next: SceneTypeKey) {
@@ -320,10 +369,15 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	const fallbackSceneType = projectType === "restoration" ? "assess" : "groundwork";
 	const scType = (sceneTypes[currentScene] ?? fallbackSceneType) as SceneTypeKey;
 	const scTypeLabel = getSceneTypeLabel(projectType, scType);
-	const progressPct = Math.round((currentScene / TOTAL_SCENES) * 100);
+	const progressPct = Math.round((currentScene / totalScenes) * 100);
 
 	return {
 		tabs,
+
+		totalMinutes,
+		secPerScene,
+		totalScenes,
+		onDurationChange,
 
 		projectType,
 		setProjectTypeSafe,

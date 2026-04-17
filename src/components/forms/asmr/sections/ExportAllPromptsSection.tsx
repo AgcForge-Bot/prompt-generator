@@ -1,6 +1,6 @@
 "use client";
 
-import { SCENE_TYPES, SEC_PER_SCENE, TOTAL_SCENES } from "../constants";
+import { SCENE_TYPES } from "../constants";
 import type { AsmrTimelapseGenerator, SceneTypeKey } from "../types";
 import { mmss } from "../utils";
 
@@ -14,7 +14,7 @@ export default function ExportAllPromptsSection({
 			<div className="section-label">📦 Export Semua Prompt</div>
 			<div className="flex flex-wrap gap-2">
 				<button type="button" className="btn-primary" onClick={gen.generateAll}>
-					🎬 Generate Semua 12 Prompt
+					🎬 Generate Semua {gen.totalScenes} Prompt
 				</button>
 				<button type="button" className="btn-outline" onClick={gen.copyAll}>
 					📋 Copy Semua
@@ -43,8 +43,8 @@ export default function ExportAllPromptsSection({
 						return (
 							<div key={s} className="rounded-lg border border-leaf/15 bg-bark/20 p-3">
 								<div className="font-mono text-[10px] text-stone2 mb-2">
-									◆ Scene {s}/{TOTAL_SCENES} · {mmss(i * SEC_PER_SCENE)}–
-									{mmss((i + 1) * SEC_PER_SCENE)} ·{" "}
+									◆ Scene {s}/{gen.totalScenes} · {mmss(i * gen.secPerScene)}–
+									{mmss((i + 1) * gen.secPerScene)} ·{" "}
 									<span className="text-leaf2">[{label}]</span>
 								</div>
 								<pre className="font-mono text-[10px] text-stone2 whitespace-pre-wrap leading-relaxed">
@@ -58,4 +58,3 @@ export default function ExportAllPromptsSection({
 		</section>
 	);
 }
-

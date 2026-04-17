@@ -2,6 +2,7 @@
 
 import useAsmrTimelapseGenerator from "./asmr/useAsmrTimelapseGenerator";
 import ExportAllPromptsSection from "./asmr/sections/ExportAllPromptsSection";
+import DurationEngineSection from "./asmr/sections/DurationEngineSection";
 import HeaderSection from "./asmr/sections/HeaderSection";
 import ProgressSection from "./asmr/sections/ProgressSection";
 import ProjectDnaSection from "./asmr/sections/ProjectDnaSection";
@@ -19,6 +20,7 @@ export default function AsmrTimelapseConstructorForm() {
 	return (
 		<div>
 			<HeaderSection gen={gen} />
+			<DurationEngineSection gen={gen} />
 			<ProjectDnaSection gen={gen} />
 			<ProgressSection gen={gen} />
 			<TimeOfDaySection gen={gen} />
@@ -42,4 +44,3 @@ export default function AsmrTimelapseConstructorForm() {
 		</div>
 	);
 }
-

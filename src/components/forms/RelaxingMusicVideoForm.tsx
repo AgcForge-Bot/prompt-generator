@@ -2,6 +2,7 @@
 
 import useRelaxingMusicVideoGenerator from "./relaxing-music/useRelaxingMusicVideoGenerator";
 import ExportAllPromptsSection from "./relaxing-music/sections/ExportAllPromptsSection";
+import DurationEngineSection from "./relaxing-music/sections/DurationEngineSection";
 import HeaderSection from "./relaxing-music/sections/HeaderSection";
 import ProgressSection from "./relaxing-music/sections/ProgressSection";
 import PromptOutputSection from "./relaxing-music/sections/PromptOutputSection";
@@ -17,6 +18,7 @@ export default function RelaxingMusicVideoForm() {
 	return (
 		<div>
 			<HeaderSection gen={gen} />
+			<DurationEngineSection gen={gen} />
 			<ProgressSection gen={gen} />
 			<TimeOfDaySection gen={gen} />
 			<TimelineSection gen={gen} />

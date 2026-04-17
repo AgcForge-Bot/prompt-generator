@@ -1,6 +1,5 @@
 "use client";
 
-import { TOTAL_SCENES } from "../constants";
 import type { AsmrTimelapseGenerator } from "../types";
 
 export default function ProgressSection({ gen }: { gen: AsmrTimelapseGenerator }) {
@@ -15,10 +14,9 @@ export default function ProgressSection({ gen }: { gen: AsmrTimelapseGenerator }
 					/>
 				</div>
 				<div className="font-mono text-[10px] text-leaf2 font-bold">
-					{gen.currentScene}/{TOTAL_SCENES}
+					{gen.currentScene}/{gen.totalScenes}
 				</div>
 			</div>
 		</section>
 	);
 }
-

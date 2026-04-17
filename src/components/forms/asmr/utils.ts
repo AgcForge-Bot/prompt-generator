@@ -1,4 +1,4 @@
-import { OPTIONS, SCENE_ORDER_CONS, SCENE_ORDER_REST, SCENE_TYPES, TOTAL_SCENES } from "./constants";
+import { OPTIONS, SCENE_ORDER_CONS, SCENE_ORDER_REST, SCENE_TYPES } from "./constants";
 import type { ProjectTypeKey, SceneConfig, SceneTypeKey } from "./types";
 
 export function rnd<T>(arr: readonly T[]): T {
@@ -13,12 +13,13 @@ export function mmss(seconds: number) {
 
 export function getDefaultSceneTypes(
 	projectType: ProjectTypeKey,
+	totalScenes: number,
 ): Record<number, SceneTypeKey> {
 	const order =
 		projectType === "restoration" ? SCENE_ORDER_REST : SCENE_ORDER_CONS;
 	const map: Record<number, SceneTypeKey> = {};
-	for (let i = 1; i <= TOTAL_SCENES; i++) {
-		map[i] = order[i - 1] as SceneTypeKey;
+	for (let i = 1; i <= totalScenes; i++) {
+		map[i] = order[(i - 1) % order.length] as SceneTypeKey;
 	}
 	return map;
 }
@@ -76,4 +77,3 @@ export function getSceneTypeLabel(
 		] ?? String(sceneType)
 	);
 }
-
