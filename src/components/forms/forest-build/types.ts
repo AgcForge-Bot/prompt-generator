@@ -159,6 +159,8 @@ export interface AnalyzeImageRequest {
 	url?: string
 	scope: 'global' | 'scene'
 	sceneNum?: number
+	model: ModelType
+	modelId?: string
 }
 
 export interface AnalyzeImageResponse {

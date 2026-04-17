@@ -1,193 +1,235 @@
-# ASMR Survival Build — AI Video Prompt Generator
+# Prompt Video Generator
 
-> Generate cinematic AI video prompts untuk konten **ASMR Primitive Survival Build**.
-> Story-driven, documentary-style, Anti-CGI, optimized untuk **Grok & VEO**.
+## Struktur Folder & File
 
----
+Struktur di bawah ini dibuat untuk memudahkan maintenance. Folder besar/hasil generate tidak dicantumkan agar README tetap terbaca:
 
-## ✨ Fitur Utama
+- Tidak ditampilkan: `node_modules/`, `.next/`, `.git/`, `.pnpm-store/`, `dist/`, `build/`, `out/`, `coverage/`
 
-- 🧬 **Project DNA System** — Lokasi, model, shelter, material dikunci konsisten di semua scene
-- 🎬 **Story Arc Engine** — Hook → Preparation → Journey → Build → Living → Closing Credits
-- ⭐ **Emotional Injection** — Auto & manual placement: Animal, Civilian, Wonder, Rescue, Cook, Fire, Reflect
-- 🚫 **Anti-CGI Rules** — Instruksi eksplisit realism: handheld, 24fps, organic motion, no CGI
-- ⏱️ **Duration Engine** — 8–20 menit, pilih 8 atau 10 detik per scene, total scene auto-dihitung
-- 📸 **Claude Vision AI** — Upload/URL gambar → AI analisa → deskripsi sinematik masuk ke prompt
-- 🌤️ **Time of Day** — Pagi / Siang / Sore / Malam per scene
-- 🎥 **Multi-camera Mix** — Depan / Sisi / Belakang / Drone aerial per scene
-
----
-
-## 🚀 Setup Development (Localhost)
-
-### 1. Clone / Download project ini
-
-```bash
-cd asmr-generator
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Setup environment variable
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local`:
-
-```env
-ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxxxxxxxxxx
-```
-
-> **Dapatkan API Key:** https://console.anthropic.com/
-
-### 4. Jalankan development server
-
-```bash
-npm run dev
-```
-
-Buka: **http://localhost:3000**
-
----
-
-## ☁️ Deploy ke Vercel
-
-### Cara 1 — Via Vercel CLI
-
-```bash
-npm install -g vercel
-vercel
-```
-
-### Cara 2 — Via GitHub (Recommended)
-
-1. Push project ke GitHub repository
-2. Buka [vercel.com](https://vercel.com) → **New Project** → Import dari GitHub
-3. Vercel otomatis detect Next.js
-4. **PENTING:** Tambahkan Environment Variable di Vercel Dashboard:
-   - Key: `ANTHROPIC_API_KEY`
-   - Value: `sk-ant-api03-xxxxxxxxxxxx`
-5. Klik **Deploy**
-
-### Vercel Environment Variables
-
-Pergi ke: **Vercel Dashboard → Project → Settings → Environment Variables**
-
-| Variable            | Value              |
-| ------------------- | ------------------ |
-| `ANTHROPIC_API_KEY` | `sk-ant-api03-...` |
-
----
-
-## 📁 Struktur Project
-
-```
-asmr-generator/
-├── app/
-│   ├── api/
-│   │   └── analyze-image/
-│   │       └── route.ts        ← Claude Vision API (server-side, key aman)
-│   ├── globals.css             ← Tailwind + custom styles
-│   ├── layout.tsx              ← Root layout
-│   └── page.tsx                ← Main generator UI
-├── lib/
-│   ├── data.ts                 ← All constants, options, DNA defaults
-│   ├── promptBuilder.ts        ← Prompt generation engine
-│   └── sceneGenerator.ts       ← Scene list + phase builder
-├── types/
-│   └── index.ts                ← TypeScript types
-├── .env.example                ← Template env vars
-├── next.config.js
-├── tailwind.config.js
+```text
+prompt-video-generator/
+├── .editorconfig
+├── .gitignore
+├── AGENTS.md
+├── CLAUDE.md
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── postcss.config.mjs
 ├── tsconfig.json
-└── vercel.json
+├── public/
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── example/
+│   ├── asmr_timelapse_prompt_generator_v3.html
+│   ├── fastfurious_carparty_prompt_generator.html
+│   ├── relaxing_music_video_prompt_generator_v1.html
+│   └── war_cinematic_prompt_generator.html
+├── .trae/
+│   └── documents/
+│       ├── PAGE-Design-Home-Radio-4-Form.md
+│       ├── PRD-Home-Radio-4-Form.md
+│       └── TECH-Architecture-Home-Radio-4-Form.md
+└── src/
+    ├── app/
+    │   ├── favicon.ico
+    │   ├── globals.css
+    │   ├── layout.tsx
+    │   ├── page.tsx
+    │   └── api/
+    │       ├── analyze-image/
+    │       │   └── route.ts
+    │       ├── analyze-product/
+    │       │   └── route.ts
+    │       └── transform-description/
+    │           └── route.ts
+    ├── types/
+    │   └── index.d.ts
+    ├── lib/
+    │   ├── data.ts
+    │   ├── prompt-builder.ts
+    │   └── scene-generator.ts
+    └── components/
+        ├── OldHomeBackup.tsx
+        └── forms/
+            ├── AsmrTimelapseConstructorForm.tsx
+            ├── CarMusicVideoClipForm.tsx
+            ├── ForestBuildPrimitiveCraftForm.tsx
+            ├── RelaxingMusicVideoForm.tsx
+            ├── WarMusicVideoClipForm.tsx
+            ├── asmr/
+            │   ├── constants.ts
+            │   ├── promptBuilder.ts
+            │   ├── types.ts
+            │   ├── useAsmrTimelapseGenerator.ts
+            │   ├── utils.ts
+            │   └── sections/
+            │       ├── DurationEngineSection.tsx
+            │       ├── ExportAllPromptsSection.tsx
+            │       ├── HeaderSection.tsx
+            │       ├── ProgressSection.tsx
+            │       ├── ProjectDnaSection.tsx
+            │       ├── ProjectTypeSection.tsx
+            │       ├── PromptOutputSection.tsx
+            │       ├── RandomGeneratorSection.tsx
+            │       ├── SceneConfigSection.tsx
+            │       ├── ScenePhaseSection.tsx
+            │       ├── TimeOfDaySection.tsx
+            │       ├── TimelineSection.tsx
+            │       └── tabs/
+            │           ├── AsmrTab.tsx
+            │           ├── CameraTab.tsx
+            │           ├── EquipmentTab.tsx
+            │           ├── LightingTab.tsx
+            │           ├── NarrationTab.tsx
+            │           └── TimelapseTab.tsx
+            ├── car-music/
+            │   ├── constants.ts
+            │   ├── promptBuilder.ts
+            │   ├── types.ts
+            │   ├── useCarMusicVideoGenerator.ts
+            │   ├── utils.ts
+            │   └── sections/
+            │       ├── ExportAllPromptsSection.tsx
+            │       ├── HeaderSection.tsx
+            │       ├── PromptOutputSection.tsx
+            │       ├── RandomGeneratorSection.tsx
+            │       ├── SceneConfigSection.tsx
+            │       ├── SceneTypeSection.tsx
+            │       ├── TimelineSection.tsx
+            │       └── tabs/
+            │           ├── CameraTab.tsx
+            │           ├── CarsTab.tsx
+            │           ├── CrowdTab.tsx
+            │           ├── DjTab.tsx
+            │           ├── LightingTab.tsx
+            │           ├── LocationTab.tsx
+            │           └── PropsTab.tsx
+            ├── relaxing-music/
+            │   ├── constants.ts
+            │   ├── promptBuilder.ts
+            │   ├── types.ts
+            │   ├── useRelaxingMusicVideoGenerator.ts
+            │   ├── utils.ts
+            │   └── sections/
+            │       ├── DurationEngineSection.tsx
+            │       ├── ExportAllPromptsSection.tsx
+            │       ├── HeaderSection.tsx
+            │       ├── ProgressSection.tsx
+            │       ├── PromptOutputSection.tsx
+            │       ├── RandomGeneratorSection.tsx
+            │       ├── SceneConfigSection.tsx
+            │       ├── SceneTypeSection.tsx
+            │       ├── TimeOfDaySection.tsx
+            │       ├── TimelineSection.tsx
+            │       └── tabs/
+            │           ├── AnimalsTab.tsx
+            │           ├── DroneTab.tsx
+            │           ├── ElementsTab.tsx
+            │           ├── LightingTab.tsx
+            │           ├── LocationTab.tsx
+            │           ├── NatureTab.tsx
+            │           ├── StyleTab.tsx
+            │           └── VisualsTab.tsx
+            ├── war-music/
+            │   ├── constants.ts
+            │   ├── promptBuilder.ts
+            │   ├── types.ts
+            │   ├── useWarMusicVideoGenerator.ts
+            │   ├── utils.ts
+            │   └── sections/
+            │       ├── ExportAllPromptsSection.tsx
+            │       ├── HeaderSection.tsx
+            │       ├── PromptOutputSection.tsx
+            │       ├── RandomGeneratorSection.tsx
+            │       ├── SceneConfigSection.tsx
+            │       ├── SceneTypeSection.tsx
+            │       ├── TimelineSection.tsx
+            │       └── tabs/
+            │           ├── CameraTab.tsx
+            │           ├── CivilianTab.tsx
+            │           ├── DjTab.tsx
+            │           ├── LightingTab.tsx
+            │           ├── LocationTab.tsx
+            │           ├── SoldiersTab.tsx
+            │           ├── VehiclesTab.tsx
+            │           └── VfxTab.tsx
+            ├── forest-build/
+            │   ├── DurationEngineSection.tsx
+            │   ├── ExportAllPromptsSection.tsx
+            │   ├── Field.tsx
+            │   ├── ImageReferenceSection.tsx
+            │   ├── PhaseNavigationSection.tsx
+            │   ├── ProjectDnaSection.tsx
+            │   ├── PromptOutputSection.tsx
+            │   ├── SceneConfigSection.tsx
+            │   ├── SceneEditorSection.tsx
+            │   ├── Sel.tsx
+            │   ├── TimeOfDaySection.tsx
+            │   ├── constants.ts
+            │   ├── promptBuilder.ts
+            │   ├── sceneGenerator.ts
+            │   ├── types.ts
+            │   ├── useForestBuildGenerator.ts
+            │   ├── useForestBuildImageState.ts
+            │   ├── useForestBuildProjectState.ts
+            │   ├── useForestBuildPromptState.ts
+            │   ├── useToast.ts
+            │   └── utils.ts
+            └── product-promo-video/
+                ├── ProductPromoVideoForm.tsx
+                ├── constants.ts
+                ├── promptBuilder.ts
+                ├── types.ts
+                ├── useProductPromoGenerator.ts
+                ├── useProductPromoImageState.ts
+                └── sections/
+                    ├── CategoryAndModelSections.tsx
+                    ├── ConfigSections.tsx
+                    ├── ProductInfoSection.tsx
+                    └── SceneOutputSection.tsx
 ```
 
----
+## Entry Point Penting
 
-## 🎬 Cara Pakai
+- Home (selector semua tools): [page.tsx](file:///d:/laragon/www/tools/Prompt-Video-Generator/prompt-video-generator/src/app/page.tsx)
+- Global styling + utility class untuk form: [globals.css](file:///d:/laragon/www/tools/Prompt-Video-Generator/prompt-video-generator/src/app/globals.css)
+- API routes (App Router):
+  - Vision analyze image: [route.ts](file:///d:/laragon/www/tools/Prompt-Video-Generator/prompt-video-generator/src/app/api/analyze-image/route.ts)
+  - Analyze product: [route.ts](file:///d:/laragon/www/tools/Prompt-Video-Generator/prompt-video-generator/src/app/api/analyze-product/route.ts)
+  - Transform description: [route.ts](file:///d:/laragon/www/tools/Prompt-Video-Generator/prompt-video-generator/src/app/api/transform-description/route.ts)
 
-### Step 1 — Duration Engine
+## Pola Arsitektur Form (konsisten)
 
-Pilih total durasi (8–20 menit) dan durasi per-scene (8 atau 10 detik). Jumlah scene dihitung otomatis.
+Semua generator form mengikuti pola:
 
-### Step 2 — Project DNA
+- `src/components/forms/<NamaForm>.tsx` = wrapper (render sections + toast)
+- `src/components/forms/<tool-folder>/` =
+  - `constants.ts` / `types.ts` / `utils.ts` / `promptBuilder.ts`
+  - `use<...>Generator.ts` (state + handler)
+  - `sections/` + `sections/tabs/` (UI per bagian)
 
-Isi dan **kunci** DNA proyek:
+## Ringkasan Fungsi Folder
 
-- Judul video (story hook)
-- Model gender (Laki-laki / Perempuan) — dikunci konsisten
-- Mode perjalanan (Jalan kaki / Camper Van / Snowfox / dll)
-- Setting lokasi & iklim
-- Tipe shelter yang dibangun
-- Film style (anti-CGI anchor)
-
-### Step 3 — Image Reference (Optional)
-
-Upload gambar atau paste URL → Claude Vision AI menganalisa → deskripsi masuk otomatis ke prompt.
-
-### Step 4 — Navigasi Scene
-
-Pilih fase dan scene dari Phase Navigator. Tiap scene bisa dikonfigurasi:
-
-- Camera angle, movement, mood
-- Craft activity
-- Sound ASMR
-- Visual atmosphere
-- Emotional injection
-
-### Step 5 — Generate
-
-Klik **⚡ Generate Prompt** untuk scene aktif, atau **🎬 Generate Semua** untuk semua scene sekaligus.
-
----
-
-## 🎯 Story Arc (Urutan Fase)
-
-| Fase              | Emoji | Deskripsi                                        | Porsi |
-| ----------------- | ----- | ------------------------------------------------ | ----- |
-| Opening Hook      | 🎣    | Cuplikan highlight — bikin penonton penasaran    | ~4%   |
-| Preparation       | 🎒    | Mempersiapkan perlengkapan dan bekal             | ~7%   |
-| Journey           | 🚗    | Perjalanan menuju lokasi, mix semua sudut kamera | ~16%  |
-| Arrival & Scout   | 🔍    | Tiba di lokasi, pilih titik membangun            | ~6%   |
-| Build Phase       | 🏗️    | Membangun shelter — fase terpanjang              | ~33%  |
-| Challenges        | ⚡    | Tantangan alam: hujan, badai, medan sulit        | ~8%   |
-| Living & Relaxing | 🔥    | Berburu, memasak, makan, relaxing                | ~18%  |
-| Closing Credits   | 🌅    | Penutup seperti film, credit title               | ~8%   |
-
----
-
-## 🔒 Keamanan API Key
-
-- API Key **hanya ada** di environment variable server (`.env.local` atau Vercel)
-- Claude Vision request diproses di **server-side** (`/api/analyze-image`)
-- API Key **tidak pernah dikirim** ke browser
-- **Aman** untuk deploy ke Vercel sebagai production app
-
----
-
-## 🎬 Compatible Platforms
-
-**Primary:** Grok, VEO
-**Also works:** Kling AI, Runway Gen-3, Pika 2.0, Sora, Luma Dream Machine, Hailuo, Vidu
-
----
-
-## 📝 Anti-CGI Rules (Built-in di setiap prompt)
-
-Setiap prompt yang di-generate otomatis menyertakan:
-
-```
-• NO CGI, NO 3D rendering — photographic realism ONLY
-• Natural camera breathing, organic handheld micro-movement
-• Film grain visible — analogue texture, not digital clean
-• Motion: natural human pace, no superhuman movements
-• Continuity: same person, clothes, location, structure stage
-• No objects with wrong scale — correct real-world size always
-```
+- `src/app/` = Next App Router (Home, layout, CSS global, dan API routes).
+- `src/app/page.tsx` = Home selector (radio card) untuk memilih tool/form.
+- `src/app/api/*/route.ts` = Route handler API (server-side).
+- `src/components/forms/` = Seluruh UI form generator (wrapper + folder tool).
+- `src/components/forms/<tool>/use...Generator.ts` = Sumber state + handler utama tool itu (generate/copy/export/random).
+- `src/components/forms/<tool>/promptBuilder.ts` = Builder string prompt (format output prompt).
+- `src/components/forms/<tool>/constants.ts` = Opsi dropdown, default, scene types, time-of-day, dll.
+- `src/components/forms/<tool>/types.ts` = Tipe data (SceneConfig/DNA/Generator API).
+- `src/components/forms/<tool>/sections/` = Bagian UI yang dipisah agar file pendek (header, timeline, duration engine, output, export).
+- `src/components/forms/<tool>/sections/tabs/` = Tab panel per kategori konfigurasi (mis. kamera/lighting/props).
+- `src/components/forms/forest-build/Field.tsx` & `Sel.tsx` = Komponen input dasar yang dipakai lintas tool.
+- `src/components/forms/forest-build/useToast.ts` = Toast kecil untuk feedback aksi (copy, generate, dsb).
+- `src/lib/` = Helper/engine generik (prompt builder lama, scene generator, data util).
+- `src/types/` = Tipe global/shared untuk request/response API dan app.
+- `public/` = Asset statis (ikon/svgs).
+- `example/` = HTML sumber referensi (aslinya sebelum dikonversi ke React).
+- `.trae/documents/` = Dokumen PRD/arsitektur/desain internal untuk panduan struktur.

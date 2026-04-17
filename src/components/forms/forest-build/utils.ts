@@ -146,7 +146,7 @@ export const DNA_DEFAULTS: ProjectDNA = {
 	characterHair: 'dark brown short hair — slightly overgrown, natural texture, tucked under a worn olive-green beanie hat',
 	characterBuild: 'lean and wiry — low body fat, visible muscle definition from real outdoor work, not gym-built',
 	characterOutfit: 'faded olive-green canvas field jacket over dark grey thermal henley — worn brown leather work gloves, dark cargo pants with dirt and sawdust, lace-up brown leather boots caked with dried mud',
-	characterGear: 'N/A — traveling entirely on foot',
+	characterGear: '65L olive green backpack with external frame — axe strapped to side, rope coiled on top, canvas roll with tools visible',
 	vehicleDesc: 'N/A — traveling entirely on foot',
 	shelterDimension: 'approximately 3m wide × 4m long × 2.2m interior height — compact but fully functional single-room space',
 	shelterExterior: 'entrance is a low doorway with hand-crafted timber door on leather hinges — earth mound visible above, small glass window on south face, ventilation pipe protruding from roof',

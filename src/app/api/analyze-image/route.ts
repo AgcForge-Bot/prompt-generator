@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { OpenRouter } from '@openrouter/sdk'
 import { GoogleGenAI, createPartFromBase64, createPartFromText, createPartFromUri } from '@google/genai'
+import type { AnalyzeImageRequest, AnalyzeImageResponse, ModelType } from '@/components/forms/forest-build/types'
 
 function getClaudeClient() {
 	if (!process.env.ANTHROPIC_API_KEY) return null
