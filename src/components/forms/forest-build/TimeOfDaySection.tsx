@@ -1,6 +1,7 @@
 "use client";
 
-import { TOD_DATA } from "@/lib/data";
+import type { TimeOfDay, SceneConfig } from "./types";
+import { TOD_DATA } from "./utils";
 
 export default function TimeOfDaySection({
 	sc,
@@ -37,7 +38,9 @@ export default function TimeOfDaySection({
 						onClick={() => sc && updateScene(currentScene, { timeOfDay: key })}
 					>
 						<span className="text-2xl">{tod.emoji}</span>
-						<span className="font-playfair text-sm text-cream">{tod.label}</span>
+						<span className="font-playfair text-sm text-cream">
+							{tod.label}
+						</span>
 						<span className="font-mono text-[8px] text-stone2 text-center leading-tight">
 							{tod.range}
 						</span>

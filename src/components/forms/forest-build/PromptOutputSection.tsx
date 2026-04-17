@@ -1,6 +1,7 @@
 "use client";
 
-import { PHASE_META } from "@/lib/data";
+import type { SceneConfig } from "./types";
+import { PHASE_META } from "./utils";
 
 export default function PromptOutputSection({
 	promptOutput,
@@ -71,4 +72,3 @@ export default function PromptOutputSection({
 		</section>
 	);
 }
-

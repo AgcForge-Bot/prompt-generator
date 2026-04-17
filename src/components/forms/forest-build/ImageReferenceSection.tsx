@@ -1,5 +1,6 @@
 "use client";
 
+import type { ModelType, ImageRef } from "./types";
 import Image from "next/image";
 import Field from "@/components/forms/forest-build/Field";
 import Sel from "@/components/forms/forest-build/Sel";
@@ -106,8 +107,8 @@ export default function ImageReferenceSection({
 				/>
 				<div className="text-3xl mb-2">📁</div>
 				<div className="font-mono text-[11px] text-stone2">
-					<span className="text-leaf2 font-bold">Klik atau drag</span>{" "}
-					gambar referensi
+					<span className="text-leaf2 font-bold">Klik atau drag</span> gambar
+					referensi
 					<br />
 					JPG / PNG / WEBP · Multiple files OK
 					<br />
@@ -192,4 +193,3 @@ export default function ImageReferenceSection({
 		</section>
 	);
 }
-

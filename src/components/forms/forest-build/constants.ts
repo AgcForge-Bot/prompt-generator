@@ -1,3 +1,5 @@
+import type { ModelType } from "./types";
+
 export const CAM_ANGLES = [
 	"wide establishing fixed — full environment, subject small in frame, nature dominant",
 	"aerial drone descending — top-down to eye-level reveal, immense scale shown",

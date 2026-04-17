@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ProjectDNA, SceneConfig, ImageRef, ScenePhaseKey, SceneTypeKey, ProjectDNATab } from './types'
 import {
 	CAM_ANGLES,
 	CAM_MOODS,
@@ -9,14 +10,15 @@ import {
 	SOUND_AMBIENTS,
 	SOUND_PRIMARIES,
 } from "@/components/forms/forest-build/constants";
-import { buildScenePrompt } from "@/lib/prompt-builder";
-import { computePhases } from "@/lib/scene-generator";
+import { buildScenePrompt } from "./promptBuilder";
+import { computePhases } from "./sceneGenerator";
 
 export default function useForestBuildPromptState({
 	currentPhase,
 	currentScene,
 	dna,
 	dnaLocked,
+	dnaTab,
 	globalImages,
 	scenes,
 	secPerScene,
@@ -31,6 +33,7 @@ export default function useForestBuildPromptState({
 	currentScene: number;
 	dna: ProjectDNA;
 	dnaLocked: boolean;
+	dnaTab: ProjectDNATab;
 	globalImages: ImageRef[];
 	scenes: SceneConfig[];
 	secPerScene: number;

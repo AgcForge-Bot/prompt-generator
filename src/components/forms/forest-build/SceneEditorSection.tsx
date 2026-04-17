@@ -1,5 +1,6 @@
 "use client";
 
+import type { SceneTypeKey, SceneConfig } from "./types";
 import {
 	CAM_ANGLES,
 	CAM_MOODS,
@@ -19,7 +20,7 @@ import {
 	PHASE_META,
 	SCENE_TYPES_EMOTION,
 	SCENE_TYPES_NORMAL,
-} from "@/lib/data";
+} from "./utils";
 
 export default function SceneEditorSection({
 	sc,
@@ -61,17 +62,16 @@ export default function SceneEditorSection({
 							const s = (currentScene - 1) * secPerScene;
 							const e = s + secPerScene;
 							const f = (n: number) =>
-								Math.floor(n / 60) +
-								":" +
-								(n % 60 < 10 ? "0" : "") +
-								(n % 60);
+								Math.floor(n / 60) + ":" + (n % 60 < 10 ? "0" : "") + (n % 60);
 							return `${f(s)} – ${f(e)}`;
 						})()}
 					</div>
 				</div>
 				<button
 					className={`ml-auto px-3 py-1.5 rounded-full font-mono text-[9px] font-bold border transition-all ${sc.isEmotional ? "bg-amber/20 border-amber2 text-amber2" : "bg-bark/40 border-amber/30 text-amber hover:border-amber"}`}
-					onClick={() => updateScene(currentScene, { isEmotional: !sc.isEmotional })}
+					onClick={() =>
+						updateScene(currentScene, { isEmotional: !sc.isEmotional })
+					}
 				>
 					⭐ {sc.isEmotional ? "Emotional ON" : "Jadikan Emotional"}
 				</button>
@@ -180,9 +180,7 @@ export default function SceneEditorSection({
 						<Sel
 							id="cam-quality"
 							value={sc.filmQuality}
-							onChange={(v) =>
-								updateScene(currentScene, { filmQuality: v })
-							}
+							onChange={(v) => updateScene(currentScene, { filmQuality: v })}
 							options={FILM_STYLE_OPTIONS}
 						/>
 					</Field>
@@ -219,9 +217,7 @@ export default function SceneEditorSection({
 						<Sel
 							id="sound-primary"
 							value={sc.soundPrimary}
-							onChange={(v) =>
-								updateScene(currentScene, { soundPrimary: v })
-							}
+							onChange={(v) => updateScene(currentScene, { soundPrimary: v })}
 							options={SOUND_PRIMARIES}
 						/>
 					</Field>
@@ -229,9 +225,7 @@ export default function SceneEditorSection({
 						<Sel
 							id="sound-ambient"
 							value={sc.soundAmbient}
-							onChange={(v) =>
-								updateScene(currentScene, { soundAmbient: v })
-							}
+							onChange={(v) => updateScene(currentScene, { soundAmbient: v })}
 							options={SOUND_AMBIENTS}
 						/>
 					</Field>

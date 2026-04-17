@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ProjectDNATab, ProjectDNA, SceneConfig, ScenePhaseKey } from "./types"
 import {
 	CLIMATE_OPTIONS,
 	DNA_DEFAULTS,
@@ -8,8 +9,8 @@ import {
 	LOCATION_OPTIONS,
 	SHELTER_OPTIONS,
 	TRAVEL_MODE_OPTIONS,
-} from "@/lib/data";
-import { generateScenes } from "@/lib/scene-generator";
+} from "./utils";
+import { generateScenes } from "./sceneGenerator";
 
 export default function useForestBuildProjectState({
 	showToast,
@@ -22,6 +23,7 @@ export default function useForestBuildProjectState({
 
 	const [dna, setDna] = useState<ProjectDNA>(DNA_DEFAULTS);
 	const [dnaLocked, setDnaLocked] = useState(false);
+	const [dnaTab, setDnaTab] = useState<ProjectDNATab>('identity')
 
 	const [scenes, setScenes] = useState<SceneConfig[]>([]);
 	const [currentScene, setCurrentScene] = useState(1);
@@ -84,6 +86,7 @@ export default function useForestBuildProjectState({
 		currentScene,
 		dna,
 		dnaLocked,
+		dnaTab,
 		getScene,
 		handleDurationChange,
 		lockDNA,
@@ -94,6 +97,7 @@ export default function useForestBuildProjectState({
 		setCurrentPhase,
 		setCurrentScene,
 		setDna,
+		setDnaTab,
 		setScenes,
 		setSecPerScene,
 		setTotalMinutes,

@@ -5,6 +5,7 @@ import useForestBuildImageState from "@/components/forms/forest-build/useForestB
 import useForestBuildProjectState from "@/components/forms/forest-build/useForestBuildProjectState";
 import useForestBuildPromptState from "@/components/forms/forest-build/useForestBuildPromptState";
 import { useState } from "react";
+import type { ProjectDNA } from "./types"
 
 export default function useForestBuildGenerator() {
 	const { toast, show: showToast } = useToast();
@@ -12,7 +13,7 @@ export default function useForestBuildGenerator() {
 	const [imgScope, setImgScope] = useState<"global" | "scene">("global");
 	const derivedSc = project.dnaLocked
 		? (project.scenes.find((s) => s.id === project.currentScene) ??
-				project.scenes[0])
+			project.scenes[0])
 		: null;
 	const images = useForestBuildImageState({
 		currentScene: project.currentScene,
@@ -28,6 +29,7 @@ export default function useForestBuildGenerator() {
 		currentScene: project.currentScene,
 		dna: project.dna,
 		dnaLocked: project.dnaLocked,
+		dnaTab: project.dnaTab,
 		globalImages: images.globalImages,
 		scenes: project.scenes,
 		secPerScene: project.secPerScene,

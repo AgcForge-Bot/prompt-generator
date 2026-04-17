@@ -5,6 +5,7 @@ import {
 	getDefaultVisionModelId,
 	getVisionProviderLabel,
 } from "@/components/forms/forest-build/constants";
+import type { SceneConfig, ModelType, ImageRef } from "./types";
 
 export default function useForestBuildImageState({
 	currentScene,

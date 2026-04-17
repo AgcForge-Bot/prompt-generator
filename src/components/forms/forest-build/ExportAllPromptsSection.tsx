@@ -1,6 +1,7 @@
 "use client";
 
-import { PHASE_META } from "@/lib/data";
+import type { SceneConfig } from "./types";
+import { PHASE_META } from "./utils";
 
 export default function ExportAllPromptsSection({
 	totalScenes,
@@ -23,8 +24,9 @@ export default function ExportAllPromptsSection({
 		<section className="card mb-5">
 			<div className="section-label">📤 Export Semua Prompt</div>
 			<p className="font-mono text-[11px] text-stone2 mb-4 leading-relaxed">
-				Generate semua <span className="text-leaf2 font-bold">{totalScenes}</span>{" "}
-				prompt sekaligus.
+				Generate semua{" "}
+				<span className="text-leaf2 font-bold">{totalScenes}</span> prompt
+				sekaligus.
 			</p>
 			<div className="flex gap-2 flex-wrap mb-4">
 				<button className="btn-primary" onClick={onGenerateAll}>
@@ -70,4 +72,3 @@ export default function ExportAllPromptsSection({
 		</section>
 	);
 }
-

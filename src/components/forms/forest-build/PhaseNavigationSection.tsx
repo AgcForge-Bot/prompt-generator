@@ -1,6 +1,7 @@
 "use client";
 
-import { PHASE_META } from "@/lib/data";
+import type { ScenePhaseKey, SceneConfig } from "./types";
+import { PHASE_META } from "./utils";
 
 export default function PhaseNavigationSection({
 	phases,
@@ -71,4 +72,3 @@ export default function PhaseNavigationSection({
 		</section>
 	);
 }
-

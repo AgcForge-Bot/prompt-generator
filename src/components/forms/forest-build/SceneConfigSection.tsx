@@ -1,5 +1,6 @@
 "use client";
 
+import type { ScenePhaseKey, SceneConfig } from "./types";
 import PhaseNavigationSection from "@/components/forms/forest-build/PhaseNavigationSection";
 import SceneEditorSection from "@/components/forms/forest-build/SceneEditorSection";
 

@@ -22,6 +22,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		currentScene,
 		dna,
 		dnaLocked,
+		dnaTab,
 		generateAll,
 		generatePrompt,
 		generatePromptFor,
@@ -36,6 +37,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		imgProgress,
 		imgScope,
 		lockDNA,
+		setDnaTab,
 		nextScene,
 		phases,
 		promptOutput,
@@ -112,10 +114,12 @@ export default function ForestBuildPrimitiveCraftForm() {
 
 				<ProjectDnaSection
 					dna={dna}
+					dnaTab={dnaTab}
 					setDna={setDna}
 					dnaLocked={dnaLocked}
 					totalScenes={totalScenes}
 					onLock={lockDNA}
+					setDnaTab={setDnaTab}
 					onRandom={randomDNA}
 				/>
 
