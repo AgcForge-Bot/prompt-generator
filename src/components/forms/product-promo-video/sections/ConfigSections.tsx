@@ -255,7 +255,7 @@ export function DurationSection({
 			{/* Sec per scene */}
 			<div className="mb-4">
 				<label className="field-label">Durasi Per Scene (per prompt AI)</label>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap gap-2">
 					{SEC_PER_SCENE_OPTIONS.map((sec) => {
 						const isActive = dna.secPerScene === sec;
 						return (
@@ -263,7 +263,7 @@ export function DurationSection({
 								key={sec}
 								type="button"
 								onClick={() => handleDurationChange(dna.totalDurationSec, sec)}
-								className={`flex-1 rounded-lg border py-2 font-mono text-xs transition-all ${
+								className={`rounded-lg border px-3 py-2 font-mono text-xs transition-all ${
 									isActive
 										? "border-amber/60 bg-amber/15 text-amber2 font-bold"
 										: "border-leaf/15 bg-bark/25 text-stone2 hover:border-leaf/35 hover:text-cream"
@@ -273,6 +273,10 @@ export function DurationSection({
 							</button>
 						);
 					})}
+				</div>
+				<div className="mt-2 font-mono text-[9px] text-stone2">
+					Opsi 15–20 detik cocok untuk model yang mendukung durasi lebih panjang
+					(mis. Sora).
 				</div>
 			</div>
 

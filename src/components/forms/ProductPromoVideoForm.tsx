@@ -256,6 +256,11 @@ export default function ProductPromoVideoForm() {
 				{/* ── SETUP TAB ── */}
 				{gen.activeTab === "setup" && (
 					<div>
+						<DurationSection
+							dna={gen.dna}
+							setDna={gen.setDna}
+							rebuildScenes={gen.rebuildScenes}
+						/>
 						<ProductInfoSection
 							dna={gen.dna}
 							setDna={gen.setDna}
@@ -291,11 +296,7 @@ export default function ProductPromoVideoForm() {
 						<ModelSection dna={gen.dna} setDna={gen.setDna} />
 						<NarrationSection dna={gen.dna} setDna={gen.setDna} />
 						<LocationSection dna={gen.dna} setDna={gen.setDna} />
-						<DurationSection
-							dna={gen.dna}
-							setDna={gen.setDna}
-							rebuildScenes={gen.rebuildScenes}
-						/>
+
 						<AspectRatioSection dna={gen.dna} setDna={gen.setDna} />
 						<CTASection dna={gen.dna} setDna={gen.setDna} />
 

@@ -2,17 +2,12 @@
 
 import Field from "@/components/forms/forest-build/Field";
 import Sel from "@/components/forms/forest-build/Sel";
+import type { WarMusicVideoGenerator } from "../types";
 
 export default function DurationEngineSection({
-	totalMinutes,
-	secPerScene,
-	totalScenes,
-	onDurationChange,
+	gen,
 }: {
-	totalMinutes: number;
-	secPerScene: number;
-	totalScenes: number;
-	onDurationChange: (min: number, sec: number) => void;
+	gen: WarMusicVideoGenerator;
 }) {
 	return (
 		<section className="card mb-5">
@@ -20,10 +15,10 @@ export default function DurationEngineSection({
 			<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
 				<Field label="Total Durasi Video">
 					<Sel
-						id="dur-total"
-						value={String(totalMinutes)}
-						onChange={(v) => onDurationChange(+v, secPerScene)}
-						options={["8", "10", "12", "15", "18", "20"].map((v) => ({
+						id="dur-total-war"
+						value={String(gen.totalMinutes)}
+						onChange={(v) => gen.onDurationChange(+v, gen.secPerScene)}
+						options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"].map((v) => ({
 							value: v,
 							label: `${v} Menit`,
 						}))}
@@ -31,9 +26,9 @@ export default function DurationEngineSection({
 				</Field>
 				<Field label="Durasi Per-Scene (AI)">
 					<Sel
-						id="dur-scene"
-						value={String(secPerScene)}
-						onChange={(v) => onDurationChange(totalMinutes, +v)}
+						id="dur-scene-war"
+						value={String(gen.secPerScene)}
+						onChange={(v) => gen.onDurationChange(gen.totalMinutes, +v)}
 						options={[
 							{ value: "8", label: "8 Detik / scene" },
 							{ value: "10", label: "10 Detik / scene" },
@@ -43,28 +38,30 @@ export default function DurationEngineSection({
 						]}
 					/>
 					<div className="mt-2 font-mono text-[9px] text-stone2">
-						Opsi 12–20 detik cocok untuk AI yang mendukung durasi lebih panjang
-						(mis. Sora).
+						Opsi 12–20 detik cocok untuk AI yang mendukung durasi lebih panjang (mis.
+						Sora).
 					</div>
 				</Field>
-				<Field label="Format Prompt">
+				<Field label="Total Scene (Auto)">
 					<Sel
-						id="dur-format"
-						value="detailed"
+						id="dur-scenes-war"
+						value={String(gen.totalScenes)}
 						onChange={() => {}}
 						options={[
-							"Detailed — Full cinematic description",
-							"Compact — Dense key phrases",
+							{
+								value: String(gen.totalScenes),
+								label: `${gen.totalScenes} Scene`,
+							},
 						]}
 					/>
 				</Field>
 			</div>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-bark/40 rounded-xl p-4 border border-leaf/10">
 				{[
-					[totalScenes.toString(), "Total Scene"],
-					[totalMinutes.toString(), "Menit"],
-					[secPerScene.toString(), "Detik/Scene"],
-					[Math.floor(totalScenes / 15).toString(), "Emotional Moments"],
+					[gen.totalScenes.toString(), "Total Scene"],
+					[gen.totalMinutes.toString(), "Menit"],
+					[gen.secPerScene.toString(), "Detik/Scene"],
+					[Math.floor(gen.totalScenes / 10).toString(), "Highlight Moments"],
 				].map(([v, l]) => (
 					<div key={l} className="flex flex-col items-center gap-1">
 						<span className="font-playfair text-3xl font-bold text-leaf2">
@@ -79,3 +76,4 @@ export default function DurationEngineSection({
 		</section>
 	);
 }
+

@@ -1,15 +1,17 @@
-import { SCENE_TYPE_LABELS, SEC_PER_SCENE, TOTAL_SCENES } from "./constants";
+import { SCENE_TYPE_LABELS } from "./constants";
 import type { SceneConfig, SceneTypeKey } from "./types";
 import { mmss } from "./utils";
 
 export function buildPrompt(args: {
 	sceneNum: number;
+	totalScenes: number;
+	secPerScene: number;
 	sceneType: SceneTypeKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, sceneType, config } = args;
-	const start = (sceneNum - 1) * SEC_PER_SCENE;
-	const end = start + SEC_PER_SCENE;
+	const { sceneNum, totalScenes, secPerScene, sceneType, config } = args;
+	const start = (sceneNum - 1) * secPerScene;
+	const end = start + secPerScene;
 	const typeLabel = SCENE_TYPE_LABELS[sceneType] ?? sceneType;
 
 	const actionLines: Record<SceneTypeKey, string> = {
@@ -23,7 +25,7 @@ export function buildPrompt(args: {
 		"night-vibe": `MAIN ACTION: NIGHT ATMOSPHERE — ${config.crowdMoment}. ${config.crowdAction}. Fire: ${config.propFire}.`,
 	};
 
-	return `[SCENE ${sceneNum}/${TOTAL_SCENES} | ${mmss(start)} – ${mmss(end)} | ★ ${typeLabel.toUpperCase()} ★]
+	return `[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ★ ${typeLabel.toUpperCase()} ★]
 THEME: Fast & Furious Car Party × DJ Music Video | Semi-Cinematic Realistic
 
 ${actionLines[sceneType] ?? actionLines["dj-party"]}
@@ -44,4 +46,3 @@ CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${
 
 STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and animals. Semi-cinematic music video production quality.`;
 }
-

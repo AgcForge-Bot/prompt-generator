@@ -65,6 +65,11 @@ export type CarMusicVideoGenerator = {
 	activeTab: TabKey;
 	setActiveTab: (tab: TabKey) => void;
 
+	totalMinutes: number;
+	secPerScene: number;
+	totalScenes: number;
+	onDurationChange: (min: number, sec: number) => void;
+
 	currentScene: number;
 	setCurrentSceneSafe: (sceneNum: number) => void;
 
@@ -97,4 +102,3 @@ export type CarMusicVideoGenerator = {
 
 	toast: { msg: string; show: boolean };
 };
-

@@ -1,4 +1,4 @@
-import { DEFAULT_TYPES, OPTIONS, SCENE_TYPE_LABELS, TOTAL_SCENES } from "./constants";
+import { DEFAULT_TYPES, OPTIONS, SCENE_TYPE_LABELS } from "./constants";
 import type { SceneConfig, SceneTypeKey } from "./types";
 
 export function rnd<T>(arr: readonly T[]): T {
@@ -11,9 +11,11 @@ export function mmss(seconds: number) {
 	return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
-export function getDefaultTypes(): Record<number, SceneTypeKey> {
+export function getDefaultTypes(totalScenes: number): Record<number, SceneTypeKey> {
 	const map: Record<number, SceneTypeKey> = {};
-	for (let i = 1; i <= TOTAL_SCENES; i++) map[i] = DEFAULT_TYPES[i - 1];
+	for (let i = 1; i <= totalScenes; i++) {
+		map[i] = DEFAULT_TYPES[(i - 1) % DEFAULT_TYPES.length];
+	}
 	return map;
 }
 
@@ -69,4 +71,3 @@ export function getDefaultSceneConfig(): SceneConfig {
 export function getSceneTypeLabel(sceneType: SceneTypeKey) {
 	return SCENE_TYPE_LABELS[sceneType] ?? sceneType;
 }
-

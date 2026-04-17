@@ -322,7 +322,7 @@ export const CTA_PRESETS = [
 // ─── DURATION OPTIONS ─────────────────────────────────────────────────────────
 
 export const TOTAL_DURATION_OPTIONS = [30, 40, 45, 60, 75, 90, 105, 120];
-export const SEC_PER_SCENE_OPTIONS = [8, 10, 12];
+export const SEC_PER_SCENE_OPTIONS = [8, 10, 12, 15, 20];
 
 // ─── CINEMATIC STYLES ─────────────────────────────────────────────────────────
 

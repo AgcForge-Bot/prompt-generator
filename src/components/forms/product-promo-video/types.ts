@@ -99,7 +99,7 @@ export type ImageRef = {
 export type SceneConfig = {
 	id: number;
 	sceneType: SceneTypeKey;
-	duration: number;          // detik (8, 10, atau 12)
+	duration: number;          // detik (8, 10, 12, 15, atau 20)
 	generatedPrompt?: string;
 };
 
@@ -157,7 +157,7 @@ export type PromoDNA = {
 
 	// Durasi & scene
 	totalDurationSec: number;           // 30–120 detik
-	secPerScene: number;                // 8, 10, atau 12 detik
+	secPerScene: number;                // 8, 10, 12, 15, atau 20 detik
 	totalScenes: number;                // auto kalkulasi
 
 	// Visual

@@ -1,14 +1,16 @@
-import { SCENE_TYPE_LABELS, SEC_PER_SCENE } from "./constants";
+import { SCENE_TYPE_LABELS } from "./constants";
 import type { SceneConfig, SceneTypeKey } from "./types";
 
 export function buildPrompt(args: {
 	sceneNum: number;
+	totalScenes: number;
+	secPerScene: number;
 	sceneType: SceneTypeKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, sceneType, config } = args;
-	const start = (sceneNum - 1) * SEC_PER_SCENE;
-	const end = start + SEC_PER_SCENE;
+	const { sceneNum, totalScenes, secPerScene, sceneType, config } = args;
+	const start = (sceneNum - 1) * secPerScene;
+	const end = start + secPerScene;
 	const typeLabel = SCENE_TYPE_LABELS[sceneType] ?? sceneType;
 
 	const actionLines: Record<SceneTypeKey, string> = {
@@ -22,7 +24,7 @@ export function buildPrompt(args: {
 		aftermath: `MAIN ACTION: AFTERMATH — ${config.civEmotion}. ${config.vfxProps}. ${config.civInteraction}. Silence after battle.`,
 	};
 
-	return `[SCENE ${sceneNum} | ${start}s – ${end}s | ★ ${typeLabel.toUpperCase()} ★]
+	return `[SCENE ${sceneNum}/${totalScenes} | ${start}s – ${end}s | ★ ${typeLabel.toUpperCase()} ★]
 THEME: WAR CINEMATIC × DJ Battle Zone | Hyper-Cinematic Realistic
 FILM REFS: Saving Private Ryan · 1917 · LOTR Return of the King · Braveheart · Gladiator · Dunkirk · Apocalypse Now · Hacksaw Ridge · Troy
 
@@ -48,4 +50,3 @@ CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${
 
 STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and environments. Hyper-cinematic war epic production quality. Sound: war music atmosphere — drums, brass, tension underscore.`;
 }
-

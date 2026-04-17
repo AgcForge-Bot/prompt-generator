@@ -1,6 +1,5 @@
 "use client";
 
-import { SEC_PER_SCENE, TOTAL_SCENES } from "../constants";
 import type { CarMusicVideoGenerator } from "../types";
 
 export default function HeaderSection({
@@ -31,11 +30,11 @@ export default function HeaderSection({
 				</div>
 				<div className="flex flex-col gap-2 sm:items-end">
 					{[
-						["Total Scene", `${TOTAL_SCENES}`],
-						["Durasi", `${2} menit`],
-						["Per-scene", `${SEC_PER_SCENE} detik`],
+						["Total Scene", `${gen.totalScenes}`],
+						["Durasi", `${gen.totalMinutes} menit`],
+						["Per-scene", `${gen.secPerScene} detik`],
 						["Platform", "Grok + VEO"],
-						["Scene", `${TOTAL_SCENES} × ${SEC_PER_SCENE} detik`],
+						["Scene", `${gen.totalScenes} × ${gen.secPerScene} detik`],
 						["Mode", "Semi-Cinematic"],
 					].map(([k, v]) => (
 						<div

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { OPTIONS, SCENE_TYPE_LABELS, TOTAL_SCENES } from "./constants";
+import { OPTIONS, SCENE_TYPE_LABELS } from "./constants";
 import { buildPrompt } from "./promptBuilder";
 import type { SceneConfig, SceneTypeKey, TabKey, WarMusicVideoGenerator } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
@@ -26,9 +26,16 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 	const { toast, show: showToast } = useToast();
 
 	const [activeTab, setActiveTab] = useState<TabKey>("soldiers");
+	const [totalMinutes, setTotalMinutes] = useState(2);
+	const [secPerScene, setSecPerScene] = useState(10);
 	const [currentScene, setCurrentScene] = useState(1);
+
+	const totalScenes = Math.max(
+		2,
+		Math.floor((totalMinutes * 60) / Math.max(1, secPerScene)),
+	);
 	const [sceneTypes, setSceneTypes] = useState<Record<number, SceneTypeKey>>(
-		() => getDefaultTypes(),
+		() => getDefaultTypes(totalScenes),
 	);
 	const [sceneConfigs, setSceneConfigs] = useState<Record<number, SceneConfig>>(
 		() => ({}),
@@ -61,10 +68,21 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		}));
 	}
 
-	function generatePromptFor(sceneNum: number) {
+	function generatePromptFor(
+		sceneNum: number,
+		durOverride?: { totalScenes: number; secPerScene: number },
+	) {
+		const effectiveTotalScenes = durOverride?.totalScenes ?? totalScenes;
+		const effectiveSecPerScene = durOverride?.secPerScene ?? secPerScene;
 		const sceneType = sceneTypes[sceneNum] ?? "ground-assault";
 		const config = getSceneConfig(sceneNum);
-		const prompt = buildPrompt({ sceneNum, sceneType, config });
+		const prompt = buildPrompt({
+			sceneNum,
+			totalScenes: effectiveTotalScenes,
+			secPerScene: effectiveSecPerScene,
+			sceneType,
+			config,
+		});
 		setPromptOutput(prompt);
 		updateSceneConfig(sceneNum, { generatedPrompt: prompt });
 	}
@@ -75,7 +93,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 	}
 
 	function nextScene() {
-		const next = currentScene < TOTAL_SCENES ? currentScene + 1 : 1;
+		const next = currentScene < totalScenes ? currentScene + 1 : 1;
 		setCurrentScene(next);
 		setTimeout(() => generatePromptFor(next), 50);
 	}
@@ -89,10 +107,16 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 	function generateAll() {
 		const prompts: string[] = [];
 		const updated: Record<number, SceneConfig> = { ...sceneConfigs };
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = sceneTypes[s] ?? "ground-assault";
 			const config = getSceneConfig(s);
-			const prompt = buildPrompt({ sceneNum: s, sceneType, config });
+			const prompt = buildPrompt({
+				sceneNum: s,
+				totalScenes,
+				secPerScene,
+				sceneType,
+				config,
+			});
 			prompts.push(prompt);
 			updated[s] = { ...config, generatedPrompt: prompt };
 		}
@@ -100,7 +124,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		setAllPrompts(prompts);
 		setShowAllPrompts(true);
 		setPromptOutput(prompts[currentScene - 1] ?? "");
-		showToast(`✓ ${TOTAL_SCENES} prompt berhasil di-generate!`);
+		showToast(`✓ ${totalScenes} prompt berhasil di-generate!`);
 	}
 
 	function copyAll() {
@@ -109,7 +133,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			return;
 		}
 		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
-		showToast(`📋 Semua ${TOTAL_SCENES} prompt tersalin!`);
+		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
 	}
 
 	function randomizeCurrentScene() {
@@ -187,7 +211,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		const keys = Object.keys(SCENE_TYPE_LABELS) as SceneTypeKey[];
 		const nextTypes: Record<number, SceneTypeKey> = {};
 		const nextConfigs: Record<number, SceneConfig> = {};
-		for (let s = 1; s <= TOTAL_SCENES; s++) {
+		for (let s = 1; s <= totalScenes; s++) {
 			nextTypes[s] = Math.random() > 0.4 ? rnd(keys) : keys[s % keys.length];
 			const base = getDefaultSceneConfig();
 			const updates: Partial<SceneConfig> = {};
@@ -251,13 +275,41 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		}
 		setSceneTypes(nextTypes);
 		setSceneConfigs(nextConfigs);
-		showToast("🎰 Semua 12 scene di-randomize!");
+		showToast(`🎰 Semua ${totalScenes} scene di-randomize!`);
 		setTimeout(() => generateAll(), 50);
 	}
 
+	function onDurationChange(min: number, sec: number) {
+		const safeMin = Math.max(1, Math.floor(min));
+		const safeSec = Math.max(1, Math.floor(sec));
+		const nextTotalScenes = Math.max(
+			2,
+			Math.floor((safeMin * 60) / Math.max(1, safeSec)),
+		);
+
+		setTotalMinutes(safeMin);
+		setSecPerScene(safeSec);
+		setCurrentScene(1);
+		setSceneTypes(getDefaultTypes(nextTotalScenes));
+		setAllPrompts([]);
+		setShowAllPrompts(false);
+		setTimeout(
+			() =>
+				generatePromptFor(1, {
+					totalScenes: nextTotalScenes,
+					secPerScene: safeSec,
+				}),
+			50,
+		);
+		showToast(
+			`⏱ Durasi update: ${safeMin} menit · ${safeSec}s/scene = ${nextTotalScenes} scene`,
+		);
+	}
+
 	function setCurrentSceneSafe(sceneNum: number) {
-		setCurrentScene(sceneNum);
-		setTimeout(() => generatePromptFor(sceneNum), 50);
+		const safe = Math.min(totalScenes, Math.max(1, sceneNum));
+		setCurrentScene(safe);
+		setTimeout(() => generatePromptFor(safe), 50);
 	}
 
 	function setSceneTypeForScene(sceneNum: number, next: SceneTypeKey) {
@@ -272,6 +324,11 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		tabs,
 		activeTab,
 		setActiveTab,
+
+		totalMinutes,
+		secPerScene,
+		totalScenes,
+		onDurationChange,
 
 		currentScene,
 		setCurrentSceneSafe,
@@ -306,4 +363,3 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		toast,
 	};
 }
-

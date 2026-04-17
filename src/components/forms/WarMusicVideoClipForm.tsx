@@ -2,6 +2,7 @@
 
 import useWarMusicVideoGenerator from "./war-music/useWarMusicVideoGenerator";
 import ExportAllPromptsSection from "./war-music/sections/ExportAllPromptsSection";
+import DurationEngineSection from "./war-music/sections/DurationEngineSection";
 import HeaderSection from "./war-music/sections/HeaderSection";
 import PromptOutputSection from "./war-music/sections/PromptOutputSection";
 import RandomGeneratorSection from "./war-music/sections/RandomGeneratorSection";
@@ -16,6 +17,7 @@ export default function WarMusicVideoClipForm() {
 		<div>
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
 				<HeaderSection gen={gen} />
+				<DurationEngineSection gen={gen} />
 				<TimelineSection gen={gen} />
 				<SceneTypeSection gen={gen} />
 				<SceneConfigSection gen={gen} />
