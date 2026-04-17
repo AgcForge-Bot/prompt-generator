@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
 import UserNav from "@/components/auth/UserNav";
 
 export const metadata: Metadata = {
@@ -46,7 +47,16 @@ export default async function RootLayout({
 					>
 						<div className="max-w-6xl mx-auto px-4 sm:px-6 h-11 flex items-center justify-between gap-4">
 							<div className="flex items-center gap-2 shrink-0">
-								<span className="text-sm">🌿</span>
+								{/* <span className="text-sm">🌿</span> */}
+								<Image
+									src="/favicon.ico"
+									width={14}
+									height={14}
+									alt="AI Video Tools"
+									sizes="14px"
+									className="object-cover h-6 w-6"
+								/>
+
 								<span className="font-mono text-[9px] tracking-[0.18em] uppercase text-leaf hidden sm:block">
 									AI Video Tools
 								</span>
