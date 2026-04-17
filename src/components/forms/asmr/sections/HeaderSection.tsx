@@ -12,9 +12,9 @@ export default function HeaderSection({
 			<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 				<div>
 					<div className="flex items-center gap-2 mb-3">
-						<span className="text-leaf text-sm">🌿</span>
+						<span className="text-leaf text-sm">🏗️</span>
 						<span className="font-mono text-[9px] tracking-[0.2em] uppercase text-leaf">
-							🏗️ ASMR Timelapse — Restoration & Construction
+							ASMR Timelapse — Restoration & Construction
 						</span>
 					</div>
 					<h1 className="font-playfair text-4xl sm:text-5xl font-bold text-cream leading-tight mb-2">

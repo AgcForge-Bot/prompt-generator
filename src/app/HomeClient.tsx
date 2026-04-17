@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Field from "@/components/forms/forest-build/Field";
+import Sel from "@/components/forms/forest-build/Sel";
 import ForestBuildPrimitiveCraftForm from "@/components/forms/ForestBuildPrimitiveCraftForm";
 import AsmrTimelapseConstructorForm from "@/components/forms/AsmrTimelapseConstructorForm";
 import CarMusicVideoClipForm from "@/components/forms/CarMusicVideoClipForm";
@@ -22,6 +24,7 @@ type ToolMeta = {
 	title: string;
 	description: string;
 	badge?: string;
+	icon: string;
 };
 
 function setMetaTitleAndDescription(title: string, description: string) {
@@ -58,7 +61,7 @@ function RadioCard({
 		<button
 			type="button"
 			onClick={onSelect}
-			className={`w-full text-left rounded-xl border transition-all px-4 py-3 ${
+			className={`w-full max-w-sm text-left rounded-xl border transition-all px-4 py-3 cursor-pointer ${
 				checked
 					? "border-leaf bg-moss/20"
 					: "border-leaf/15 bg-bark/30 hover:border-leaf/40 hover:bg-moss/10"
@@ -106,6 +109,7 @@ export default function HomeClient() {
 				title: "Product Promo Video — AI Prompt Generator",
 				description:
 					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi — generate prompt scene-by-scene siap untuk Kling, Runway, Pika, VEO, dan lainnya.",
+				icon: "🛍️",
 			},
 			{
 				key: "forest-build-primitive-craft",
@@ -113,6 +117,7 @@ export default function HomeClient() {
 				title: "Forest Build Primitive Craft — AI Prompt Generator",
 				description:
 					"Generator prompt AI untuk ASMR Survival Build (Forest Build Primitive Craft). Fokus: cinematic documentary realism + scene-by-scene prompt.",
+				icon: "🌿",
 			},
 			{
 				key: "asmr-timelapse-constructor",
@@ -120,6 +125,7 @@ export default function HomeClient() {
 				title: "ASMR Timelapse Constructor — AI Prompt Generator",
 				description:
 					"Generator prompt untuk ASMR timelapse constructor: DNA lock, timeline 12 scene, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "🏗️",
 			},
 			{
 				key: "car-music-video-clip",
@@ -127,6 +133,7 @@ export default function HomeClient() {
 				title: "Car Music Video Clip — AI Prompt Generator",
 				description:
 					"Generator prompt untuk car music video clip: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "🚗",
 			},
 			{
 				key: "war-music-video-clip",
@@ -134,6 +141,7 @@ export default function HomeClient() {
 				title: "War Music Video Clip — AI Prompt Generator",
 				description:
 					"Generator prompt untuk war cinematic × DJ battle zone: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "⚔️",
 			},
 			{
 				key: "relaxing-music-video-clip",
@@ -141,6 +149,7 @@ export default function HomeClient() {
 				title: "Relaxing Music Video Clip — AI Prompt Generator",
 				description:
 					"Generator prompt untuk relaxing nature drone music clip: time-of-day, timeline 12 scene, scene type, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "🌿",
 			},
 		],
 		[],
@@ -168,7 +177,9 @@ export default function HomeClient() {
 						<h1 className="font-playfair text-3xl sm:text-4xl font-bold text-cream leading-tight">
 							Home
 							<span className="text-leaf2"> · </span>
-							<span className="text-leaf2 italic">{activeMeta.label}</span>
+							<span className="text-leaf2">
+								{activeMeta.label} {activeMeta.icon}
+							</span>
 							{activeMeta.badge && (
 								<span className="ml-3 font-mono text-xs px-2 py-0.5 rounded-full bg-amber/20 border border-amber/40 text-amber2 uppercase tracking-wider align-middle">
 									{activeMeta.badge}
@@ -181,19 +192,30 @@ export default function HomeClient() {
 					</div>
 				</header>
 
-				<div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
+				<div className="space-y-5">
 					<section className="card h-fit">
 						<div className="section-label">🎛️ Pilih Tools</div>
-						<div className="flex flex-col gap-2">
+						<div className="hidden select-none md:grid w-full gap-4 md:grid-cols-3 items-center justify-center">
 							{tools.map((t) => (
 								<RadioCard
 									key={t.key}
 									checked={selected === t.key}
-									label={t.label}
+									label={`${t.icon} ${t.label}`}
 									badge={t.badge}
 									onSelect={() => setSelected(t.key)}
 								/>
 							))}
+						</div>
+						<div className="flex md:hidden justify-center">
+							<Sel
+								id="mobile-select"
+								value={selected}
+								onChange={(v) => setSelected(v as HomeToolKey)}
+								options={tools.map((t) => ({
+									value: t.key,
+									label: `${t.icon} ${t.label}`,
+								}))}
+							/>
 						</div>
 					</section>
 
@@ -217,4 +239,3 @@ export default function HomeClient() {
 		</main>
 	);
 }
-

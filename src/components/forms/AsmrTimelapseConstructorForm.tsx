@@ -19,19 +19,20 @@ export default function AsmrTimelapseConstructorForm() {
 
 	return (
 		<div>
-			<HeaderSection gen={gen} />
-			<DurationEngineSection gen={gen} />
-			<ProjectDnaSection gen={gen} />
-			<ProgressSection gen={gen} />
-			<TimeOfDaySection gen={gen} />
-			<ProjectTypeSection gen={gen} />
-			<TimelineSection gen={gen} />
-			<ScenePhaseSection gen={gen} />
-			<SceneConfigSection gen={gen} />
-			<RandomGeneratorSection gen={gen} />
-			<PromptOutputSection gen={gen} />
-			<ExportAllPromptsSection gen={gen} />
-
+			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
+				<HeaderSection gen={gen} />
+				<DurationEngineSection gen={gen} />
+				<ProjectDnaSection gen={gen} />
+				<ProgressSection gen={gen} />
+				<TimeOfDaySection gen={gen} />
+				<ProjectTypeSection gen={gen} />
+				<TimelineSection gen={gen} />
+				<ScenePhaseSection gen={gen} />
+				<SceneConfigSection gen={gen} />
+				<RandomGeneratorSection gen={gen} />
+				<PromptOutputSection gen={gen} />
+				<ExportAllPromptsSection gen={gen} />
+			</div>
 			<div
 				className={`toast-base bg-moss/95 text-white transition-all ${
 					gen.toast.show

@@ -17,16 +17,18 @@ export default function RelaxingMusicVideoForm() {
 
 	return (
 		<div>
-			<HeaderSection gen={gen} />
-			<DurationEngineSection gen={gen} />
-			<ProgressSection gen={gen} />
-			<TimeOfDaySection gen={gen} />
-			<TimelineSection gen={gen} />
-			<SceneTypeSection gen={gen} />
-			<SceneConfigSection gen={gen} />
-			<RandomGeneratorSection gen={gen} />
-			<PromptOutputSection gen={gen} />
-			<ExportAllPromptsSection gen={gen} />
+			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
+				<HeaderSection gen={gen} />
+				<DurationEngineSection gen={gen} />
+				<ProgressSection gen={gen} />
+				<TimeOfDaySection gen={gen} />
+				<TimelineSection gen={gen} />
+				<SceneTypeSection gen={gen} />
+				<SceneConfigSection gen={gen} />
+				<RandomGeneratorSection gen={gen} />
+				<PromptOutputSection gen={gen} />
+				<ExportAllPromptsSection gen={gen} />
+			</div>
 
 			<div
 				className={`toast-base bg-moss/95 text-white transition-all ${
