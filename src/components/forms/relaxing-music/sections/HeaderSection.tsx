@@ -35,6 +35,7 @@ export default function HeaderSection({
 						["Per-scene", `${gen.secPerScene} detik`],
 						["Platform", "Grok + VEO"],
 						["Scene", `${gen.totalScenes} × ${gen.secPerScene} detik`],
+						["Mode", gen.visualStyleLabel],
 					].map(([k, v]) => (
 						<div
 							key={k}

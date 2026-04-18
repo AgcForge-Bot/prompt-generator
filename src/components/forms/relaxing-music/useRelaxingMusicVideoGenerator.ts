@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { OPTIONS, RANDOM_GROUP_FIELDS, SCENE_TYPES, TOD_DATA } from "./constants";
+import { OPTIONS, RANDOM_GROUP_FIELDS, SCENE_TYPES, TOD_DATA, VISUAL_STYLE_LABELS } from "./constants";
 import { buildPrompt } from "./promptBuilder";
-import type { RandomGroupKey, RelaxingMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, TodKey } from "./types";
+import type { RandomGroupKey, RelaxingMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, TodKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
 
 export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGenerator {
@@ -29,6 +29,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	const [timeOfDay, setTimeOfDay] = useState<TodKey>("morning");
 	const [totalMinutes, setTotalMinutes] = useState(2);
 	const [secPerScene, setSecPerScene] = useState(10);
+	const [visualStyle, setVisualStyle] = useState<VisualStyleKey>("cinematic-realistic");
 	const [currentScene, setCurrentScene] = useState(1);
 
 	const totalScenes = Math.max(
@@ -60,6 +61,61 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	const [allPrompts, setAllPrompts] = useState<string[]>([]);
 	const [showAllPrompts, setShowAllPrompts] = useState(false);
 
+	function pickOption(options: readonly string[], prefers: string[]) {
+		const lower = options.map((o) => o.toLowerCase());
+		for (const p of prefers) {
+			const idx = lower.findIndex((o) => o.includes(p.toLowerCase()));
+			if (idx >= 0) return options[idx];
+		}
+		return options[0] ?? "";
+	}
+
+	function getVisualPreset(style: VisualStyleKey): Partial<SceneConfig> {
+		if (style === "cinematic") {
+			return {
+				styQuality: pickOption(OPTIONS.styQuality, ["4k cinematic", "8k"]),
+				styGrade: pickOption(OPTIONS.styGrade, ["cinematic teal", "soft warm film", "golden warm"]),
+				camLens: pickOption(OPTIONS.camLens, ["ultra wide", "wide angle"]),
+				camSpeed: pickOption(OPTIONS.camSpeed, ["ultra-slow", "slow and graceful"]),
+				styMood: pickOption(OPTIONS.styMood, ["awe-inspiring", "romantic and soft", "deeply peaceful"]),
+			};
+		}
+		if (style === "semi-cinematic") {
+			return {
+				styQuality: pickOption(OPTIONS.styQuality, ["photorealistic", "4k cinematic"]),
+				styGrade: pickOption(OPTIONS.styGrade, ["natural vivid", "soft warm film"]),
+				camLens: pickOption(OPTIONS.camLens, ["wide angle", "medium focal"]),
+				camSpeed: pickOption(OPTIONS.camSpeed, ["slow and graceful", "moderate smooth"]),
+				styMood: pickOption(OPTIONS.styMood, ["deeply peaceful", "uplifting and joyful"]),
+			};
+		}
+		if (style === "cinematic-realistic") {
+			return {
+				styQuality: pickOption(OPTIONS.styQuality, ["photorealistic", "8k"]),
+				styGrade: pickOption(OPTIONS.styGrade, ["HDR natural", "natural vivid", "soft warm film"]),
+				camLens: pickOption(OPTIONS.camLens, ["wide angle", "slight telephoto", "medium focal"]),
+				camSpeed: pickOption(OPTIONS.camSpeed, ["slow and graceful", "moderate smooth"]),
+				styMood: pickOption(OPTIONS.styMood, ["intimate and gentle", "deeply peaceful"]),
+			};
+		}
+		if (style === "realistic") {
+			return {
+				styQuality: pickOption(OPTIONS.styQuality, ["photorealistic", "8k"]),
+				styGrade: pickOption(OPTIONS.styGrade, ["log-style flat", "HDR natural", "natural vivid"]),
+				camLens: pickOption(OPTIONS.camLens, ["medium focal", "wide angle"]),
+				camSpeed: pickOption(OPTIONS.camSpeed, ["moderate smooth", "slow and graceful"]),
+				styMood: pickOption(OPTIONS.styMood, ["deeply peaceful", "energizing and fresh"]),
+			};
+		}
+		return {
+			styQuality: pickOption(OPTIONS.styQuality, ["8k", "photorealistic"]),
+			styGrade: pickOption(OPTIONS.styGrade, ["HDR natural", "natural vivid"]),
+			camLens: pickOption(OPTIONS.camLens, ["slight telephoto", "ultra wide"]),
+			camSpeed: pickOption(OPTIONS.camSpeed, ["ultra-slow", "slow and graceful"]),
+			styMood: pickOption(OPTIONS.styMood, ["mysterious and ethereal", "awe-inspiring grandeur"]),
+		};
+	}
+
 	function getSceneConfig(sceneNum: number): SceneConfig {
 		return sceneConfigs[sceneNum] ?? getDefaultSceneConfig();
 	}
@@ -79,6 +135,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 			totalScenes,
 			secPerScene,
 			sceneType,
+			visualStyle,
 			timeOfDay,
 			config,
 		});
@@ -114,6 +171,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 				totalScenes,
 				secPerScene,
 				sceneType,
+				visualStyle,
 				timeOfDay,
 				config,
 			});
@@ -246,6 +304,21 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		showToast(`⏱ Durasi update: ${safeMin} menit · ${safeSec}s/scene = ${nextTotalScenes} scene`);
 	}
 
+	function setVisualStyleSafe(next: VisualStyleKey) {
+		setVisualStyle(next);
+		const preset = getVisualPreset(next);
+		setSceneConfigs((prev) => {
+			const nextMap: Record<number, SceneConfig> = { ...prev };
+			for (let s = 1; s <= totalScenes; s++) {
+				const base = nextMap[s] ?? getDefaultSceneConfig();
+				nextMap[s] = { ...base, ...preset };
+			}
+			return nextMap;
+		});
+		setTimeout(() => generatePromptFor(currentScene), 50);
+		showToast(`🎞️ Visual style: ${VISUAL_STYLE_LABELS[next]}`);
+	}
+
 	function setTimeOfDaySafe(next: TodKey) {
 		setTimeOfDay(next);
 		setTimeout(() => generatePromptFor(currentScene), 50);
@@ -265,6 +338,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	const scType = sceneTypes[currentScene] ?? "mountain";
 	const scTypeLabel = getSceneTypeLabel(scType);
 	const progressPct = Math.round((currentScene / totalScenes) * 100);
+	const visualStyleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
 
 	return {
 		tabs,
@@ -275,6 +349,10 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		secPerScene,
 		totalScenes,
 		onDurationChange,
+
+		visualStyle,
+		visualStyleLabel,
+		setVisualStyleSafe,
 
 		timeOfDay,
 		setTimeOfDaySafe,

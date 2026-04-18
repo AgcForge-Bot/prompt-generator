@@ -47,6 +47,27 @@ export const SCENE_TYPES = {
 	tundra: "🌿 Padang Terbuka",
 } as const;
 
+export const VISUAL_STYLE_LABELS = {
+	cinematic: "Cinematic",
+	"semi-cinematic": "Semi-Cinematic",
+	"cinematic-realistic": "Cinematic Realistic",
+	realistic: "Realistic",
+	"hyper-realistic": "Hyper Realistic",
+} as const;
+
+export const VISUAL_STYLE_HINTS = {
+	cinematic:
+		"strong cinematic lighting, dramatic composition, gentle film grain, shallow depth of field where appropriate",
+	"semi-cinematic":
+		"balanced cinematic look, clean composition, soft contrast, relaxing music video polish",
+	"cinematic-realistic":
+		"photorealistic baseline with cinematic framing and color polish, natural textures",
+	realistic:
+		"natural documentary realism, neutral grading, minimal stylization, true-to-life colors",
+	"hyper-realistic":
+		"ultra photoreal, micro-detail textures, crisp clarity, high dynamic range realism",
+} as const;
+
 export const DEFAULT_TYPES = [
 	"mountain",
 	"hills",
@@ -406,4 +427,3 @@ export const RANDOM_GROUP_FIELDS = {
 	elements: ["elemWind", "elemHuman", "elemAtmo", "elemSeason"],
 	style: ["styMood", "styGrade", "styQuality", "styMusic"],
 } as const;
-

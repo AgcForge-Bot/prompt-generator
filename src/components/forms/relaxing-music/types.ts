@@ -13,6 +13,12 @@ export type TabKey =
 export type SceneTypeKey = keyof typeof SCENE_TYPES;
 export type TodKey = keyof typeof TOD_DATA;
 export type RandomGroupKey = keyof typeof RANDOM_GROUP_FIELDS;
+export type VisualStyleKey =
+	| "cinematic"
+	| "semi-cinematic"
+	| "cinematic-realistic"
+	| "realistic"
+	| "hyper-realistic";
 
 export type SceneConfig = {
 	natSpot: string;
@@ -67,6 +73,10 @@ export type RelaxingMusicVideoGenerator = {
 	secPerScene: number;
 	totalScenes: number;
 	onDurationChange: (min: number, sec: number) => void;
+
+	visualStyle: VisualStyleKey;
+	visualStyleLabel: string;
+	setVisualStyleSafe: (next: VisualStyleKey) => void;
 
 	timeOfDay: TodKey;
 	setTimeOfDaySafe: (next: TodKey) => void;

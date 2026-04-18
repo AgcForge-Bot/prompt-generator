@@ -11,6 +11,7 @@ import SceneConfigSection from "./relaxing-music/sections/SceneConfigSection";
 import SceneTypeSection from "./relaxing-music/sections/SceneTypeSection";
 import TimeOfDaySection from "./relaxing-music/sections/TimeOfDaySection";
 import TimelineSection from "./relaxing-music/sections/TimelineSection";
+import VisualStyleSection from "./relaxing-music/sections/VisualStyleSection";
 
 export default function RelaxingMusicVideoForm() {
 	const gen = useRelaxingMusicVideoGenerator();
@@ -20,6 +21,7 @@ export default function RelaxingMusicVideoForm() {
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
 				<HeaderSection gen={gen} />
 				<DurationEngineSection gen={gen} />
+				<VisualStyleSection gen={gen} />
 				<ProgressSection gen={gen} />
 				<TimeOfDaySection gen={gen} />
 				<TimelineSection gen={gen} />

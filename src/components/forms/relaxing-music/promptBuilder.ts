@@ -1,5 +1,5 @@
-import { SCENE_TYPES, TOD_DATA } from "./constants";
-import type { SceneConfig, SceneTypeKey, TodKey } from "./types";
+import { SCENE_TYPES, TOD_DATA, VISUAL_STYLE_HINTS, VISUAL_STYLE_LABELS } from "./constants";
+import type { SceneConfig, SceneTypeKey, TodKey, VisualStyleKey } from "./types";
 import { mmss } from "./utils";
 
 export function buildPrompt(args: {
@@ -7,20 +7,24 @@ export function buildPrompt(args: {
 	totalScenes: number;
 	secPerScene: number;
 	sceneType: SceneTypeKey;
+	visualStyle: VisualStyleKey;
 	timeOfDay: TodKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, totalScenes, secPerScene, sceneType, timeOfDay, config } = args;
+	const { sceneNum, totalScenes, secPerScene, sceneType, visualStyle, timeOfDay, config } = args;
 	const start = (sceneNum - 1) * secPerScene;
 	const end = start + secPerScene;
 	const tod = TOD_DATA[timeOfDay];
 	const typeLabel = SCENE_TYPES[sceneType] ?? sceneType;
+	const styleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
+	const styleHint = VISUAL_STYLE_HINTS[visualStyle] ?? "";
 
 	return `═══════════════════════════════════════════════════════════════
 [SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ${typeLabel}]
 ═══════════════════════════════════════════════════════════════
 
-THEME: Relaxing Music Video Clip — European Nature Drone Cinematic
+THEME: Relaxing Music Video Clip — European Nature Drone | ${styleLabel}
+VISUAL STYLE: ${styleLabel} — ${styleHint}
 
 TIME OF DAY: ${tod.label}
 LIGHTING: ${tod.lighting}
