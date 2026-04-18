@@ -9,6 +9,7 @@ import RandomGeneratorSection from "./car-music/sections/RandomGeneratorSection"
 import SceneConfigSection from "./car-music/sections/SceneConfigSection";
 import SceneTypeSection from "./car-music/sections/SceneTypeSection";
 import TimelineSection from "./car-music/sections/TimelineSection";
+import VisualStyleSection from "./car-music/sections/VisualStyleSection";
 
 export default function CarMusicVideoClipForm() {
 	const gen = useCarMusicVideoGenerator();
@@ -18,6 +19,7 @@ export default function CarMusicVideoClipForm() {
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
 				<HeaderSection gen={gen} />
 				<DurationEngineSection gen={gen} />
+				<VisualStyleSection gen={gen} />
 				<TimelineSection gen={gen} />
 				<SceneTypeSection gen={gen} />
 				<SceneConfigSection gen={gen} />

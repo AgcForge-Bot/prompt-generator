@@ -1,17 +1,20 @@
-import { SCENE_TYPE_LABELS } from "./constants";
-import type { SceneConfig, SceneTypeKey } from "./types";
+import { SCENE_TYPE_LABELS, VISUAL_STYLE_HINTS, VISUAL_STYLE_LABELS } from "./constants";
+import type { SceneConfig, SceneTypeKey, VisualStyleKey } from "./types";
 
 export function buildPrompt(args: {
 	sceneNum: number;
 	totalScenes: number;
 	secPerScene: number;
 	sceneType: SceneTypeKey;
+	visualStyle: VisualStyleKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, totalScenes, secPerScene, sceneType, config } = args;
+	const { sceneNum, totalScenes, secPerScene, sceneType, visualStyle, config } = args;
 	const start = (sceneNum - 1) * secPerScene;
 	const end = start + secPerScene;
 	const typeLabel = SCENE_TYPE_LABELS[sceneType] ?? sceneType;
+	const styleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
+	const styleHint = VISUAL_STYLE_HINTS[visualStyle] ?? "";
 
 	const actionLines: Record<SceneTypeKey, string> = {
 		"ground-assault": `MAIN ACTION: GROUND ASSAULT — ${config.solAction}. Formation: ${config.solSquad}. Enemy: ${config.solEnemy}.`,
@@ -25,7 +28,8 @@ export function buildPrompt(args: {
 	};
 
 	return `[SCENE ${sceneNum}/${totalScenes} | ${start}s – ${end}s | ★ ${typeLabel.toUpperCase()} ★]
-THEME: WAR CINEMATIC × DJ Battle Zone | Hyper-Cinematic Realistic
+THEME: WAR CINEMATIC × DJ Battle Zone | ${styleLabel}
+VISUAL STYLE: ${styleLabel} — ${styleHint}
 FILM REFS: Saving Private Ryan · 1917 · LOTR Return of the King · Braveheart · Gladiator · Dunkirk · Apocalypse Now · Hacksaw Ridge · Troy
 
 ${actionLines[sceneType] || actionLines["ground-assault"]}
@@ -48,5 +52,5 @@ VFX: Fire/Explosion — ${config.vfxFire}. Smoke — ${config.vfxSmoke}. Weapons
 
 CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${config.camMood}.
 
-STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and environments. Hyper-cinematic war epic production quality. Sound: war music atmosphere — drums, brass, tension underscore.`;
+STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and environments. ${styleLabel} war epic production quality. Sound: war music atmosphere — drums, brass, tension underscore.`;
 }

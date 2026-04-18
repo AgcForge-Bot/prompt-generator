@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { OPTIONS, SCENE_TYPE_LABELS } from "./constants";
+import { OPTIONS, SCENE_TYPE_LABELS, VISUAL_STYLE_LABELS } from "./constants";
 import { buildPrompt } from "./promptBuilder";
-import type { CarMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey } from "./types";
+import type { CarMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
 
 export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
@@ -27,6 +27,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 	const [activeTab, setActiveTab] = useState<TabKey>("cars");
 	const [totalMinutes, setTotalMinutes] = useState(2);
 	const [secPerScene, setSecPerScene] = useState(10);
+	const [visualStyle, setVisualStyle] = useState<VisualStyleKey>("semi-cinematic");
 	const [currentScene, setCurrentScene] = useState(1);
 
 	const totalScenes = Math.max(
@@ -55,6 +56,56 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 	const [allPrompts, setAllPrompts] = useState<string[]>([]);
 	const [showAllPrompts, setShowAllPrompts] = useState(false);
 
+	function pickOption(options: readonly string[], prefers: string[]) {
+		const lower = options.map((o) => o.toLowerCase());
+		for (const p of prefers) {
+			const idx = lower.findIndex((o) => o.includes(p.toLowerCase()));
+			if (idx >= 0) return options[idx];
+		}
+		return options[0] ?? "";
+	}
+
+	function getVisualPreset(style: VisualStyleKey): Partial<SceneConfig> {
+		if (style === "cinematic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["red imax", "8k"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["teal-orange", "bleach bypass"]),
+				camLens: pickOption(OPTIONS.camLens, ["anamorphic", "50mm", "wide-angle"]),
+				camMood: pickOption(OPTIONS.camMood, ["epic blockbuster", "luxury glamour"]),
+			};
+		}
+		if (style === "semi-cinematic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["8k", "red imax"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["blue shadow", "teal-orange"]),
+				camLens: pickOption(OPTIONS.camLens, ["50mm", "wide-angle", "anamorphic"]),
+				camMood: pickOption(OPTIONS.camMood, ["cool underground", "euphoric rave"]),
+			};
+		}
+		if (style === "cinematic-realistic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["8k", "red imax"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["teal-orange", "blue shadow"]),
+				camLens: pickOption(OPTIONS.camLens, ["50mm", "anamorphic", "wide-angle"]),
+				camMood: pickOption(OPTIONS.camMood, ["luxury glamour", "cool underground"]),
+			};
+		}
+		if (style === "realistic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["8k", "unreal engine"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["desaturated gritty", "bleach bypass"]),
+				camLens: pickOption(OPTIONS.camLens, ["50mm", "wide-angle"]),
+				camMood: pickOption(OPTIONS.camMood, ["documentary", "raw adrenaline"]),
+			};
+		}
+		return {
+			camQuality: pickOption(OPTIONS.camQuality, ["unreal engine", "8k"]),
+			camGrade: pickOption(OPTIONS.camGrade, ["vivid", "teal-orange"]),
+			camLens: pickOption(OPTIONS.camLens, ["macro", "telephoto", "anamorphic"]),
+			camMood: pickOption(OPTIONS.camMood, ["epic blockbuster", "raw adrenaline"]),
+		};
+	}
+
 	function getSceneConfig(sceneNum: number): SceneConfig {
 		return sceneConfigs[sceneNum] ?? getDefaultSceneConfig();
 	}
@@ -79,6 +130,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 			totalScenes: effectiveTotalScenes,
 			secPerScene: effectiveSecPerScene,
 			sceneType,
+			visualStyle,
 			config,
 		});
 		setPromptOutput(prompt);
@@ -113,6 +165,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 				totalScenes,
 				secPerScene,
 				sceneType,
+				visualStyle,
 				config,
 			});
 			prompts.push(prompt);
@@ -296,6 +349,21 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		);
 	}
 
+	function setVisualStyleSafe(next: VisualStyleKey) {
+		setVisualStyle(next);
+		const preset = getVisualPreset(next);
+		setSceneConfigs((prev) => {
+			const nextMap: Record<number, SceneConfig> = { ...prev };
+			for (let s = 1; s <= totalScenes; s++) {
+				const base = nextMap[s] ?? getDefaultSceneConfig();
+				nextMap[s] = { ...base, ...preset };
+			}
+			return nextMap;
+		});
+		setTimeout(() => generatePromptFor(currentScene), 50);
+		showToast(`🎞️ Visual style: ${VISUAL_STYLE_LABELS[next]}`);
+	}
+
 	function setCurrentSceneSafe(sceneNum: number) {
 		const safe = Math.min(totalScenes, Math.max(1, sceneNum));
 		setCurrentScene(safe);
@@ -309,6 +377,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 
 	const scType = sceneTypes[currentScene] ?? "dj-party";
 	const scTypeLabel = getSceneTypeLabel(scType);
+	const visualStyleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
 
 	return {
 		tabs,
@@ -319,6 +388,10 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		secPerScene,
 		totalScenes,
 		onDurationChange,
+
+		visualStyle,
+		visualStyleLabel,
+		setVisualStyleSafe,
 
 		currentScene,
 		setCurrentSceneSafe,

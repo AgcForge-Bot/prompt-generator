@@ -10,6 +10,12 @@ export type TabKey =
 	| "camera";
 
 export type SceneTypeKey = keyof typeof SCENE_TYPE_LABELS;
+export type VisualStyleKey =
+	| "cinematic"
+	| "semi-cinematic"
+	| "cinematic-realistic"
+	| "realistic"
+	| "hyper-realistic";
 
 export type SceneConfig = {
 	carHero: string;
@@ -69,6 +75,10 @@ export type CarMusicVideoGenerator = {
 	secPerScene: number;
 	totalScenes: number;
 	onDurationChange: (min: number, sec: number) => void;
+
+	visualStyle: VisualStyleKey;
+	visualStyleLabel: string;
+	setVisualStyleSafe: (next: VisualStyleKey) => void;
 
 	currentScene: number;
 	setCurrentSceneSafe: (sceneNum: number) => void;

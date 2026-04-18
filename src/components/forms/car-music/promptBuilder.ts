@@ -1,5 +1,5 @@
-import { SCENE_TYPE_LABELS } from "./constants";
-import type { SceneConfig, SceneTypeKey } from "./types";
+import { SCENE_TYPE_LABELS, VISUAL_STYLE_HINTS, VISUAL_STYLE_LABELS } from "./constants";
+import type { SceneConfig, SceneTypeKey, VisualStyleKey } from "./types";
 import { mmss } from "./utils";
 
 export function buildPrompt(args: {
@@ -7,12 +7,15 @@ export function buildPrompt(args: {
 	totalScenes: number;
 	secPerScene: number;
 	sceneType: SceneTypeKey;
+	visualStyle: VisualStyleKey;
 	config: SceneConfig;
 }) {
-	const { sceneNum, totalScenes, secPerScene, sceneType, config } = args;
+	const { sceneNum, totalScenes, secPerScene, sceneType, visualStyle, config } = args;
 	const start = (sceneNum - 1) * secPerScene;
 	const end = start + secPerScene;
 	const typeLabel = SCENE_TYPE_LABELS[sceneType] ?? sceneType;
+	const styleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
+	const styleHint = VISUAL_STYLE_HINTS[visualStyle] ?? "";
 
 	const actionLines: Record<SceneTypeKey, string> = {
 		"dj-party": `MAIN ACTION: DJ FREESTYLE — ${config.djAction}. Setup: ${config.djSetup}. Effect: ${config.djFx}. ${config.djSound}.`,
@@ -26,7 +29,8 @@ export function buildPrompt(args: {
 	};
 
 	return `[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ★ ${typeLabel.toUpperCase()} ★]
-THEME: Fast & Furious Car Party × DJ Music Video | Semi-Cinematic Realistic
+THEME: Fast & Furious Car Party × DJ Music Video | ${styleLabel}
+VISUAL STYLE: ${styleLabel} — ${styleHint}
 
 ${actionLines[sceneType] ?? actionLines["dj-party"]}
 
@@ -44,5 +48,5 @@ PROPS: Fire — ${config.propFire}. Smoke — ${config.propSmoke}. Animal — ${
 
 CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${config.camMood}.
 
-STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and animals. Semi-cinematic music video production quality.`;
+STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and animals. ${styleLabel} music video production quality.`;
 }

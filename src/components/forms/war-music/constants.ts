@@ -12,6 +12,27 @@ export const SCENE_TYPE_LABELS = {
 	aftermath: "Aftermath Silence",
 } as const;
 
+export const VISUAL_STYLE_LABELS = {
+	cinematic: "Cinematic",
+	"semi-cinematic": "Semi-Cinematic",
+	"cinematic-realistic": "Cinematic Realistic",
+	realistic: "Realistic",
+	"hyper-realistic": "Hyper Realistic",
+} as const;
+
+export const VISUAL_STYLE_HINTS = {
+	cinematic:
+		"strong cinematic lighting, dramatic composition, shallow depth of field, filmic contrast, tasteful grain",
+	"semi-cinematic":
+		"balanced cinematic look, clean composition, moderate depth of field, polished music video feel",
+	"cinematic-realistic":
+		"photorealistic baseline with cinematic framing and lighting, natural textures, film-grade polish",
+	realistic:
+		"natural documentary realism, neutral grading, minimal stylization, true-to-life lighting and colors",
+	"hyper-realistic":
+		"ultra photoreal, micro-detail textures, crisp clarity, high dynamic range, premium VFX realism",
+} as const;
+
 export const DEFAULT_TYPES = [
 	"ground-assault",
 	"dj-warzone",
@@ -401,4 +422,3 @@ export const OPTIONS = {
 		"macro extreme close — details of war, trigger fingers, sweat",
 	],
 } as const;
-
