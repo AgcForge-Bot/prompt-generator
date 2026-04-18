@@ -8,14 +8,17 @@ import CarMusicVideoClipForm from "@/components/forms/CarMusicVideoClipForm";
 import WarMusicVideoClipForm from "@/components/forms/WarMusicVideoClipForm";
 import RelaxingMusicVideoForm from "@/components/forms/RelaxingMusicVideoForm";
 import ProductPromoVideoForm from "@/components/forms/ProductPromoVideoForm";
+import SeoChannelOptimizerForm from "@/components/forms/SeoChannelOptimizerForm";
 
 type HomeToolKey =
+	| "product-promo-video"
 	| "forest-build-primitive-craft"
 	| "asmr-timelapse-constructor"
 	| "car-music-video-clip"
 	| "war-music-video-clip"
 	| "relaxing-music-video-clip"
-	| "product-promo-video";
+	| "seo-channel-optimizer"
+	| "all-in-one-prompt-generator";
 
 type ToolMeta = {
 	key: HomeToolKey;
@@ -150,6 +153,15 @@ export default function HomeClient() {
 					"Generator prompt untuk relaxing nature drone music clip: time-of-day, timeline 12 scene, scene type, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🌿",
 			},
+			{
+				key: "seo-channel-optimizer",
+				label: "SEO Channel Optimizer",
+				badge: "NEW",
+				title: "SEO Channel Optimizer — AI Prompt Generator",
+				description:
+					"Auto generate judul, deskripsi, tags & storyboard full SEO optimization. Analisa skor SEO video YouTube/Facebook seperti VidIQ. Powered by Claude, GPT, Gemini & OpenRouter.",
+				icon: "📊",
+			},
 		],
 		[],
 	);
@@ -227,10 +239,14 @@ export default function HomeClient() {
 							<CarMusicVideoClipForm />
 						) : selected === "war-music-video-clip" ? (
 							<WarMusicVideoClipForm />
-						) : selected === "product-promo-video" ? (
-							<ProductPromoVideoForm />
-						) : (
+						) : selected === "relaxing-music-video-clip" ? (
 							<RelaxingMusicVideoForm />
+						) : selected === "seo-channel-optimizer" ? (
+							<SeoChannelOptimizerForm />
+						) : selected === "all-in-one-prompt-generator" ? (
+							<ProductPromoVideoForm /> // Future feature
+						) : (
+							<ProductPromoVideoForm />
 						)}
 					</div>
 				</div>
