@@ -2,14 +2,39 @@
 
 export type ModelType = "CLAUDE" | "OPENAI" | "GEMINI" | "OPENROUTER";
 
-// ─── TEMA VIDEO (exclude product-promo) ──────────────────────────────────────
+// ─── TEMA VIDEO ───────────────────────────────────────────────────────────────
 
 export type VideoThemeKey =
 	| "forest-build-primitive-craft"
 	| "asmr-timelapse-constructor"
 	| "car-music-video-clip"
 	| "war-music-video-clip"
-	| "relaxing-music-video-clip";
+	| "relaxing-music-video-clip"
+	| "other-video-theme";
+
+// ─── CUSTOM THEME (untuk "other-video-theme") ────────────────────────────────
+
+export type CustomThemeImageRef = {
+	id: string;
+	name: string;
+	base64: string;
+	mediaType: string;
+	previewUrl: string;
+	aiDescription?: string;   // hasil analisa AI opsional
+};
+
+export type CustomThemeData = {
+	// Wajib diisi user jika pilih "other-video-theme"
+	themeName: string;          // nama tema bebas
+	themeNiche: string;         // niche/genre konten
+	targetPlatform: string;     // YouTube / Facebook / TikTok / dll
+	videoDescription: string;   // deskripsi tema & alur cerita manual
+	targetAudienceCustom: string; // target penonton spesifik
+	contentStyle: string;       // gaya konten (cinematik, vlog, tutorial, dll)
+	keywordHints: string;       // keyword hint dari user (opsional)
+	// Image references (1–3 gambar)
+	imageRefs: CustomThemeImageRef[];
+};
 
 // ─── MODE TOOLS ──────────────────────────────────────────────────────────────
 
@@ -19,52 +44,41 @@ export type ToolMode = "generate" | "analyze";
 
 export type TitleVariant = {
 	title: string;
-	seoScore: number;         // 0–100
+	seoScore: number;
 	searchVolume: "High" | "Medium" | "Low";
-	clickbaitScore: number;   // 0–100
+	clickbaitScore: number;
 	charCount: number;
 	keywords: string[];
-	reason: string;           // kenapa judul ini bagus
+	reason: string;
 };
 
 export type TagItem = {
 	tag: string;
 	volume: "High" | "Medium" | "Low";
-	relevance: number;        // 0–100
+	relevance: number;
 	category: "broad" | "niche" | "long-tail";
 };
 
 export type StoryboardScene = {
 	sceneNum: number;
 	title: string;
-	imagePrompt: string;      // prompt untuk Grok/VEO image reference
-	duration: string;         // estimasi durasi
-	description: string;      // deskripsi visual singkat
+	imagePrompt: string;
+	duration: string;
+	description: string;
 };
 
 export type GenerateOutput = {
-	// Judul
 	titleVariants: TitleVariant[];
 	bestTitleIndex: number;
-
-	// Deskripsi
-	description: string;      // full SEO description
+	description: string;
 	descriptionKeywords: string[];
 	descriptionCharCount: number;
-
-	// Tags
 	tags: TagItem[];
 	totalTagCount: number;
 	overallTagScore: number;
-
-	// Thumbnail
-	thumbnailPrompt: string;  // prompt siap generate
-
-	// Storyboard
-	storyboardCore: string;   // 1 prompt inti keseluruhan video
-	storyboardScenes: StoryboardScene[]; // 2–4 scene image prompts
-
-	// Meta
+	thumbnailPrompt: string;
+	storyboardCore: string;
+	storyboardScenes: StoryboardScene[];
 	theme: VideoThemeKey;
 	generatedAt: string;
 	aiModel: string;
@@ -73,7 +87,7 @@ export type GenerateOutput = {
 // ─── OUTPUT ANALYZE MODE ─────────────────────────────────────────────────────
 
 export type ScoreItem = {
-	score: number;            // 0–100
+	score: number;
 	grade: "A" | "B" | "C" | "D" | "F";
 	strengths: string[];
 	issues: string[];
@@ -84,19 +98,13 @@ export type AnalyzeOutput = {
 	url: string;
 	platform: "youtube" | "facebook" | "unknown";
 	theme: VideoThemeKey;
-
-	// Skor per bagian
 	titleScore: ScoreItem & { detectedTitle?: string };
 	thumbnailScore: ScoreItem & { thumbnailSuggestion?: string };
 	descriptionScore: ScoreItem & { detectedDescription?: string };
 	tagsScore: ScoreItem & { detectedTags?: string[] };
-
-	// Overall
 	overallScore: number;
 	overallGrade: "A" | "B" | "C" | "D" | "F";
-	priorityFixes: string[];   // urutan perbaikan yang paling penting
-
-	// Meta
+	priorityFixes: string[];
 	analyzedAt: string;
 	aiModel: string;
 };
@@ -111,10 +119,13 @@ export type SeoFormState = {
 	aiModelId: string;
 
 	// Generate mode
-	customKeyword: string;    // keyword tambahan opsional
-	targetAudience: string;   // target penonton
-	videoStyle: string;       // gaya video (opsional, free text)
-	language: "id" | "en" | "both"; // bahasa output
+	customKeyword: string;
+	targetAudience: string;
+	videoStyle: string;
+	language: "id" | "en" | "both";
+
+	// Custom theme data (aktif jika theme === "other-video-theme")
+	customTheme: CustomThemeData;
 
 	// Analyze mode
 	videoUrl: string;
@@ -126,6 +137,7 @@ export type SeoFormState = {
 	// UI state
 	isGenerating: boolean;
 	isAnalyzing: boolean;
+	isAnalyzingImage: boolean;    // loading saat AI analisa gambar custom theme
 	error: string;
 	activeOutputTab: "titles" | "description" | "tags" | "thumbnail" | "storyboard";
 };

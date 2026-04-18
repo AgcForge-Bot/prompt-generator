@@ -8,10 +8,14 @@ import {
 } from "./seo-optimizer/sections/InputSections";
 import GenerateOutputSection from "./seo-optimizer/sections/GenerateOutputSection";
 import AnalyzeOutputSection from "./seo-optimizer/sections/AnalyzeOutputSection";
+import CustomThemeSection from "./seo-optimizer/sections/CustomThemeSection";
+import { getThemeIcon, getThemeLabel } from "./seo-optimizer/constants";
 
 export default function SeoChannelOptimizerForm() {
 	const gen = useSeoOptimizer();
 	const { state, update } = gen;
+
+	const isCustomTheme = state.theme === "other-video-theme";
 
 	return (
 		<div>
@@ -50,19 +54,24 @@ export default function SeoChannelOptimizerForm() {
 									: "🔍 Mode Analisa"}
 							</div>
 							<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
+								{getThemeIcon(state.theme)}{" "}
+								{getThemeLabel(state.theme, state.customTheme.themeName)}
+							</div>
+							<div className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
 								🤖 {state.aiModel}
 							</div>
 						</div>
 					</div>
 				</header>
 
-				{/* ── CONFIG: TEMA + MODE + MODEL ── */}
+				{/* ── TEMA + MODE + MODEL ── */}
 				<ThemeModelSection
 					mode={state.mode}
 					theme={state.theme}
 					aiModel={state.aiModel}
 					aiModelId={state.aiModelId}
 					language={state.language}
+					customThemeName={state.customTheme.themeName}
 					onMode={gen.setMode}
 					onTheme={gen.setTheme}
 					onModel={gen.setModel}
@@ -70,9 +79,26 @@ export default function SeoChannelOptimizerForm() {
 					onLanguage={(l) => update({ language: l })}
 				/>
 
+				{/* ── CUSTOM THEME FIELDS (muncul hanya jika other-video-theme) ── */}
+				{isCustomTheme && (
+					<CustomThemeSection
+						data={state.customTheme}
+						isAnalyzingImage={state.isAnalyzingImage}
+						onUpdate={gen.updateCustomTheme}
+						onImageUpload={gen.handleCustomImageUpload}
+						onRemoveImage={gen.removeCustomImage}
+					/>
+				)}
+
 				{/* ── ERROR ── */}
 				{state.error && (
-					<div className="card mb-5 border-red-500/30 bg-red-950/10">
+					<div
+						className="card mb-5"
+						style={{
+							border: "1px solid rgba(239,68,68,0.3)",
+							background: "rgba(127,29,29,0.1)",
+						}}
+					>
 						<div className="flex items-start gap-2">
 							<span className="text-red-400 text-lg shrink-0">⚠</span>
 							<div>
@@ -95,6 +121,8 @@ export default function SeoChannelOptimizerForm() {
 							targetAudience={state.targetAudience}
 							videoStyle={state.videoStyle}
 							isGenerating={state.isGenerating}
+							isCustomTheme={isCustomTheme}
+							hasCustomImages={state.customTheme.imageRefs.length > 0}
 							onCustomKeyword={(v) => update({ customKeyword: v })}
 							onTargetAudience={(v) => update({ targetAudience: v })}
 							onVideoStyle={(v) => update({ videoStyle: v })}

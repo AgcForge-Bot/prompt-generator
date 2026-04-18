@@ -3,12 +3,14 @@
 
 import { useState } from "react";
 import type { ModelType, PromoDNA, ProductSpec, ImageRef } from "../types";
-import {
-	PRODUCT_CATEGORIES,
-	getDefaultVisionModelId,
-	getVisionProviderLabel,
-} from "../constants";
+import { PRODUCT_CATEGORIES } from "../constants";
 import { redirectToLogin } from "@/lib/auth/redirectToLogin";
+import {
+	AI_MODELS_PROVIDER,
+	getDefaultModelId,
+	getModelOptions,
+	getProviderLabel,
+} from "@/lib/modelProviders";
 
 type Props = {
 	dna: PromoDNA;
@@ -28,13 +30,6 @@ type Props = {
 	onAddUrl: (url: string, name?: string, cat?: string) => void;
 	removeImage: (i: number) => void;
 };
-
-const AI_PROVIDERS: { value: ModelType; label: string }[] = [
-	{ value: "CLAUDE", label: "Claude (Anthropic)" },
-	{ value: "OPENAI", label: "OpenAI GPT-4o" },
-	{ value: "GEMINI", label: "Gemini" },
-	{ value: "OPENROUTER", label: "OpenRouter" },
-];
 
 type SpecFieldKey = keyof Omit<
 	ProductSpec,
@@ -218,10 +213,10 @@ export default function ProductInfoSection({
 						onChange={(e) => {
 							const p = e.target.value as ModelType;
 							setImgModel(p);
-							setImgModelId(getDefaultVisionModelId(p));
+							setImgModelId(getDefaultModelId(p));
 						}}
 					>
-						{AI_PROVIDERS.map((p) => (
+						{AI_MODELS_PROVIDER.map((p) => (
 							<option key={p.value} value={p.value}>
 								{p.label}
 							</option>
@@ -229,13 +224,18 @@ export default function ProductInfoSection({
 					</select>
 				</div>
 				<div>
-					<label className="field-label">🧠 Model ID (opsional)</label>
-					<input
-						className="forest-input"
-						placeholder={getDefaultVisionModelId(imgModel)}
-						value={imgModelId}
+					<label className="field-label">🧠 Model</label>
+					<select
+						className="forest-select"
+						value={imgModelId || getDefaultModelId(imgModel)}
 						onChange={(e) => setImgModelId(e.target.value)}
-					/>
+					>
+						{getModelOptions(imgModel).map((m) => (
+							<option key={m.value} value={m.value}>
+								{m.label}
+							</option>
+						))}
+					</select>
 				</div>
 			</div>
 
@@ -268,7 +268,7 @@ export default function ProductInfoSection({
 							JPG · PNG · WEBP · Multiple OK
 							<br />
 							<span className="text-leaf">
-								{getVisionProviderLabel(imgModel)} otomatis analisa &
+								{getProviderLabel(imgModel)} otomatis analisa &
 								identifikasi produk dari foto
 							</span>
 						</div>
@@ -465,7 +465,7 @@ Bumil & Busui Friendly`}</pre>
 									menganalisa & mentransform deskripsi...
 								</>
 							) : (
-								<>✨ Transform dengan {getVisionProviderLabel(imgModel)}</>
+								<>✨ Transform dengan {getProviderLabel(imgModel)}</>
 							)}
 						</button>
 

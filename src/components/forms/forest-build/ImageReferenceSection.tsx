@@ -5,9 +5,11 @@ import Image from "next/image";
 import Field from "@/components/forms/forest-build/Field";
 import Sel from "@/components/forms/forest-build/Sel";
 import {
-	getDefaultVisionModelId,
-	getVisionProviderLabel,
-} from "@/components/forms/forest-build/constants";
+	AI_MODELS_PROVIDER,
+	getDefaultModelId,
+	getModelOptions,
+	getProviderLabel,
+} from "@/lib/modelProviders";
 
 export default function ImageReferenceSection({
 	imgScope,
@@ -47,7 +49,7 @@ export default function ImageReferenceSection({
 	return (
 		<section className="card mb-5">
 			<div className="section-label">
-				📸 Image Reference — {getVisionProviderLabel(imgModel)}
+				📸 Image Reference — {getProviderLabel(imgModel)}
 			</div>
 			<div className="flex gap-1 mb-4 bg-bark/40 rounded-xl p-1">
 				{(["global", "scene"] as const).map((scope) => (
@@ -77,22 +79,23 @@ export default function ImageReferenceSection({
 						onChange={(v) => {
 							const provider = v as ModelType;
 							setImgModel(provider);
-							setImgModelId(getDefaultVisionModelId(provider));
+							setImgModelId(getDefaultModelId(provider));
 						}}
-						options={[
-							{ value: "CLAUDE", label: "Claude (Anthropic)" },
-							{ value: "OPENAI", label: "OpenAI" },
-							{ value: "GEMINI", label: "Gemini" },
-							{ value: "OPENROUTER", label: "OpenRouter" },
-						]}
+						options={AI_MODELS_PROVIDER.map((p) => ({
+							value: p.value,
+							label: p.label,
+						}))}
 					/>
 				</Field>
-				<Field label="🧠 Model ID (opsional)">
-					<input
-						className="forest-input"
-						placeholder={getDefaultVisionModelId(imgModel)}
-						value={imgModelId}
-						onChange={(e) => setImgModelId(e.target.value)}
+				<Field label="🧠 Model">
+					<Sel
+						id="img-model-id"
+						value={imgModelId || getDefaultModelId(imgModel)}
+						onChange={(v) => setImgModelId(v)}
+						options={getModelOptions(imgModel).map((m) => ({
+							value: m.value,
+							label: m.label,
+						}))}
 					/>
 				</Field>
 			</div>

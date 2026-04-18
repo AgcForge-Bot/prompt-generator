@@ -88,7 +88,7 @@ async function callAI(
 
 		case "GEMINI": {
 			const res = await geminiClient.models.generateContent({
-				model: modelId || "gemini-2.5-flash-lite",
+				model: modelId || "gemini-3.1-flash-lite-preview",
 				contents: [{
 					role: "user",
 					parts: [{ text: `${TRANSFORM_PROMPT}\n\n---\nTeks deskripsi produk:\n${userMessage}` }]
@@ -100,7 +100,7 @@ async function callAI(
 		case "OPENROUTER": {
 			const res = await openRouterClient.chat.send({
 				chatRequest: {
-					model: modelId || "google/gemini-2.5-flash-lite",
+					model: modelId || "google/gemini-3.1-flash-lite-preview",
 					maxTokens: 800,
 					messages: [
 						{ role: "system", content: TRANSFORM_PROMPT },

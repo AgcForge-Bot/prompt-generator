@@ -1,50 +1,46 @@
-import type { VideoThemeKey, SeoFormState } from "./types";
+import type { VideoThemeKey, SeoFormState, CustomThemeData } from "./types";
 import { VIDEO_THEMES } from "./constants";
 
-// ─── HELPER ───────────────────────────────────────────────────────────────────
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-function themeContext(theme: VideoThemeKey, lang: string): string {
+function langNote(lang: string): string {
+	if (lang === "id") return "Semua output dalam Bahasa Indonesia (kecuali tags yang boleh campuran ID+EN)";
+	if (lang === "en") return "All output in English";
+	return "Titles in both Bahasa Indonesia and English. Description in Bahasa Indonesia. Tags mix ID+EN.";
+}
+
+// Bangun konteks dari tema preset
+function presetThemeContext(theme: Exclude<VideoThemeKey, "other-video-theme">, lang: string): string {
 	const t = VIDEO_THEMES[theme];
-	return `
-TEMA VIDEO: ${t.label}
+	return `TEMA VIDEO: ${t.label}
 NICHE: ${t.niche}
 PLATFORM TARGET: ${t.platform}
 KEYWORD SEED: ${t.keywordSeed.join(", ")}
 TARGET AUDIENCE: ${t.audienceDesc}
 CONTENT STYLE: ${t.contentStyle}
-BAHASA OUTPUT: ${lang === "id" ? "Bahasa Indonesia" : lang === "en" ? "English" : "Bilingual (Bahasa Indonesia dan English, judul dalam kedua bahasa)"}
-`.trim();
+BAHASA OUTPUT: ${lang === "id" ? "Bahasa Indonesia" : lang === "en" ? "English" : "Bilingual"}`;
 }
 
-// ─── GENERATE PROMPT ──────────────────────────────────────────────────────────
+// Bangun konteks dari custom theme (other-video-theme)
+function customThemeContext(ct: CustomThemeData, lang: string): string {
+	const imageNote = ct.imageRefs.length > 0
+		? `\nREFERENSI GAMBAR: ${ct.imageRefs.length} gambar referensi telah disertakan — gunakan sebagai acuan visual untuk storyboard dan thumbnail prompt.`
+		: "";
 
-export function buildGeneratePrompt(state: SeoFormState): string {
-	const theme = VIDEO_THEMES[state.theme];
-	const langNote =
-		state.language === "id"
-			? "Semua output dalam Bahasa Indonesia (kecuali tags yang boleh campuran ID+EN)"
-			: state.language === "en"
-				? "All output in English"
-				: "Titles in both Bahasa Indonesia and English. Description in Bahasa Indonesia. Tags mix ID+EN.";
+	return `TEMA VIDEO: ${ct.themeName || "Tema Custom"}
+NICHE/GENRE: ${ct.themeNiche || "—"}
+PLATFORM TARGET: ${ct.targetPlatform || "YouTube"}
+DESKRIPSI TEMA & ALUR CERITA:
+${ct.videoDescription || "—"}
+TARGET AUDIENCE: ${ct.targetAudienceCustom || "—"}
+GAYA KONTEN: ${ct.contentStyle || "—"}
+KEYWORD HINT DARI USER: ${ct.keywordHints || "—"}
+BAHASA OUTPUT: ${lang === "id" ? "Bahasa Indonesia" : lang === "en" ? "English" : "Bilingual"}${imageNote}`;
+}
 
-	const extraContext = [
-		state.customKeyword ? `Keyword tambahan dari user: "${state.customKeyword}"` : "",
-		state.targetAudience ? `Target audience spesifik: "${state.targetAudience}"` : "",
-		state.videoStyle ? `Style video: "${state.videoStyle}"` : "",
-	]
-		.filter(Boolean)
-		.join("\n");
+// ─── JSON SCHEMA TEMPLATE ─────────────────────────────────────────────────────
 
-	return `Kamu adalah pakar YouTube & Facebook SEO setara VidIQ dan TubeBuddy. Tugas kamu adalah menghasilkan konten SEO yang fully optimized untuk video dengan tema berikut:
-
-${themeContext(state.theme, state.language)}
-${extraContext ? `\nINFO TAMBAHAN:\n${extraContext}` : ""}
-
-INSTRUKSI OUTPUT:
-Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtick, tidak ada penjelasan di luar JSON).
-
-JSON SCHEMA:
-{
+const JSON_SCHEMA = `{
   "titleVariants": [
     {
       "title": "judul video yang menarik dan SEO-friendly",
@@ -81,10 +77,10 @@ JSON SCHEMA:
       "description": "deskripsi singkat apa yang terjadi di scene ini"
     }
   ]
-}
+}`;
 
-ATURAN WAJIB:
-- titleVariants: TEPAT 5 variasi judul. Variasi dalam panjang, angle, dan gaya (angka, pertanyaan, how-to, emotional, mystery). ${langNote}
+const GENERATE_RULES = (note: string) => `ATURAN WAJIB:
+- titleVariants: TEPAT 5 variasi judul. Variasi dalam panjang, angle, dan gaya (angka, pertanyaan, how-to, emotional, mystery). ${note}
 - seoScore: estimasi 0-100 berdasarkan keyword density, panjang optimal (50-70 char), CTR potential
 - searchVolume: estimasi volume pencarian ("High" >10k/bulan, "Medium" 1k-10k, "Low" <1k)
 - description: wajib ada hook 2 baris pertama yang kuat, keyword natural di body, minimal 5 hashtag trending di akhir
@@ -93,15 +89,109 @@ ATURAN WAJIB:
 - storyboardCore: comprehensive overview prompt untuk keseluruhan video
 - storyboardScenes: 3 scene image reference prompts (opening, middle, climax/ending)
 - Output HANYA JSON valid. Tidak ada teks sebelum { atau setelah }`;
+
+// ─── GENERATE PROMPT — PRESET THEME ──────────────────────────────────────────
+
+export function buildGeneratePrompt(state: SeoFormState): string {
+	const isCustom = state.theme === "other-video-theme";
+	const note = langNote(state.language);
+
+	const themeCtx = isCustom
+		? customThemeContext(state.customTheme, state.language)
+		: presetThemeContext(state.theme as Exclude<VideoThemeKey, "other-video-theme">, state.language);
+
+	const extraContext = [
+		state.customKeyword ? `Keyword tambahan dari user: "${state.customKeyword}"` : "",
+		state.targetAudience ? `Target audience spesifik: "${state.targetAudience}"` : "",
+		state.videoStyle ? `Style video: "${state.videoStyle}"` : "",
+	]
+		.filter(Boolean)
+		.join("\n");
+
+	const imageInstruction = isCustom && state.customTheme.imageRefs.length > 0
+		? `\nPERHATIAN GAMBAR REFERENSI: User telah menyertakan ${state.customTheme.imageRefs.length} gambar referensi. Gunakan deskripsi visual dari gambar-gambar tersebut sebagai inspirasi utama untuk thumbnailPrompt dan imagePrompt di setiap storyboardScenes. Buat prompt yang konsisten secara visual dengan apa yang ditampilkan di gambar referensi.\n`
+		: "";
+
+	return `Kamu adalah pakar YouTube & Facebook SEO setara VidIQ dan TubeBuddy. Tugas kamu adalah menghasilkan konten SEO yang fully optimized untuk video dengan tema berikut:
+
+${themeCtx}
+${extraContext ? `\nINFO TAMBAHAN:\n${extraContext}` : ""}${imageInstruction}
+
+INSTRUKSI OUTPUT:
+Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtick, tidak ada penjelasan di luar JSON).
+
+JSON SCHEMA:
+${JSON_SCHEMA}
+
+${GENERATE_RULES(note)}`;
+}
+
+// ─── GENERATE PROMPT — CUSTOM THEME WITH IMAGES (multipart) ──────────────────
+// Dipakai di API saat ada image refs — return messages array format
+
+export function buildCustomThemeMessages(state: SeoFormState): {
+	text: string;
+	images: { base64: string; mediaType: string }[];
+} {
+	const note = langNote(state.language);
+	const ct = state.customTheme;
+
+	const extraContext = [
+		state.customKeyword ? `Keyword tambahan dari user: "${state.customKeyword}"` : "",
+		state.targetAudience ? `Target audience spesifik: "${state.targetAudience}"` : "",
+		state.videoStyle ? `Style video: "${state.videoStyle}"` : "",
+	]
+		.filter(Boolean)
+		.join("\n");
+
+	const text = `Kamu adalah pakar YouTube & Facebook SEO setara VidIQ dan TubeBuddy. Hasilkan konten SEO fully optimized untuk video custom theme berikut:
+
+${customThemeContext(ct, state.language)}
+${extraContext ? `\nINFO TAMBAHAN:\n${extraContext}` : ""}
+
+INSTRUKSI GAMBAR REFERENSI:
+${ct.imageRefs.length > 0
+			? `User telah menyertakan ${ct.imageRefs.length} gambar referensi visual untuk tema ini. Analisa gambar-gambar tersebut dan gunakan sebagai inspirasi utama untuk:
+- thumbnailPrompt: buat prompt thumbnail yang secara visual konsisten dengan gambar referensi
+- storyboardCore: deskripsikan visual keseluruhan video yang mencerminkan estetika gambar referensi
+- imagePrompt di setiap storyboardScenes: buat prompt yang mengacu pada gaya visual gambar referensi`
+			: "Tidak ada gambar referensi. Hasilkan berdasarkan deskripsi tema saja."
+		}
+
+INSTRUKSI OUTPUT:
+Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtick).
+
+JSON SCHEMA:
+${JSON_SCHEMA}
+
+${GENERATE_RULES(note)}`;
+
+	return {
+		text,
+		images: ct.imageRefs.map((img) => ({
+			base64: img.base64,
+			mediaType: img.mediaType,
+		})),
+	};
 }
 
 // ─── ANALYZE PROMPT ───────────────────────────────────────────────────────────
 
 export function buildAnalyzePrompt(state: SeoFormState): string {
+	const isCustom = state.theme === "other-video-theme";
+
+	const themeCtx = isCustom
+		? customThemeContext(state.customTheme, "id")
+		: presetThemeContext(state.theme as Exclude<VideoThemeKey, "other-video-theme">, "id");
+
+	const themeLabel = isCustom
+		? (state.customTheme.themeName || "Tema Custom")
+		: VIDEO_THEMES[state.theme as Exclude<VideoThemeKey, "other-video-theme">]?.label ?? state.theme;
+
 	return `Kamu adalah auditor SEO YouTube & Facebook profesional setara VidIQ Score. Analisa video dari URL berikut dan berikan skor SEO komprehensif.
 
 URL VIDEO: ${state.videoUrl}
-${themeContext(state.theme, "id")}
+${themeCtx}
 
 TUGAS:
 1. Akses atau asumsikan konten dari URL tersebut berdasarkan pola URL (YouTube/Facebook)
@@ -111,7 +201,7 @@ TUGAS:
 PENTING: Jika tidak bisa mengakses konten URL secara langsung, analisa berdasarkan:
 - Struktur URL (apakah ada keyword di URL)
 - Pola platform (YouTube vs Facebook)
-- Berikan analisa framework SEO yang bisa diterapkan untuk tema ${VIDEO_THEMES[state.theme].label}
+- Berikan analisa framework SEO yang bisa diterapkan untuk tema ${themeLabel}
 
 Format output: JSON murni tanpa markdown atau backtick.
 
@@ -123,18 +213,18 @@ JSON SCHEMA:
   "titleScore": {
     "score": 72,
     "grade": "B",
-    "detectedTitle": "judul yang terdeteksi atau null jika tidak bisa diakses",
-    "strengths": ["hal positif 1", "hal positif 2"],
-    "issues": ["masalah 1", "masalah 2"],
-    "suggestions": ["saran perbaikan konkret 1", "saran perbaikan konkret 2"]
+    "detectedTitle": "judul yang terdeteksi atau null",
+    "strengths": ["hal positif"],
+    "issues": ["masalah"],
+    "suggestions": ["saran konkret"]
   },
   "thumbnailScore": {
     "score": 65,
     "grade": "C",
-    "thumbnailSuggestion": "deskripsi thumbnail yang ideal untuk tema ini",
+    "thumbnailSuggestion": "deskripsi thumbnail ideal untuk tema ini",
     "strengths": [],
-    "issues": ["masalah thumbnail umum untuk tema ini"],
-    "suggestions": ["saran visual thumbnail yang optimal"]
+    "issues": ["masalah thumbnail"],
+    "suggestions": ["saran visual thumbnail"]
   },
   "descriptionScore": {
     "score": 55,
@@ -142,7 +232,7 @@ JSON SCHEMA:
     "detectedDescription": null,
     "strengths": [],
     "issues": ["masalah deskripsi"],
-    "suggestions": ["saran perbaikan deskripsi dengan contoh konkret"]
+    "suggestions": ["saran perbaikan dengan contoh konkret"]
   },
   "tagsScore": {
     "score": 60,
@@ -150,15 +240,11 @@ JSON SCHEMA:
     "detectedTags": [],
     "strengths": [],
     "issues": ["masalah tags"],
-    "suggestions": ["rekomendasikan 10 tags yang harus ada untuk tema ini"]
+    "suggestions": ["rekomendasikan 10 tags yang harus ada"]
   },
   "overallScore": 63,
   "overallGrade": "C",
-  "priorityFixes": [
-    "Perbaikan #1 yang paling berdampak",
-    "Perbaikan #2",
-    "Perbaikan #3"
-  ]
+  "priorityFixes": ["Perbaikan #1 paling berdampak", "Perbaikan #2", "Perbaikan #3"]
 }
 
 ATURAN SKOR:
@@ -168,10 +254,6 @@ ATURAN SKOR:
 - 40-54: Grade D — Poor, major rework required
 - 0-39: Grade F — Critical issues
 
-Setiap suggestions harus:
-- Spesifik dan actionable (bukan generik)
-- Disertai contoh konkret jika memungkinkan
-- Disesuaikan dengan tema ${VIDEO_THEMES[state.theme].label}
-
+Setiap suggestions harus spesifik, actionable, dan disesuaikan dengan tema ${themeLabel}.
 Output HANYA JSON valid.`;
 }

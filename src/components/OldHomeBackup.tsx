@@ -29,6 +29,12 @@ import {
 } from "@/components/forms/forest-build/sceneGenerator";
 import { buildScenePrompt } from "@/components/forms/forest-build/promptBuilder";
 import { redirectToLogin } from "@/lib/auth/redirectToLogin";
+import {
+	AI_MODELS_PROVIDER,
+	getDefaultModelId,
+	getModelOptions,
+	getProviderLabel,
+} from "@/lib/modelProviders";
 
 // ─── HELPER: SELECT OPTIONS ──────────────────────────────────────────────────
 
@@ -105,32 +111,6 @@ const SOUND_AMBIENTS = [
 	"night sounds — frogs, owls, deep forest alive in darkness",
 	"lake water lapping — soft rhythmic wave against shore",
 ];
-
-function getVisionProviderLabel(model: ModelType) {
-	switch (model) {
-		case "CLAUDE":
-			return "Claude (Anthropic)";
-		case "OPENAI":
-			return "OpenAI";
-		case "GEMINI":
-			return "Gemini";
-		case "OPENROUTER":
-			return "OpenRouter";
-	}
-}
-
-function getDefaultVisionModelId(provider: ModelType) {
-	switch (provider) {
-		case "CLAUDE":
-			return "claude-sonnet-4-20250514";
-		case "OPENAI":
-			return "gpt-4o-mini";
-		case "GEMINI":
-			return "gemini-2.5-flash-lite";
-		case "OPENROUTER":
-			return "google/gemini-2.5-flash-lite";
-	}
-}
 
 // ─── FIELD COMPONENT ──────────────────────────────────────────────────────────
 
@@ -228,7 +208,7 @@ export default function Home() {
 	const [imgProgress, setImgProgress] = useState("");
 	const [imgModel, setImgModel] = useState<ModelType>("CLAUDE");
 	const [imgModelId, setImgModelId] = useState<string>(
-		getDefaultVisionModelId("CLAUDE"),
+		getDefaultModelId("CLAUDE"),
 	);
 
 	// ── Output
@@ -496,7 +476,7 @@ export default function Home() {
 		setImgProgress("");
 		e.target.value = "";
 		showToast(
-			`✅ ${files.length} gambar selesai dianalisa ${getVisionProviderLabel(imgModel)}!`,
+			`✅ ${files.length} gambar selesai dianalisa ${getProviderLabel(imgModel)}!`,
 		);
 	}
 
@@ -554,7 +534,7 @@ export default function Home() {
 		setImgProgress("");
 		showToast(
 			desc
-				? `🎨 URL dianalisa ${getVisionProviderLabel(imgModel)}!`
+				? `🎨 URL dianalisa ${getProviderLabel(imgModel)}!`
 				: "⚠ URL ditambahkan (analisa gagal)",
 		);
 	}
@@ -880,7 +860,7 @@ export default function Home() {
 				{/* ── IMAGE REFERENCE ── */}
 				<section className="card mb-5">
 					<div className="section-label">
-						📸 Image Reference — {getVisionProviderLabel(imgModel)}
+						📸 Image Reference — {getProviderLabel(imgModel)}
 					</div>
 					{/* Scope tabs */}
 					<div className="flex gap-1 mb-4 bg-bark/40 rounded-xl p-1">
@@ -912,22 +892,23 @@ export default function Home() {
 								onChange={(v) => {
 									const provider = v as ModelType;
 									setImgModel(provider);
-									setImgModelId(getDefaultVisionModelId(provider));
+									setImgModelId(getDefaultModelId(provider));
 								}}
-								options={[
-									{ value: "CLAUDE", label: "Claude (Anthropic)" },
-									{ value: "OPENAI", label: "OpenAI" },
-									{ value: "GEMINI", label: "Gemini" },
-									{ value: "OPENROUTER", label: "OpenRouter" },
-								]}
+								options={AI_MODELS_PROVIDER.map((p) => ({
+									value: p.value,
+									label: p.label,
+								}))}
 							/>
 						</Field>
-						<Field label="🧠 Model ID (opsional)">
-							<input
-								className="forest-input"
-								placeholder={getDefaultVisionModelId(imgModel)}
-								value={imgModelId}
-								onChange={(e) => setImgModelId(e.target.value)}
+						<Field label="🧠 Model">
+							<Sel
+								id="img-model-id"
+								value={imgModelId || getDefaultModelId(imgModel)}
+								onChange={(v) => setImgModelId(v)}
+								options={getModelOptions(imgModel).map((m) => ({
+									value: m.value,
+									label: m.label,
+								}))}
 							/>
 						</Field>
 					</div>

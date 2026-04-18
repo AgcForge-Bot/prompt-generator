@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { OpenRouter } from "@openrouter/sdk";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, createPartFromBase64, createPartFromText } from "@google/genai";
 
 // ─── LAZY CLIENTS ─────────────────────────────────────────────────────────────
 
@@ -29,20 +29,15 @@ function safeParseJSON(raw: string): unknown {
 			.trim();
 		return JSON.parse(clean);
 	} catch {
-		// Try to extract JSON object from raw text
 		const match = raw.match(/\{[\s\S]*\}/);
 		if (match) {
-			try {
-				return JSON.parse(match[0]);
-			} catch {
-				return null;
-			}
+			try { return JSON.parse(match[0]); } catch { return null; }
 		}
 		return null;
 	}
 }
 
-// ─── CALL AI ──────────────────────────────────────────────────────────────────
+// ─── CALL AI — TEXT ONLY ─────────────────────────────────────────────────────
 
 async function callAI(
 	provider: string,
@@ -61,19 +56,103 @@ async function callAI(
 			});
 			return res.content.find((b) => b.type === "text")?.text ?? "";
 		}
-
 		case "OPENAI": {
 			if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 			const res = await fetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+				body: JSON.stringify({ model: modelId || "gpt-4o", max_tokens: maxTokens, messages: [{ role: "user", content: prompt }] }),
+			});
+			if (!res.ok) throw new Error(`OpenAI error: ${res.status}`);
+			const data = await res.json();
+			return data.choices?.[0]?.message?.content ?? "";
+		}
+		case "GEMINI": {
+			const client = getGeminiClient();
+			if (!client) throw new Error("GEMINI_API_KEY not configured");
+			const res = await client.models.generateContent({
+				model: modelId || "gemini-3.1-flash-lite-preview",
+				contents: [{ role: "user", parts: [{ text: prompt }] }],
+			});
+			return res.text ?? "";
+		}
+		case "OPENROUTER": {
+			const client = getOpenRouterClient();
+			if (!client) throw new Error("OPENROUTER_API_KEY not configured");
+			const res = await client.chat.send({
+				chatRequest: {
+					model: modelId || "google/gemini-3.1-flash-lite-preview",
+					maxTokens: maxTokens,
+					messages: [{ role: "user", content: prompt }],
 				},
+			});
+			const content = res.choices?.[0]?.message?.content;
+			if (typeof content === "string") return content;
+			if (Array.isArray(content)) {
+				return content
+					.filter((p: unknown) => p && typeof p === "object" && (p as { type?: string }).type === "text")
+					.map((p: unknown) => (p as { text?: string }).text ?? "")
+					.join("\n");
+			}
+			return "";
+		}
+		default:
+			throw new Error(`Provider tidak dikenal: ${provider}`);
+	}
+}
+
+// ─── CALL AI — WITH IMAGES (untuk custom theme) ───────────────────────────────
+
+async function callAIWithImages(
+	provider: string,
+	modelId: string,
+	text: string,
+	images: { base64: string; mediaType: string }[],
+	maxTokens = 5000,
+): Promise<string> {
+	switch (provider) {
+		case "CLAUDE": {
+			const client = getClaudeClient();
+			if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
+
+			const content: Anthropic.MessageParam["content"] = [
+				// Gambar dulu, lalu teks
+				...images.map((img): Anthropic.ImageBlockParam => ({
+					type: "image",
+					source: {
+						type: "base64",
+						media_type: img.mediaType as Anthropic.Base64ImageSource["media_type"],
+						data: img.base64,
+					},
+				})),
+				{ type: "text", text },
+			];
+
+			const res = await client.messages.create({
+				model: modelId || "claude-sonnet-4-20250514",
+				max_tokens: maxTokens,
+				messages: [{ role: "user", content }],
+			});
+			return res.content.find((b) => b.type === "text")?.text ?? "";
+		}
+
+		case "OPENAI": {
+			if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
+			const contentParts = [
+				// Gambar dulu
+				...images.map((img) => ({
+					type: "image_url",
+					image_url: { url: `data:${img.mediaType};base64,${img.base64}` },
+				})),
+				{ type: "text", text },
+			];
+			const res = await fetch("https://api.openai.com/v1/chat/completions", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
 				body: JSON.stringify({
 					model: modelId || "gpt-4o",
 					max_tokens: maxTokens,
-					messages: [{ role: "user", content: prompt }],
+					messages: [{ role: "user", content: contentParts }],
 				}),
 			});
 			if (!res.ok) throw new Error(`OpenAI error: ${res.status}`);
@@ -84,9 +163,13 @@ async function callAI(
 		case "GEMINI": {
 			const client = getGeminiClient();
 			if (!client) throw new Error("GEMINI_API_KEY not configured");
+			const parts = [
+				...images.map((img) => createPartFromBase64(img.base64, img.mediaType)),
+				createPartFromText(text),
+			];
 			const res = await client.models.generateContent({
-				model: modelId || "gemini-2.5-flash-lite",
-				contents: [{ role: "user", parts: [{ text: prompt }] }],
+				model: modelId || "gemini-3.1-flash-lite-preview",
+				contents: [{ role: "user", parts }],
 			});
 			return res.text ?? "";
 		}
@@ -94,11 +177,26 @@ async function callAI(
 		case "OPENROUTER": {
 			const client = getOpenRouterClient();
 			if (!client) throw new Error("OPENROUTER_API_KEY not configured");
+			const contentParts = [
+				...images.map((img) => ({
+					type: "image_url" as const,
+					imageUrl: {
+						url: `data:${img.mediaType};base64,${img.base64}`,
+						detail: "auto" as const
+					},
+				})),
+				{ type: "text" as const, text },
+			];
 			const res = await client.chat.send({
 				chatRequest: {
-					model: modelId || "google/gemini-2.5-flash-lite",
+					model: modelId || "google/gemini-3.1-flash-lite-preview",
 					maxTokens: maxTokens,
-					messages: [{ role: "user", content: prompt }],
+					messages: [
+						{
+							role: "user",
+							content: contentParts,
+						}
+					],
 				},
 			});
 			const content = res.choices?.[0]?.message?.content;
@@ -125,6 +223,8 @@ export async function POST(req: NextRequest) {
 		prompt: string;
 		model?: string;
 		modelId?: string;
+		// Untuk custom theme dengan images
+		images?: { base64: string; mediaType: string }[];
 	};
 
 	try {
@@ -133,7 +233,7 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
 	}
 
-	const { action, prompt, model, modelId } = body;
+	const { action, prompt, model, modelId, images } = body;
 	const provider = model ?? "CLAUDE";
 
 	if (!prompt?.trim()) {
@@ -155,11 +255,15 @@ export async function POST(req: NextRequest) {
 	}
 
 	try {
-		// Generate butuh lebih banyak token karena output lebih panjang
 		const maxTokens = action === "generate" ? 5000 : 3000;
-		const rawOutput = await callAI(provider, modelId ?? "", prompt, maxTokens);
-		const parsed = safeParseJSON(rawOutput);
+		const hasImages = images && images.length > 0;
 
+		// Jika ada images, pakai callAIWithImages
+		const rawOutput = hasImages
+			? await callAIWithImages(provider, modelId ?? "", prompt, images, maxTokens)
+			: await callAI(provider, modelId ?? "", prompt, maxTokens);
+
+		const parsed = safeParseJSON(rawOutput);
 		if (!parsed) {
 			return NextResponse.json(
 				{ error: "AI tidak menghasilkan JSON yang valid. Coba lagi.", rawOutput },

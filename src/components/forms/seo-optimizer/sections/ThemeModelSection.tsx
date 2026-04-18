@@ -3,10 +3,15 @@
 import type { VideoThemeKey, ModelType } from "../types";
 import {
 	VIDEO_THEMES,
-	AI_PROVIDERS,
 	LANGUAGE_OPTIONS,
-	getDefaultModelId,
+	getThemeIcon,
+	getThemeLabel,
 } from "../constants";
+import {
+	AI_MODELS_PROVIDER,
+	getDefaultModelId,
+	getModelOptions,
+} from "@/lib/modelProviders";
 
 type Props = {
 	mode: "generate" | "analyze";
@@ -14,6 +19,7 @@ type Props = {
 	aiModel: ModelType;
 	aiModelId: string;
 	language: "id" | "en" | "both";
+	customThemeName?: string;
 	onMode: (m: "generate" | "analyze") => void;
 	onTheme: (t: VideoThemeKey) => void;
 	onModel: (m: ModelType) => void;
@@ -21,19 +27,25 @@ type Props = {
 	onLanguage: (l: "id" | "en" | "both") => void;
 };
 
+const PRESET_THEME_KEYS = Object.keys(VIDEO_THEMES) as Exclude<
+	VideoThemeKey,
+	"other-video-theme"
+>[];
+
 export default function ThemeModelSection({
 	mode,
 	theme,
 	aiModel,
 	aiModelId,
 	language,
+	customThemeName,
 	onMode,
 	onTheme,
 	onModel,
 	onModelId,
 	onLanguage,
 }: Props) {
-	const themeKeys = Object.keys(VIDEO_THEMES) as VideoThemeKey[];
+	const isCustom = theme === "other-video-theme";
 
 	return (
 		<>
@@ -82,8 +94,10 @@ export default function ThemeModelSection({
 			{/* ── TEMA VIDEO ── */}
 			<section className="card mb-5">
 				<div className="section-label">🎬 Tema Video</div>
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-					{themeKeys.map((key) => {
+
+				{/* Preset themes (5 tema fix) */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+					{PRESET_THEME_KEYS.map((key) => {
 						const t = VIDEO_THEMES[key];
 						const isActive = theme === key;
 						return (
@@ -111,31 +125,87 @@ export default function ThemeModelSection({
 							</button>
 						);
 					})}
+
+					{/* ── OTHER THEME BUTTON ── */}
+					<button
+						type="button"
+						onClick={() => onTheme("other-video-theme")}
+						className={`rounded-xl border px-4 py-3 text-left transition-all ${
+							isCustom
+								? "border-amber/60 bg-amber/10"
+								: "border-amber/20 bg-bark/20 hover:border-amber/40 hover:bg-amber/5"
+						}`}
+					>
+						<div className="flex items-center gap-2 mb-1">
+							<span className="text-lg">🎨</span>
+							<span
+								className={`font-playfair text-sm font-bold ${isCustom ? "text-amber2" : "text-cream"}`}
+							>
+								Tema Lainnya
+							</span>
+						</div>
+						<div className="font-mono text-[9px] text-stone2">
+							{isCustom && customThemeName
+								? customThemeName
+								: "Tema bebas — isi manual + upload gambar referensi"}
+						</div>
+					</button>
 				</div>
 
-				{/* Info tema terpilih */}
-				<div className="mt-3 rounded-xl bg-bark/25 border border-leaf/10 p-3">
-					<div className="font-mono text-[9px] text-leaf uppercase tracking-wider mb-1">
-						{VIDEO_THEMES[theme].icon} Info Tema
+				{/* Info / preview tema yang dipilih */}
+				{!isCustom && (
+					<div className="mt-1 rounded-xl bg-bark/25 border border-leaf/10 p-3">
+						<div className="font-mono text-[9px] text-leaf uppercase tracking-wider mb-1">
+							{
+								VIDEO_THEMES[
+									theme as Exclude<VideoThemeKey, "other-video-theme">
+								].icon
+							}{" "}
+							Info Tema
+						</div>
+						<div className="font-mono text-[10px] text-stone2 leading-relaxed">
+							<span className="text-cream">Platform:</span>{" "}
+							{
+								VIDEO_THEMES[
+									theme as Exclude<VideoThemeKey, "other-video-theme">
+								].platform
+							}
+							<br />
+							<span className="text-cream">Audience:</span>{" "}
+							{
+								VIDEO_THEMES[
+									theme as Exclude<VideoThemeKey, "other-video-theme">
+								].audienceDesc
+							}
+						</div>
+						<div className="mt-2 flex flex-wrap gap-1">
+							{VIDEO_THEMES[
+								theme as Exclude<VideoThemeKey, "other-video-theme">
+							].keywordSeed
+								.slice(0, 5)
+								.map((kw) => (
+									<span
+										key={kw}
+										className="font-mono text-[8px] px-2 py-0.5 rounded-full bg-moss/20 border border-leaf/15 text-leaf2"
+									>
+										{kw}
+									</span>
+								))}
+						</div>
 					</div>
-					<div className="font-mono text-[10px] text-stone2 leading-relaxed">
-						<span className="text-cream">Platform:</span>{" "}
-						{VIDEO_THEMES[theme].platform}
-						<br />
-						<span className="text-cream">Audience:</span>{" "}
-						{VIDEO_THEMES[theme].audienceDesc}
+				)}
+
+				{/* Notif jika custom tapi belum diisi */}
+				{isCustom && (
+					<div className="mt-1 rounded-xl bg-amber/8 border border-amber/20 p-3">
+						<div className="font-mono text-[10px] text-amber2 leading-relaxed">
+							✏️ Isi detail tema kamu di bagian{" "}
+							<strong>&quot;Detail Tema Lainnya&quot;</strong> di bawah. Semakin
+							detail deskripsi tema & alur ceritamu, semakin optimal SEO yang
+							dihasilkan AI.
+						</div>
 					</div>
-					<div className="mt-2 flex flex-wrap gap-1">
-						{VIDEO_THEMES[theme].keywordSeed.slice(0, 5).map((kw) => (
-							<span
-								key={kw}
-								className="font-mono text-[8px] px-2 py-0.5 rounded-full bg-moss/20 border border-leaf/15 text-leaf2"
-							>
-								{kw}
-							</span>
-						))}
-					</div>
-				</div>
+				)}
 			</section>
 
 			{/* ── AI MODEL ── */}
@@ -153,7 +223,7 @@ export default function ThemeModelSection({
 								onModelId(getDefaultModelId(p));
 							}}
 						>
-							{AI_PROVIDERS.map((p) => (
+							{AI_MODELS_PROVIDER.map((p) => (
 								<option key={p.value} value={p.value}>
 									{p.label}
 								</option>
@@ -161,13 +231,18 @@ export default function ThemeModelSection({
 						</select>
 					</div>
 					<div>
-						<label className="field-label">Model ID (opsional)</label>
-						<input
-							className="forest-input"
-							placeholder={getDefaultModelId(aiModel)}
-							value={aiModelId}
+						<label className="field-label">Model</label>
+						<select
+							className="forest-select"
+							value={aiModelId || getDefaultModelId(aiModel)}
 							onChange={(e) => onModelId(e.target.value)}
-						/>
+						>
+							{getModelOptions(aiModel).map((m) => (
+								<option key={m.value} value={m.value}>
+									{m.label}
+								</option>
+							))}
+						</select>
 					</div>
 				</div>
 
@@ -190,6 +265,18 @@ export default function ThemeModelSection({
 									{l.label}
 								</button>
 							))}
+						</div>
+					</div>
+				)}
+
+				{/* Info vision support jika custom theme + images */}
+				{isCustom && mode === "generate" && (
+					<div className="mt-3 px-3 py-2 rounded-lg bg-moss/10 border border-leaf/15">
+						<div className="font-mono text-[9px] text-leaf2 leading-relaxed">
+							🖼️ <strong>Claude, GPT-4o, dan Gemini</strong> mendukung analisa
+							gambar referensi. Jika kamu upload gambar referensi, AI akan
+							menggunakannya untuk menghasilkan thumbnail prompt dan storyboard
+							yang lebih akurat secara visual.
 						</div>
 					</div>
 				)}

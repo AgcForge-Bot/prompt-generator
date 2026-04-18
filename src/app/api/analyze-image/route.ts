@@ -126,7 +126,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeImageR
 				]
 
 				const response = await geminiClient.models.generateContent({
-					model: modelId?.trim() || 'gemini-2.5-flash-lite',
+					model: modelId?.trim() || 'gemini-3.1-flash-lite-preview',
 					contents: [
 						{
 							role: 'user',
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<AnalyzeImageR
 
 				const result = await openRouterClient.chat.send({
 					chatRequest: {
-						model: modelId?.trim() || 'google/gemini-2.5-flash-lite',
+						model: modelId?.trim() || 'google/gemini-3.1-flash-lite-preview',
 						maxTokens: 600,
 						messages: [
 							{

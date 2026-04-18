@@ -148,8 +148,8 @@ export function getDefaultVisionModelId(provider: ModelType) {
 		case "OPENAI":
 			return "gpt-4o-mini";
 		case "GEMINI":
-			return "gemini-2.5-flash-lite";
+			return "gemini-3.1-flash-lite-preview";
 		case "OPENROUTER":
-			return "google/gemini-2.5-flash-lite";
+			return "google/gemini-3.1-flash-lite-preview";
 	}
 }

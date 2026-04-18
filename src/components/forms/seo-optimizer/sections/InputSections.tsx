@@ -7,6 +7,8 @@ type GenerateConfigProps = {
 	targetAudience: string;
 	videoStyle: string;
 	isGenerating: boolean;
+	isCustomTheme?: boolean;
+	hasCustomImages?: boolean;
 	onCustomKeyword: (v: string) => void;
 	onTargetAudience: (v: string) => void;
 	onVideoStyle: (v: string) => void;
@@ -18,6 +20,8 @@ export function GenerateConfigSection({
 	targetAudience,
 	videoStyle,
 	isGenerating,
+	isCustomTheme,
+	hasCustomImages,
 	onCustomKeyword,
 	onTargetAudience,
 	onVideoStyle,
@@ -91,6 +95,17 @@ export function GenerateConfigSection({
 				</div>
 			</div>
 
+			{/* Info custom theme + images */}
+			{isCustomTheme && hasCustomImages && (
+				<div className="rounded-lg bg-leaf/8 border border-leaf/15 px-3 py-2 mb-3">
+					<div className="font-mono text-[9px] text-leaf2 leading-relaxed">
+						🖼️ AI akan menganalisa gambar referensi kamu dan menggunakannya
+						untuk menghasilkan thumbnail prompt dan storyboard yang konsisten
+						secara visual.
+					</div>
+				</div>
+			)}
+
 			<button
 				type="button"
 				disabled={isGenerating}
@@ -108,10 +123,15 @@ export function GenerateConfigSection({
 				{isGenerating ? (
 					<>
 						<span className="animate-pulse">⏳</span> AI sedang generate SEO
-						content...
+						content{isCustomTheme && hasCustomImages ? " + analisa gambar" : ""}
+						...
 					</>
 				) : (
-					<>✨ Generate SEO Content Sekarang</>
+					<>
+						✨ Generate SEO Content
+						{isCustomTheme && hasCustomImages ? " (+ Image Analysis)" : ""}{" "}
+						Sekarang
+					</>
 				)}
 			</button>
 		</section>

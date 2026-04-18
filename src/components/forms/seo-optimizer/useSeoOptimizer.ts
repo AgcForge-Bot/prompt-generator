@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { SeoFormState, VideoThemeKey, ModelType, GenerateOutput, AnalyzeOutput } from "./types";
-import { DEFAULT_SEO_STATE, getDefaultModelId } from "./constants";
-import { buildGeneratePrompt, buildAnalyzePrompt } from "./promptBuilder";
+import type { SeoFormState, VideoThemeKey, ModelType, GenerateOutput, AnalyzeOutput, CustomThemeData, CustomThemeImageRef } from "./types";
+import { DEFAULT_SEO_STATE, DEFAULT_CUSTOM_THEME, getDefaultModelId } from "./constants";
+import { buildGeneratePrompt, buildAnalyzePrompt, buildCustomThemeMessages } from "./promptBuilder";
 
 export default function useSeoOptimizer() {
 	const [state, setState] = useState<SeoFormState>(DEFAULT_SEO_STATE);
@@ -16,6 +16,13 @@ export default function useSeoOptimizer() {
 
 	function update(updates: Partial<SeoFormState>) {
 		setState((prev) => ({ ...prev, ...updates }));
+	}
+
+	function updateCustomTheme(updates: Partial<CustomThemeData>) {
+		setState((prev) => ({
+			...prev,
+			customTheme: { ...prev.customTheme, ...updates },
+		}));
 	}
 
 	function setTheme(theme: VideoThemeKey) {
@@ -34,22 +41,130 @@ export default function useSeoOptimizer() {
 		update({ mode, error: "", generateOutput: null, analyzeOutput: null });
 	}
 
+	// ─── IMAGE UPLOAD (custom theme) ──────────────────────────────────────────────
+
+	async function handleCustomImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+		const files = Array.from(e.target.files ?? []);
+		if (!files.length) return;
+
+		const currentRefs = state.customTheme.imageRefs;
+		if (currentRefs.length + files.length > 3) {
+			showToast("⚠ Maksimal 3 gambar referensi");
+			e.target.value = "";
+			return;
+		}
+
+		update({ isAnalyzingImage: true });
+
+		const newRefs: CustomThemeImageRef[] = [];
+		for (const file of files) {
+			const base64 = await new Promise<string>((res, rej) => {
+				const reader = new FileReader();
+				reader.onload = (ev) => res((ev.target?.result as string).split(",")[1]);
+				reader.onerror = () => rej(new Error("Read failed"));
+				reader.readAsDataURL(file);
+			});
+			const previewUrl = await new Promise<string>((res) => {
+				const r2 = new FileReader();
+				r2.onload = (ev) => res(ev.target?.result as string);
+				r2.readAsDataURL(file);
+			});
+
+			// Analisa gambar via AI (opsional — ringan)
+			let aiDescription: string | undefined;
+			try {
+				const res = await fetch("/api/seo-optimizer", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						action: "generate",
+						prompt: `Deskripsikan gambar referensi ini dalam 2-3 kalimat singkat dalam Bahasa Indonesia. Fokus pada: apa yang terlihat, mood/suasana, warna dominan, dan elemen visual yang menonjol. Buat dalam format teks biasa saja, bukan JSON.`,
+						model: state.aiModel,
+						modelId: state.aiModelId || undefined,
+						images: [{ base64, mediaType: file.type || "image/jpeg" }],
+					}),
+				});
+				// Note: endpoint ini return JSON, tapi untuk deskripsi image kita parse rawOutput
+				const json = await res.json();
+				// Coba ambil dari rawOutput karena prompt tidak minta JSON
+				aiDescription = typeof json.rawOutput === "string"
+					? json.rawOutput.substring(0, 200)
+					: undefined;
+			} catch {
+				aiDescription = undefined;
+			}
+
+			newRefs.push({
+				id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+				name: file.name,
+				base64,
+				mediaType: file.type || "image/jpeg",
+				previewUrl,
+				aiDescription,
+			});
+		}
+
+		updateCustomTheme({
+			imageRefs: [...currentRefs, ...newRefs],
+		});
+		update({ isAnalyzingImage: false });
+		e.target.value = "";
+		showToast(`✅ ${newRefs.length} gambar referensi ditambahkan!`);
+	}
+
+	function removeCustomImage(id: string) {
+		updateCustomTheme({
+			imageRefs: state.customTheme.imageRefs.filter((img) => img.id !== id),
+		});
+	}
+
 	// ─── GENERATE ────────────────────────────────────────────────────────────────
 
 	async function handleGenerate() {
+		// Validasi custom theme
+		if (state.theme === "other-video-theme") {
+			if (!state.customTheme.themeName.trim()) {
+				update({ error: "Isi nama tema terlebih dahulu" });
+				return;
+			}
+			if (!state.customTheme.videoDescription.trim()) {
+				update({ error: "Isi deskripsi tema & alur cerita terlebih dahulu" });
+				return;
+			}
+		}
+
 		update({ isGenerating: true, error: "", generateOutput: null });
 
 		try {
-			const prompt = buildGeneratePrompt(state);
+			const isCustomWithImages =
+				state.theme === "other-video-theme" && state.customTheme.imageRefs.length > 0;
+
+			let requestBody: Record<string, unknown>;
+
+			if (isCustomWithImages) {
+				// Gunakan prompt + images khusus untuk custom theme
+				const { text, images } = buildCustomThemeMessages(state);
+				requestBody = {
+					action: "generate",
+					prompt: text,
+					model: state.aiModel,
+					modelId: state.aiModelId || undefined,
+					images,
+				};
+			} else {
+				// Preset theme atau custom tanpa gambar
+				requestBody = {
+					action: "generate",
+					prompt: buildGeneratePrompt(state),
+					model: state.aiModel,
+					modelId: state.aiModelId || undefined,
+				};
+			}
+
 			const res = await fetch("/api/seo-optimizer", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					action: "generate",
-					prompt,
-					model: state.aiModel,
-					modelId: state.aiModelId || undefined,
-				}),
+				body: JSON.stringify(requestBody),
 			});
 
 			const json = await res.json();
@@ -59,7 +174,6 @@ export default function useSeoOptimizer() {
 			}
 
 			const output = json.data as GenerateOutput;
-			// Inject meta
 			output.theme = state.theme;
 			output.generatedAt = new Date().toLocaleString("id-ID");
 			output.aiModel = `${state.aiModel}${state.aiModelId ? ` (${state.aiModelId})` : ""}`;
@@ -84,17 +198,20 @@ export default function useSeoOptimizer() {
 			update({ error: "URL tidak valid. Harus diawali dengan https://" });
 			return;
 		}
+		if (state.theme === "other-video-theme" && !state.customTheme.themeName.trim()) {
+			update({ error: "Isi nama tema terlebih dahulu di bagian Tema Lainnya" });
+			return;
+		}
 
 		update({ isAnalyzing: true, error: "", analyzeOutput: null });
 
 		try {
-			const prompt = buildAnalyzePrompt(state);
 			const res = await fetch("/api/seo-optimizer", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					action: "analyze",
-					prompt,
+					prompt: buildAnalyzePrompt(state),
 					model: state.aiModel,
 					modelId: state.aiModelId || undefined,
 				}),
@@ -140,8 +257,7 @@ export default function useSeoOptimizer() {
 
 	function copyTags() {
 		if (!state.generateOutput) return;
-		const tagStr = state.generateOutput.tags.map((t) => t.tag).join(", ");
-		copyToClipboard(tagStr, "Tags");
+		copyToClipboard(state.generateOutput.tags.map((t) => t.tag).join(", "), "Tags");
 	}
 
 	function copyThumbnailPrompt() {
@@ -156,9 +272,7 @@ export default function useSeoOptimizer() {
 
 	function copyStoryboardScene(sceneNum: number) {
 		if (!state.generateOutput) return;
-		const scene = state.generateOutput.storyboardScenes.find(
-			(s) => s.sceneNum === sceneNum,
-		);
+		const scene = state.generateOutput.storyboardScenes.find((s) => s.sceneNum === sceneNum);
 		if (!scene) return;
 		copyToClipboard(scene.imagePrompt, `Storyboard Scene ${sceneNum}`);
 	}
@@ -166,83 +280,19 @@ export default function useSeoOptimizer() {
 	function copyAllOutput() {
 		const out = state.generateOutput;
 		if (!out) return;
-
 		const bestTitle = out.titleVariants[out.bestTitleIndex];
-		const allTitles = out.titleVariants
-			.map((t, i) => `${i === out.bestTitleIndex ? "★ " : "  "}[${t.seoScore}] ${t.title}`)
-			.join("\n");
+		const allTitles = out.titleVariants.map((t, i) => `${i === out.bestTitleIndex ? "★ " : "  "}[${t.seoScore}] ${t.title}`).join("\n");
 		const tags = out.tags.map((t) => t.tag).join(", ");
-		const scenes = out.storyboardScenes
-			.map((s) => `Scene ${s.sceneNum}: ${s.title}\n${s.imagePrompt}`)
-			.join("\n\n");
-
-		const fullText = `═══════════════════════════════════════
-SEO CONTENT GENERATOR OUTPUT
-Tema: ${out.theme} | ${out.generatedAt}
-═══════════════════════════════════════
-
-📌 JUDUL TERPILIH (Skor: ${bestTitle?.seoScore}/100):
-${bestTitle?.title}
-
-📋 SEMUA VARIASI JUDUL:
-${allTitles}
-
-📝 DESKRIPSI:
-${out.description}
-
-🏷️ TAGS (${out.totalTagCount} tags):
-${tags}
-
-🖼️ THUMBNAIL PROMPT:
-${out.thumbnailPrompt}
-
-🎬 STORYBOARD INTI:
-${out.storyboardCore}
-
-🎞️ STORYBOARD SCENES:
-${scenes}`;
-
+		const scenes = out.storyboardScenes.map((s) => `Scene ${s.sceneNum}: ${s.title}\n${s.imagePrompt}`).join("\n\n");
+		const fullText = `${"═".repeat(40)}\nSEO CONTENT OUTPUT\nTema: ${out.theme} | ${out.generatedAt}\n${"═".repeat(40)}\n\n📌 JUDUL TERPILIH:\n${bestTitle?.title}\n\n📋 SEMUA JUDUL:\n${allTitles}\n\n📝 DESKRIPSI:\n${out.description}\n\n🏷️ TAGS:\n${tags}\n\n🖼️ THUMBNAIL:\n${out.thumbnailPrompt}\n\n🎬 STORYBOARD INTI:\n${out.storyboardCore}\n\n🎞️ SCENES:\n${scenes}`;
 		copyToClipboard(fullText, "Semua output");
 	}
-
-	// ─── DOWNLOAD ─────────────────────────────────────────────────────────────────
 
 	function downloadOutput() {
 		const out = state.generateOutput;
 		if (!out) return;
-
 		const bestTitle = out.titleVariants[out.bestTitleIndex];
-		const content = `SEO CONTENT — ${out.theme.toUpperCase()}
-Generated: ${out.generatedAt} | AI: ${out.aiModel}
-${"═".repeat(60)}
-
-JUDUL TERPILIH [Score: ${bestTitle?.seoScore}/100]:
-${bestTitle?.title}
-
-SEMUA VARIASI JUDUL:
-${out.titleVariants.map((t, i) => `${i + 1}. [${t.seoScore}] ${t.title}\n   Volume: ${t.searchVolume} | CTR: ${t.clickbaitScore}/100\n   Alasan: ${t.reason}`).join("\n\n")}
-
-${"═".repeat(60)}
-DESKRIPSI (${out.descriptionCharCount} karakter):
-${out.description}
-
-${"═".repeat(60)}
-TAGS (${out.totalTagCount} tags | Score: ${out.overallTagScore}/100):
-${out.tags.map((t) => `[${t.volume}][${t.category}] ${t.tag}`).join("\n")}
-
-${"═".repeat(60)}
-THUMBNAIL PROMPT:
-${out.thumbnailPrompt}
-
-${"═".repeat(60)}
-STORYBOARD INTI:
-${out.storyboardCore}
-
-${"═".repeat(60)}
-STORYBOARD SCENES:
-${out.storyboardScenes.map((s) => `Scene ${s.sceneNum}: ${s.title} (${s.duration})\n${s.description}\n\nImage Prompt:\n${s.imagePrompt}`).join("\n\n─────────────\n\n")}
-`;
-
+		const content = `SEO CONTENT — ${out.theme.toUpperCase()}\nGenerated: ${out.generatedAt} | AI: ${out.aiModel}\n${"═".repeat(60)}\n\nJUDUL TERPILIH [Score: ${bestTitle?.seoScore}/100]:\n${bestTitle?.title}\n\n${"═".repeat(60)}\nSEMUA VARIASI JUDUL:\n${out.titleVariants.map((t, i) => `${i + 1}. [${t.seoScore}] ${t.title}\n   Volume: ${t.searchVolume} | CTR: ${t.clickbaitScore}/100\n   Alasan: ${t.reason}`).join("\n\n")}\n\n${"═".repeat(60)}\nDESKRIPSI:\n${out.description}\n\n${"═".repeat(60)}\nTAGS (${out.totalTagCount}):\n${out.tags.map((t) => `[${t.volume}][${t.category}] ${t.tag}`).join("\n")}\n\n${"═".repeat(60)}\nTHUMBNAIL PROMPT:\n${out.thumbnailPrompt}\n\n${"═".repeat(60)}\nSTORYBOARD INTI:\n${out.storyboardCore}\n\n${"═".repeat(60)}\nSTORYBOARD SCENES:\n${out.storyboardScenes.map((s) => `Scene ${s.sceneNum}: ${s.title} (${s.duration})\n${s.description}\n\nImage Prompt:\n${s.imagePrompt}`).join("\n\n─────────────\n\n")}`;
 		const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
@@ -256,12 +306,15 @@ ${out.storyboardScenes.map((s) => `Scene ${s.sceneNum}: ${s.title} (${s.duration
 	return {
 		state,
 		update,
+		updateCustomTheme,
 		setTheme,
 		setModel,
 		setModelId,
 		setMode,
 		handleGenerate,
 		handleAnalyze,
+		handleCustomImageUpload,
+		removeCustomImage,
 		copyTitle,
 		copyDescription,
 		copyTags,

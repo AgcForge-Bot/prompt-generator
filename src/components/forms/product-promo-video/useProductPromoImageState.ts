@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import type { ImageRef, ModelType } from "./types";
-import { getDefaultVisionModelId, getVisionProviderLabel } from "./constants";
 import { redirectToLogin } from "@/lib/auth/redirectToLogin";
+import { getDefaultModelId, getProviderLabel } from "@/lib/modelProviders";
 
 export default function useProductPromoImageState(showToast: (msg: string) => void) {
 	const [productImages, setProductImages] = useState<ImageRef[]>([]);
 	const [imgAnalyzing, setImgAnalyzing] = useState(false);
 	const [imgProgress, setImgProgress] = useState("");
 	const [imgModel, setImgModel] = useState<ModelType>("CLAUDE");
-	const [imgModelId, setImgModelId] = useState<string>(getDefaultVisionModelId("CLAUDE"));
+	const [imgModelId, setImgModelId] = useState<string>(getDefaultModelId("CLAUDE"));
 	const [urlInput, setUrlInput] = useState("");
 	const [marketplaceUrl, setMarketplaceUrl] = useState("");
 
@@ -93,7 +93,9 @@ export default function useProductPromoImageState(showToast: (msg: string) => vo
 		setImgAnalyzing(false);
 		setImgProgress("");
 		e.target.value = "";
-		showToast(`✅ ${files.length} foto produk selesai dianalisa dengan ${getVisionProviderLabel(imgModel)}!`);
+		showToast(
+			`✅ ${files.length} foto produk selesai dianalisa dengan ${getProviderLabel(imgModel)}!`,
+		);
 	}
 
 	async function addImageURL(

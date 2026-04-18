@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-	getDefaultVisionModelId,
-	getVisionProviderLabel,
-} from "@/components/forms/forest-build/constants";
 import type { SceneConfig, ModelType, ImageRef } from "./types";
 import { redirectToLogin } from "@/lib/auth/redirectToLogin";
+import { getDefaultModelId, getProviderLabel } from "@/lib/modelProviders";
 
 export default function useForestBuildImageState({
 	currentScene,
@@ -30,7 +27,7 @@ export default function useForestBuildImageState({
 	const [imgProgress, setImgProgress] = useState("");
 	const [imgModel, setImgModel] = useState<ModelType>("CLAUDE");
 	const [imgModelId, setImgModelId] = useState<string>(
-		getDefaultVisionModelId("CLAUDE"),
+		getDefaultModelId("CLAUDE"),
 	);
 	const [urlInput, setUrlInput] = useState("");
 
@@ -108,7 +105,7 @@ export default function useForestBuildImageState({
 		setImgProgress("");
 		e.target.value = "";
 		showToast(
-			`✅ ${files.length} gambar selesai dianalisa ${getVisionProviderLabel(imgModel)}!`,
+			`✅ ${files.length} gambar selesai dianalisa ${getProviderLabel(imgModel)}!`,
 		);
 	}
 
@@ -166,7 +163,7 @@ export default function useForestBuildImageState({
 		setImgProgress("");
 		showToast(
 			desc
-				? `🎨 URL dianalisa ${getVisionProviderLabel(imgModel)}!`
+				? `🎨 URL dianalisa ${getProviderLabel(imgModel)}!`
 				: "⚠ URL ditambahkan (analisa gagal)",
 		);
 	}

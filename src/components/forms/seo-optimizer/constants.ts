@@ -1,35 +1,28 @@
-import type { VideoThemeKey, ModelType, SeoFormState } from "./types";
+import type { VideoThemeKey, ModelType, SeoFormState, CustomThemeData } from "./types";
 
 // ─── TEMA VIDEO ───────────────────────────────────────────────────────────────
 
-export const VIDEO_THEMES: Record<
-	VideoThemeKey,
-	{
-		label: string;
-		icon: string;
-		niche: string;
-		platform: string;
-		keywordSeed: string[];
-		audienceDesc: string;
-		contentStyle: string;
-	}
-> = {
+export type ThemeMeta = {
+	label: string;
+	icon: string;
+	niche: string;
+	platform: string;
+	keywordSeed: string[];
+	audienceDesc: string;
+	contentStyle: string;
+};
+
+// Tema preset (5 tema fix) — "other-video-theme" ditangani terpisah
+export const VIDEO_THEMES: Record<Exclude<VideoThemeKey, "other-video-theme">, ThemeMeta> = {
 	"forest-build-primitive-craft": {
 		label: "Forest Build Primitive Craft",
 		icon: "🌿",
 		niche: "ASMR Primitive Survival Build",
 		platform: "YouTube",
 		keywordSeed: [
-			"primitive technology",
-			"bushcraft",
-			"forest shelter build",
-			"asmr build",
-			"survival skills",
-			"primitive shelter",
-			"off grid",
-			"wilderness survival",
-			"mud house",
-			"primitive life",
+			"primitive technology", "bushcraft", "forest shelter build",
+			"asmr build", "survival skills", "primitive shelter",
+			"off grid", "wilderness survival", "mud house", "primitive life",
 		],
 		audienceDesc: "Penonton yang suka konten ASMR, survival, primitive technology, bushcraft, dan nature content",
 		contentStyle: "Cinematic documentary, ASMR, satisfying build, primitive technology, nature immersion",
@@ -40,16 +33,9 @@ export const VIDEO_THEMES: Record<
 		niche: "ASMR Construction Timelapse",
 		platform: "YouTube & Facebook",
 		keywordSeed: [
-			"construction timelapse",
-			"building timelapse",
-			"asmr construction",
-			"satisfying build",
-			"house construction",
-			"timelapse video",
-			"building restoration",
-			"satisfying construction",
-			"restoration timelapse",
-			"build process",
+			"construction timelapse", "building timelapse", "asmr construction",
+			"satisfying build", "house construction", "timelapse video",
+			"building restoration", "satisfying construction", "restoration timelapse", "build process",
 		],
 		audienceDesc: "Penonton yang suka konten satisfying, construction timelapse, ASMR, dan restoration video",
 		contentStyle: "ASMR timelapse, satisfying construction process, restoration, cinematic build documentation",
@@ -60,16 +46,8 @@ export const VIDEO_THEMES: Record<
 		niche: "Car Music Video / Street Racing",
 		platform: "YouTube & TikTok",
 		keywordSeed: [
-			"car music video",
-			"street racing",
-			"drift video",
-			"car show",
-			"fast and furious",
-			"car club",
-			"modified cars",
-			"car dj party",
-			"import scene",
-			"car meet",
+			"car music video", "street racing", "drift video", "car show",
+			"fast and furious", "car club", "modified cars", "car dj party", "import scene", "car meet",
 		],
 		audienceDesc: "Penonton yang suka konten otomotif, street racing, car culture, DJ party, dan music video",
 		contentStyle: "High energy car culture, DJ music video, street racing, cinematic car shots, night events",
@@ -80,16 +58,8 @@ export const VIDEO_THEMES: Record<
 		niche: "War Cinematic Music Video",
 		platform: "YouTube",
 		keywordSeed: [
-			"war cinematic",
-			"military music video",
-			"battle scene",
-			"war epic",
-			"cinematic war",
-			"military tribute",
-			"epic battle",
-			"war documentary style",
-			"soldier tribute",
-			"cinematic military",
+			"war cinematic", "military music video", "battle scene", "war epic",
+			"cinematic war", "military tribute", "epic battle", "war documentary style", "soldier tribute", "cinematic military",
 		],
 		audienceDesc: "Penonton yang suka konten war cinematic, military, epic music video, historical battle recreation",
 		contentStyle: "Epic cinematic war footage, dramatic battle scenes, military tribute, high production value",
@@ -100,36 +70,39 @@ export const VIDEO_THEMES: Record<
 		niche: "Relaxing Nature Drone Music",
 		platform: "YouTube",
 		keywordSeed: [
-			"relaxing music",
-			"nature drone",
-			"peaceful music",
-			"stress relief music",
-			"meditation music",
-			"sleep music",
-			"calming music",
-			"nature sounds",
-			"4k nature",
-			"relaxing drone footage",
+			"relaxing music", "nature drone", "peaceful music", "stress relief music",
+			"meditation music", "sleep music", "calming music", "nature sounds", "4k nature", "relaxing drone footage",
 		],
 		audienceDesc: "Penonton yang mencari konten relaksasi, meditasi, sleep music, nature footage untuk stress relief",
 		contentStyle: "Ultra calming drone nature footage, peaceful music backdrop, 4K scenic landscapes",
 	},
 };
 
+// Helper untuk ambil label tema (include other)
+export function getThemeLabel(theme: VideoThemeKey, customName?: string): string {
+	if (theme === "other-video-theme") return customName || "Tema Lainnya";
+	return VIDEO_THEMES[theme]?.label ?? theme;
+}
+
+export function getThemeIcon(theme: VideoThemeKey): string {
+	if (theme === "other-video-theme") return "🎨";
+	return VIDEO_THEMES[theme]?.icon ?? "🎬";
+}
+
 // ─── AI MODELS ────────────────────────────────────────────────────────────────
 
 export const AI_PROVIDERS: { value: ModelType; label: string; defaultModel: string }[] = [
 	{ value: "CLAUDE", label: "Claude (Anthropic)", defaultModel: "claude-sonnet-4-20250514" },
 	{ value: "OPENAI", label: "OpenAI GPT-4o", defaultModel: "gpt-4o" },
-	{ value: "GEMINI", label: "Gemini", defaultModel: "gemini-2.5-flash-lite" },
-	{ value: "OPENROUTER", label: "OpenRouter", defaultModel: "google/gemini-2.5-flash-lite" },
+	{ value: "GEMINI", label: "Gemini", defaultModel: "gemini-3.1-flash-lite-preview" },
+	{ value: "OPENROUTER", label: "OpenRouter", defaultModel: "google/gemini-3.1-flash-lite-preview" },
 ];
 
 export function getDefaultModelId(provider: ModelType): string {
 	return AI_PROVIDERS.find((p) => p.value === provider)?.defaultModel ?? "claude-sonnet-4-20250514";
 }
 
-// ─── SEO SCORE GRADE ─────────────────────────────────────────────────────────
+// ─── SEO HELPERS ─────────────────────────────────────────────────────────────
 
 export function getGrade(score: number): "A" | "B" | "C" | "D" | "F" {
 	if (score >= 85) return "A";
@@ -174,6 +147,19 @@ export const LANGUAGE_OPTIONS = [
 	{ value: "both", label: "🌐 Bilingual (ID + EN)" },
 ] as const;
 
+// ─── DEFAULT CUSTOM THEME ─────────────────────────────────────────────────────
+
+export const DEFAULT_CUSTOM_THEME: CustomThemeData = {
+	themeName: "",
+	themeNiche: "",
+	targetPlatform: "YouTube",
+	videoDescription: "",
+	targetAudienceCustom: "",
+	contentStyle: "",
+	keywordHints: "",
+	imageRefs: [],
+};
+
 // ─── DEFAULT STATE ────────────────────────────────────────────────────────────
 
 export const DEFAULT_SEO_STATE: SeoFormState = {
@@ -185,11 +171,41 @@ export const DEFAULT_SEO_STATE: SeoFormState = {
 	targetAudience: "",
 	videoStyle: "",
 	language: "id",
+	customTheme: { ...DEFAULT_CUSTOM_THEME },
 	videoUrl: "",
 	generateOutput: null,
 	analyzeOutput: null,
 	isGenerating: false,
 	isAnalyzing: false,
+	isAnalyzingImage: false,
 	error: "",
 	activeOutputTab: "titles",
 };
+
+// ─── PLATFORM OPTIONS (untuk custom theme) ────────────────────────────────────
+
+export const PLATFORM_OPTIONS = [
+	"YouTube",
+	"Facebook",
+	"TikTok",
+	"Instagram",
+	"YouTube & Facebook",
+	"YouTube & TikTok",
+	"Semua Platform",
+];
+
+// ─── CONTENT STYLE OPTIONS (untuk custom theme) ───────────────────────────────
+
+export const CONTENT_STYLE_OPTIONS = [
+	"Cinematic Documentary",
+	"Vlog Kasual",
+	"Tutorial / How-To",
+	"Music Video",
+	"ASMR / Satisfying",
+	"Educational / Informatif",
+	"Storytelling / Drama",
+	"Comedy / Entertainment",
+	"Travel & Lifestyle",
+	"Gaming",
+	"Lainnya (bebas)",
+];
