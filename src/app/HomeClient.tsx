@@ -9,6 +9,7 @@ import WarMusicVideoClipForm from "@/components/forms/WarMusicVideoClipForm";
 import RelaxingMusicVideoForm from "@/components/forms/RelaxingMusicVideoForm";
 import ProductPromoVideoForm from "@/components/forms/ProductPromoVideoForm";
 import SeoChannelOptimizerForm from "@/components/forms/SeoChannelOptimizerForm";
+import AllInOnePromptGeneratorForm from "@/components/forms/AllInOnePromptGeneratorForm";
 
 type HomeToolKey =
 	| "product-promo-video"
@@ -18,7 +19,7 @@ type HomeToolKey =
 	| "war-music-video-clip"
 	| "relaxing-music-video-clip"
 	| "seo-channel-optimizer"
-	| "all-in-one-prompt-generator";
+	| "all-in-one-generator";
 
 type ToolMeta = {
 	key: HomeToolKey;
@@ -162,6 +163,14 @@ export default function HomeClient() {
 					"Auto generate judul, deskripsi, tags & storyboard full SEO optimization. Analisa skor SEO video YouTube/Facebook seperti VidIQ. Powered by Claude, GPT, Gemini & OpenRouter.",
 				icon: "📊",
 			},
+			{
+				key: "all-in-one-generator",
+				label: "All-in-One Generator",
+				title: "All-in-One Generator — AI Prompt Generator",
+				description:
+					"Full AI auto-generate prompt per scene dengan image reference",
+				icon: "🎬",
+			},
 		],
 		[],
 	);
@@ -243,8 +252,8 @@ export default function HomeClient() {
 							<RelaxingMusicVideoForm />
 						) : selected === "seo-channel-optimizer" ? (
 							<SeoChannelOptimizerForm />
-						) : selected === "all-in-one-prompt-generator" ? (
-							<ProductPromoVideoForm /> // Future feature
+						) : selected === "all-in-one-generator" ? (
+							<AllInOnePromptGeneratorForm />
 						) : (
 							<ProductPromoVideoForm />
 						)}
