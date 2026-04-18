@@ -123,6 +123,10 @@ export type SeoFormState = {
 	targetAudience: string;
 	videoStyle: string;
 	language: "id" | "en" | "both";
+	// Durasi video — untuk kalkulasi jumlah storyboard scene
+	totalDurationSec: number;    // 30–600 detik
+	secPerScene: number;         // 8, 10, 12, 15, 20
+	totalStoryboardScenes: number; // auto: Math.floor(totalDurationSec / secPerScene)
 
 	// Custom theme data (aktif jika theme === "other-video-theme")
 	customTheme: CustomThemeData;

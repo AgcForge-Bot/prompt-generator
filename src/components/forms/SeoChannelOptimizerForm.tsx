@@ -2,13 +2,13 @@
 
 import useSeoOptimizer from "./seo-optimizer/useSeoOptimizer";
 import ThemeModelSection from "./seo-optimizer/sections/ThemeModelSection";
+import CustomThemeSection from "./seo-optimizer/sections/CustomThemeSection";
 import {
 	GenerateConfigSection,
 	AnalyzeSection,
 } from "./seo-optimizer/sections/InputSections";
 import GenerateOutputSection from "./seo-optimizer/sections/GenerateOutputSection";
 import AnalyzeOutputSection from "./seo-optimizer/sections/AnalyzeOutputSection";
-import CustomThemeSection from "./seo-optimizer/sections/CustomThemeSection";
 import { getThemeIcon, getThemeLabel } from "./seo-optimizer/constants";
 
 export default function SeoChannelOptimizerForm() {
@@ -120,12 +120,15 @@ export default function SeoChannelOptimizerForm() {
 							customKeyword={state.customKeyword}
 							targetAudience={state.targetAudience}
 							videoStyle={state.videoStyle}
+							totalDurationSec={state.totalDurationSec}
+							secPerScene={state.secPerScene}
 							isGenerating={state.isGenerating}
 							isCustomTheme={isCustomTheme}
 							hasCustomImages={state.customTheme.imageRefs.length > 0}
 							onCustomKeyword={(v) => update({ customKeyword: v })}
 							onTargetAudience={(v) => update({ targetAudience: v })}
 							onVideoStyle={(v) => update({ videoStyle: v })}
+							onDurationChange={gen.setDuration}
 							onGenerate={gen.handleGenerate}
 						/>
 

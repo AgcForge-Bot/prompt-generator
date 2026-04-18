@@ -94,8 +94,8 @@ export function getThemeIcon(theme: VideoThemeKey): string {
 export const AI_PROVIDERS: { value: ModelType; label: string; defaultModel: string }[] = [
 	{ value: "CLAUDE", label: "Claude (Anthropic)", defaultModel: "claude-sonnet-4-20250514" },
 	{ value: "OPENAI", label: "OpenAI GPT-4o", defaultModel: "gpt-4o" },
-	{ value: "GEMINI", label: "Gemini", defaultModel: "gemini-3.1-flash-lite-preview" },
-	{ value: "OPENROUTER", label: "OpenRouter", defaultModel: "google/gemini-3.1-flash-lite-preview" },
+	{ value: "GEMINI", label: "Gemini", defaultModel: "gemini-2.5-flash-lite" },
+	{ value: "OPENROUTER", label: "OpenRouter", defaultModel: "google/gemini-2.5-flash-lite" },
 ];
 
 export function getDefaultModelId(provider: ModelType): string {
@@ -171,6 +171,9 @@ export const DEFAULT_SEO_STATE: SeoFormState = {
 	targetAudience: "",
 	videoStyle: "",
 	language: "id",
+	totalDurationSec: 60,
+	secPerScene: 10,
+	totalStoryboardScenes: 6,
 	customTheme: { ...DEFAULT_CUSTOM_THEME },
 	videoUrl: "",
 	generateOutput: null,

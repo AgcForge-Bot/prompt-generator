@@ -79,7 +79,7 @@ const JSON_SCHEMA = `{
   ]
 }`;
 
-const GENERATE_RULES = (note: string) => `ATURAN WAJIB:
+const GENERATE_RULES = (note: string, totalScenes: number, secPerScene: number, totalDurationSec: number) => `ATURAN WAJIB:
 - titleVariants: TEPAT 5 variasi judul. Variasi dalam panjang, angle, dan gaya (angka, pertanyaan, how-to, emotional, mystery). ${note}
 - seoScore: estimasi 0-100 berdasarkan keyword density, panjang optimal (50-70 char), CTR potential
 - searchVolume: estimasi volume pencarian ("High" >10k/bulan, "Medium" 1k-10k, "Low" <1k)
@@ -87,7 +87,7 @@ const GENERATE_RULES = (note: string) => `ATURAN WAJIB:
 - tags: TEPAT 30 tags. Campuran: 8 broad tags (volume tinggi), 12 niche tags (relevan), 10 long-tail tags (spesifik). Semua relevan dengan tema
 - thumbnailPrompt: detail dan spesifik — langsung bisa dipakai untuk Midjourney/Grok image generation
 - storyboardCore: comprehensive overview prompt untuk keseluruhan video
-- storyboardScenes: 3 scene image reference prompts (opening, middle, climax/ending)
+- storyboardScenes: WAJIB TEPAT ${totalScenes} scene image reference prompts. Kalkulasi: ${totalDurationSec} detik ÷ ${secPerScene} detik per scene = ${totalScenes} scene. Setiap scene mewakili segmen ${secPerScene} detik dari video. Distribusikan arc cerita dari intro → body → climax → outro secara proporsional di ${totalScenes} scene. Format duration setiap scene: "m:ss–m:ss" sesuai posisi waktu.
 - Output HANYA JSON valid. Tidak ada teks sebelum { atau setelah }`;
 
 // ─── GENERATE PROMPT — PRESET THEME ──────────────────────────────────────────
@@ -112,10 +112,19 @@ export function buildGeneratePrompt(state: SeoFormState): string {
 		? `\nPERHATIAN GAMBAR REFERENSI: User telah menyertakan ${state.customTheme.imageRefs.length} gambar referensi. Gunakan deskripsi visual dari gambar-gambar tersebut sebagai inspirasi utama untuk thumbnailPrompt dan imagePrompt di setiap storyboardScenes. Buat prompt yang konsisten secara visual dengan apa yang ditampilkan di gambar referensi.\n`
 		: "";
 
+	const totalScenes = state.totalStoryboardScenes ?? (Math.floor(state.totalDurationSec / state.secPerScene) || 6);
+	const secPerScene = state.secPerScene ?? 10;
+	const totalDurationSec = state.totalDurationSec ?? 60;
+
 	return `Kamu adalah pakar YouTube & Facebook SEO setara VidIQ dan TubeBuddy. Tugas kamu adalah menghasilkan konten SEO yang fully optimized untuk video dengan tema berikut:
 
 ${themeCtx}
 ${extraContext ? `\nINFO TAMBAHAN:\n${extraContext}` : ""}${imageInstruction}
+
+KONFIGURASI DURASI VIDEO:
+- Total durasi: ${totalDurationSec} detik
+- Durasi per scene: ${secPerScene} detik
+- Total scene yang harus dibuat: ${totalScenes} scene (hasil kalkulasi ${totalDurationSec} ÷ ${secPerScene} = ${totalScenes})
 
 INSTRUKSI OUTPUT:
 Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtick, tidak ada penjelasan di luar JSON).
@@ -123,7 +132,7 @@ Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtic
 JSON SCHEMA:
 ${JSON_SCHEMA}
 
-${GENERATE_RULES(note)}`;
+${GENERATE_RULES(note, totalScenes, secPerScene, totalDurationSec)}`;
 }
 
 // ─── GENERATE PROMPT — CUSTOM THEME WITH IMAGES (multipart) ──────────────────
@@ -144,10 +153,19 @@ export function buildCustomThemeMessages(state: SeoFormState): {
 		.filter(Boolean)
 		.join("\n");
 
+	const totalScenes2 = state.totalStoryboardScenes ?? (Math.floor(state.totalDurationSec / state.secPerScene) || 6);
+	const secPerScene2 = state.secPerScene ?? 10;
+	const totalDurationSec2 = state.totalDurationSec ?? 60;
+
 	const text = `Kamu adalah pakar YouTube & Facebook SEO setara VidIQ dan TubeBuddy. Hasilkan konten SEO fully optimized untuk video custom theme berikut:
 
 ${customThemeContext(ct, state.language)}
 ${extraContext ? `\nINFO TAMBAHAN:\n${extraContext}` : ""}
+
+KONFIGURASI DURASI VIDEO:
+- Total durasi: ${totalDurationSec2} detik
+- Durasi per scene: ${secPerScene2} detik
+- Total scene yang harus dibuat: ${totalScenes2} scene
 
 INSTRUKSI GAMBAR REFERENSI:
 ${ct.imageRefs.length > 0
@@ -164,7 +182,7 @@ Hasilkan response dalam format JSON murni (tidak ada markdown, tidak ada backtic
 JSON SCHEMA:
 ${JSON_SCHEMA}
 
-${GENERATE_RULES(note)}`;
+${GENERATE_RULES(note, totalScenes2, secPerScene2, totalDurationSec2)}`;
 
 	return {
 		text,

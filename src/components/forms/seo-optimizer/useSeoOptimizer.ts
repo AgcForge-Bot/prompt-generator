@@ -41,6 +41,13 @@ export default function useSeoOptimizer() {
 		update({ mode, error: "", generateOutput: null, analyzeOutput: null });
 	}
 
+	// ─── DURATION CHANGE ──────────────────────────────────────────────────────────
+
+	function setDuration(totalDurationSec: number, secPerScene: number) {
+		const totalStoryboardScenes = Math.max(2, Math.floor(totalDurationSec / secPerScene));
+		update({ totalDurationSec, secPerScene, totalStoryboardScenes, generateOutput: null });
+	}
+
 	// ─── IMAGE UPLOAD (custom theme) ──────────────────────────────────────────────
 
 	async function handleCustomImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -311,6 +318,7 @@ export default function useSeoOptimizer() {
 		setModel,
 		setModelId,
 		setMode,
+		setDuration,
 		handleGenerate,
 		handleAnalyze,
 		handleCustomImageUpload,

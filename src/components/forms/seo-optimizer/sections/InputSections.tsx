@@ -1,17 +1,38 @@
 "use client";
 
+const TOTAL_DURATION_OPTIONS = [
+	{ value: 30, label: "30 detik" },
+	{ value: 45, label: "45 detik" },
+	{ value: 60, label: "1 menit" },
+	{ value: 90, label: "1.5 menit" },
+	{ value: 120, label: "2 menit" },
+	{ value: 180, label: "3 menit" },
+	{ value: 300, label: "5 menit" },
+	{ value: 480, label: "8 menit" },
+	{ value: 600, label: "10 menit" },
+];
+
+const SEC_PER_SCENE_OPTIONS = [8, 10, 12, 15, 20];
+
+function calcScenes(totalSec: number, secPerScene: number): number {
+	return Math.max(2, Math.floor(totalSec / secPerScene));
+}
+
 // ─── GENERATE CONFIG ──────────────────────────────────────────────────────────
 
 type GenerateConfigProps = {
 	customKeyword: string;
 	targetAudience: string;
 	videoStyle: string;
+	totalDurationSec: number;
+	secPerScene: number;
 	isGenerating: boolean;
 	isCustomTheme?: boolean;
 	hasCustomImages?: boolean;
 	onCustomKeyword: (v: string) => void;
 	onTargetAudience: (v: string) => void;
 	onVideoStyle: (v: string) => void;
+	onDurationChange: (totalSec: number, secPerScene: number) => void;
 	onGenerate: () => void;
 };
 
@@ -19,18 +40,97 @@ export function GenerateConfigSection({
 	customKeyword,
 	targetAudience,
 	videoStyle,
+	totalDurationSec,
+	secPerScene,
 	isGenerating,
 	isCustomTheme,
 	hasCustomImages,
 	onCustomKeyword,
 	onTargetAudience,
 	onVideoStyle,
+	onDurationChange,
 	onGenerate,
 }: GenerateConfigProps) {
+	const totalScenes = calcScenes(totalDurationSec, secPerScene);
+
 	return (
 		<section className="card mb-5">
 			<div className="section-label">⚙️ Konfigurasi Generate</div>
 
+			{/* ── DURASI VIDEO ── */}
+			<div className="mb-5 rounded-xl bg-bark/25 border border-leaf/15 p-4">
+				<div className="font-mono text-[9px] text-leaf uppercase tracking-wider mb-3">
+					⏱️ Durasi Video — Menentukan Jumlah Storyboard Scene
+				</div>
+
+				{/* Total duration */}
+				<div className="mb-3">
+					<label className="field-label">Total Durasi Video</label>
+					<div className="flex flex-wrap gap-1.5">
+						{TOTAL_DURATION_OPTIONS.map((opt) => (
+							<button
+								key={opt.value}
+								type="button"
+								onClick={() => onDurationChange(opt.value, secPerScene)}
+								className={`rounded-lg border px-3 py-1.5 font-mono text-[10px] transition-all ${
+									totalDurationSec === opt.value
+										? "border-leaf bg-moss/30 text-leaf2 font-bold"
+										: "border-leaf/15 bg-bark/30 text-stone2 hover:border-leaf/30 hover:text-cream"
+								}`}
+							>
+								{opt.label}
+							</button>
+						))}
+					</div>
+				</div>
+
+				{/* Sec per scene */}
+				<div className="mb-3">
+					<label className="field-label">
+						Durasi Per Scene (per generate AI video)
+					</label>
+					<div className="flex gap-2 flex-wrap">
+						{SEC_PER_SCENE_OPTIONS.map((sec) => (
+							<button
+								key={sec}
+								type="button"
+								onClick={() => onDurationChange(totalDurationSec, sec)}
+								className={`flex-1 min-w-13 rounded-lg border py-2 font-mono text-[10px] transition-all ${
+									secPerScene === sec
+										? "border-amber/60 bg-amber/15 text-amber2 font-bold"
+										: "border-leaf/15 bg-bark/30 text-stone2 hover:border-leaf/30 hover:text-cream"
+								}`}
+							>
+								{sec}s
+							</button>
+						))}
+					</div>
+				</div>
+
+				{/* Kalkulasi result */}
+				<div className="flex gap-2 rounded-lg bg-forest/60 border border-leaf/20 p-3">
+					{[
+						["Total Durasi", `${totalDurationSec}s`],
+						["Per Scene", `${secPerScene}s`],
+						["Storyboard Scene", `${totalScenes} scene`],
+					].map(([label, value]) => (
+						<div key={label as string} className="flex-1 text-center">
+							<div className="font-mono text-[8px] text-stone2 uppercase tracking-wider">
+								{label}
+							</div>
+							<div className="font-playfair text-base text-leaf2 font-bold">
+								{value}
+							</div>
+						</div>
+					))}
+				</div>
+				<div className="font-mono text-[9px] text-stone2 mt-1.5">
+					{totalDurationSec} detik ÷ {secPerScene} detik = {totalScenes}{" "}
+					storyboard scene yang akan di-generate AI
+				</div>
+			</div>
+
+			{/* ── OPTIONAL CONFIG ── */}
 			<div className="flex flex-col gap-3 mb-4">
 				<div>
 					<label className="field-label">🔑 Keyword Tambahan (opsional)</label>
@@ -80,9 +180,13 @@ export function GenerateConfigSection({
 						["🏷️", "30 Tags", "broad + niche + long-tail"],
 						["🖼️", "Thumbnail Prompt", "siap generate di AI image gen"],
 						["🎬", "Storyboard Inti", "1 prompt overview keseluruhan video"],
-						["🎞️", "3 Scene Prompts", "image reference untuk Grok/VEO"],
+						[
+							"🎞️",
+							`${totalScenes} Scene Prompts`,
+							`image ref untuk Grok/VEO (${totalDurationSec}s ÷ ${secPerScene}s)`,
+						],
 					].map(([emoji, label, desc]) => (
-						<div key={label} className="flex items-start gap-2">
+						<div key={label as string} className="flex items-start gap-2">
 							<span className="text-base mt-0.5">{emoji}</span>
 							<div>
 								<div className="font-mono text-[10px] text-cream font-bold">
@@ -122,15 +226,14 @@ export function GenerateConfigSection({
 			>
 				{isGenerating ? (
 					<>
-						<span className="animate-pulse">⏳</span> AI sedang generate SEO
-						content{isCustomTheme && hasCustomImages ? " + analisa gambar" : ""}
-						...
+						<span className="animate-pulse">⏳</span> AI sedang generate SEO +{" "}
+						{totalScenes} storyboard scene
+						{isCustomTheme && hasCustomImages ? " + analisa gambar" : ""}...
 					</>
 				) : (
 					<>
-						✨ Generate SEO Content
-						{isCustomTheme && hasCustomImages ? " (+ Image Analysis)" : ""}{" "}
-						Sekarang
+						✨ Generate SEO Content + {totalScenes} Scene Storyboard
+						{isCustomTheme && hasCustomImages ? " (+ Images)" : ""}
 					</>
 				)}
 			</button>
@@ -190,7 +293,6 @@ export function AnalyzeSection({
 				</div>
 			</div>
 
-			{/* Info yang akan dianalisa */}
 			<div className="rounded-xl bg-bark/25 border border-leaf/10 p-3 mb-4">
 				<div className="font-mono text-[9px] text-leaf uppercase tracking-wider mb-2">
 					📊 Yang Akan Dianalisa & Diberi Skor
@@ -202,7 +304,7 @@ export function AnalyzeSection({
 						["📝", "Deskripsi", "keyword density, hook, hashtag"],
 						["🏷️", "Tags", "coverage, relevance, volume"],
 					].map(([emoji, label, desc]) => (
-						<div key={label} className="flex items-start gap-2">
+						<div key={label as string} className="flex items-start gap-2">
 							<span className="text-base mt-0.5">{emoji}</span>
 							<div>
 								<div className="font-mono text-[10px] text-cream font-bold">
@@ -215,7 +317,6 @@ export function AnalyzeSection({
 				</div>
 			</div>
 
-			{/* Note */}
 			<div className="rounded-lg bg-amber/8 border border-amber/20 px-3 py-2 mb-4">
 				<div className="font-mono text-[9px] text-amber2 leading-relaxed">
 					⚠ AI akan menganalisa berdasarkan URL dan informasi yang tersedia.
