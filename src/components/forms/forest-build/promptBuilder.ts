@@ -1,5 +1,5 @@
 import type { SceneConfig, ProjectDNA, ImageRef, ScenePhaseKey, SceneTypeKey } from './types'
-import { PHASE_META, TOD_DATA, ANTI_CGI_RULES, SCENE_TYPES_NORMAL, SCENE_TYPES_EMOTION } from './utils'
+import { PHASE_META, PHASE_RATIOS, TOD_DATA, ANTI_CGI_RULES, SCENE_TYPES_NORMAL, SCENE_TYPES_EMOTION } from './utils'
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -17,30 +17,120 @@ function getTypeLabel(key: SceneTypeKey): string {
 	return allSceneTypes().find(t => t.key === key)?.name ?? key
 }
 
+// ─── PHASE RANGE CALCULATOR ───────────────────────────────────────────────────
+// Hitung scene start/end per fase berdasarkan totalScenes
+// Digunakan untuk menghitung shelter progress DALAM fase build saja
+
+function getPhaseRanges(totalScenes: number): Record<ScenePhaseKey, { start: number; end: number }> {
+	const keys = Object.keys(PHASE_RATIOS) as ScenePhaseKey[]
+	let allocated = 0
+	const result: Partial<Record<ScenePhaseKey, { start: number; end: number }>> = {}
+	keys.forEach((key, i) => {
+		const count = i < keys.length - 1
+			? Math.max(1, Math.round(PHASE_RATIOS[key] * totalScenes))
+			: totalScenes - allocated
+		result[key] = { start: allocated + 1, end: allocated + count }
+		allocated += count
+	})
+	return result as Record<ScenePhaseKey, { start: number; end: number }>
+}
+
+// ─── BUILD PROGRESS CALCULATOR ────────────────────────────────────────────────
+// FIX ROOT CAUSE 1: Progress shelter dihitung DALAM fase build, bukan global
+// Sehingga scene terakhir build = shelter hampir selesai, bukan 50%
+
+function getBuildProgress(sceneId: number, totalScenes: number): number {
+	const ranges = getPhaseRanges(totalScenes)
+	const buildRange = ranges['build']
+	const buildLen = buildRange.end - buildRange.start + 1
+
+	// Sebelum build dimulai
+	if (sceneId < buildRange.start) return 0
+
+	// Setelah build selesai
+	if (sceneId > buildRange.end) return 100
+
+	// Dalam fase build: 0% di scene pertama build, 100% di scene terakhir build
+	const posInBuild = sceneId - buildRange.start
+	return Math.round((posInBuild / (buildLen - 1)) * 100)
+}
+
+// ─── BUILD SUB-STAGE DESCRIPTION ─────────────────────────────────────────────
+// FIX ROOT CAUSE 2: Instruksi konstruksi spesifik per sub-tahap
+
+function getBuildSubStage(buildPct: number, dna: ProjectDNA): {
+	shelterStatus: string
+	constructionAction: string
+	constructionDetail: string
+} {
+	const shelterName = dna.shelterType.split('—')[0].trim()
+	const mat = dna.buildMaterial
+
+	if (buildPct === 0) {
+		return {
+			shelterStatus: 'SHELTER: Build site selected. No construction started. Bare ground, tools laid out, materials gathered in pile.',
+			constructionAction: 'Site preparation — clearing vegetation, marking boundaries, laying out all tools and materials in organized fashion. Measuring and planning with hands and eyes.',
+			constructionDetail: 'Close-up on hands pressing soil to test firmness, eyes scanning the site, tools arranged neatly on ground.',
+		}
+	} else if (buildPct <= 15) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Excavation just started. Only a shallow pit or cleared ground visible. No walls, no frame yet.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Digging and excavating — ${mat.split(',')[0].trim()} being removed or shaped. Hands and tools working the ground. First physical marks of ${shelterName} beginning to appear.`,
+			constructionDetail: 'Shovel or axe striking earth rhythmically. Sweat on face. Dirt accumulating beside growing hole or cleared area. Arms working hard.',
+		}
+	} else if (buildPct <= 30) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Foundation laid. A visible base or frame outline exists. Structure is just beginning — 1 layer or first posts only.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Laying foundation — placing first ${mat.split(',')[0].trim()} pieces. Each element positioned carefully with precision. Leveling, fitting, securing. The footprint of ${shelterName} is now physically defined on the ground.`,
+			constructionDetail: 'Hands pressing material firmly into place. Checking level with water or eye. First structural element standing — a single post, a first row of stones, the first timber.',
+		}
+	} else if (buildPct <= 50) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Walls rising to roughly half height. Structure visibly taking shape. No roof yet. Open to sky.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Walls rising — stacking, fitting, securing ${mat.split(',')[0].trim()} layer by layer. Each piece lifted, positioned, pressed into place. The walls of ${shelterName} are growing visibly taller with each scene.`,
+			constructionDetail: 'Lifting material with effort. Fitting joint or seam carefully. Stepping back briefly to check alignment. Wall height now reaching waist or chest level.',
+		}
+	} else if (buildPct <= 68) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Walls nearly at full height. Roof framing just beginning. The shape of ${shelterName} is now clearly recognizable.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Completing walls and beginning roof structure — ${mat.split(',')[0].trim()} positioned at full wall height. Roof frame elements being lifted and placed. The structure is now tall enough to walk under.`,
+			constructionDetail: 'Reaching up to place high elements. Roof beam being lifted with effort. Ridge pole or first roof element going into position. Structure now casts a recognizable shadow.',
+		}
+	} else if (buildPct <= 82) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Roof structure complete, being covered. Walls fully enclosed. Almost weathertight. Exterior nearly matches: ${dna.shelterExterior.split('—')[0].trim()}.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Roofing and weatherproofing — covering the roof structure with ${mat.split(',')[1]?.trim() ?? mat.split(',')[0].trim()}. Sealing gaps between walls. The shelter is becoming weathertight for the first time. Rain could fall and be shed.`,
+			constructionDetail: 'Placing roof material in overlapping rows from bottom to top. Pressing into gaps to seal. First test — hand on roof surface checking for solidity.',
+		}
+	} else if (buildPct <= 93) {
+		return {
+			shelterStatus: `SHELTER STATUS (${buildPct}% complete): Structurally complete and weathertight. Interior fit-out underway. Exterior matches: ${dna.shelterExterior}. Interior items being installed.`,
+			constructionAction: `ACTIVE CONSTRUCTION: Interior finishing — installing ${dna.furnishings.slice(0, 2).join(' and ')}. Door being hung, surfaces being smoothed, interior being made livable. The transformation from structure to shelter is happening in detail.`,
+			constructionDetail: 'Hanging door on handmade hinges — testing swing. Placing stove or hearth stone. Arranging sleeping area. Small details that make a space feel like a home.',
+		}
+	} else {
+		return {
+			shelterStatus: `SHELTER STATUS: FULLY COMPLETE. Exterior: ${dna.shelterExterior}. Interior: ${dna.shelterInterior}. Dimensions: ${dna.shelterDimension}.`,
+			constructionAction: `COMPLETION MOMENT: Final touches — ${dna.furnishings[dna.furnishings.length - 1] ?? 'last detail'} placed. The builder steps back and surveys the completed ${shelterName}. It is done. Every element visible and in its final position.`,
+			constructionDetail: 'Last small action completed — a knot tied, a surface smoothed, a door opened for the first time. Builder stands back. Looks at what has been made. A moment of quiet profound satisfaction.',
+		}
+	}
+}
+
+// ─── SHELTER STAGE FOR ANCHOR BLOCK ──────────────────────────────────────────
+
+function buildShelterStage(sceneId: number, totalScenes: number, dna: ProjectDNA): string {
+	const buildPct = getBuildProgress(sceneId, totalScenes)
+	const { shelterStatus } = getBuildSubStage(buildPct, dna)
+	return shelterStatus
+}
+
 // ─── CONSISTENCY ANCHOR BLOCK ─────────────────────────────────────────────────
 // Ini yang fix masalah wajah/kendaraan/shelter berubah di setiap scene
 
 function buildConsistencyAnchor(dna: ProjectDNA, sceneId: number, totalScenes: number): string {
-	const pct = Math.round((sceneId / totalScenes) * 100)
 	const isVehicleScene = dna.travelMode !== 'foot'
-
-	// Shelter progress description based on build percentage
-	let shelterStage = ''
-	if (pct <= 10) {
-		shelterStage = 'SHELTER STATUS: Not yet started — location not yet reached. No structure visible.'
-	} else if (pct <= 20) {
-		shelterStage = 'SHELTER STATUS: Site selected and cleared — bare ground only, tools laid out, materials beginning to gather. Zero construction complete.'
-	} else if (pct <= 40) {
-		shelterStage = `SHELTER STATUS: Foundation and early frame — excavation begun or base layer laid. Structure is roughly ${Math.round((pct - 20) / 2)}% physically visible. No roof yet.`
-	} else if (pct <= 60) {
-		shelterStage = `SHELTER STATUS: Walls rising — ${dna.shelterType.split('—')[0].trim()} approximately 50% structurally complete. Roof framing not yet done.`
-	} else if (pct <= 75) {
-		shelterStage = `SHELTER STATUS: Nearly enclosed — walls complete, roof structure being installed. Exterior: ${dna.shelterExterior.split('—')[0].trim()}. Not yet interior-finished.`
-	} else if (pct <= 88) {
-		shelterStage = `SHELTER STATUS: Structurally complete, interior being finished. Exterior matches: ${dna.shelterExterior}. Interior items being installed.`
-	} else {
-		shelterStage = `SHELTER STATUS: FULLY COMPLETE. Exterior: ${dna.shelterExterior}. Interior: ${dna.shelterInterior}. Dimensions: ${dna.shelterDimension}.`
-	}
+	const shelterStage = buildShelterStage(sceneId, totalScenes, dna)
 
 	const vehicleBlock = isVehicleScene
 		? `VEHICLE — MUST MATCH EXACTLY EVERY SCENE IT APPEARS:
@@ -79,15 +169,16 @@ SHELTER — EXACT SPECIFICATION:
   Type: ${dna.shelterType}
   Dimensions: ${dna.shelterDimension}
   Build material: ${dna.buildMaterial}
-  Exterior appearance (when complete): ${dna.shelterExterior}
-  Interior layout (when complete): ${dna.shelterInterior}
+  Exterior (when complete): ${dna.shelterExterior}
+  Interior (when complete): ${dna.shelterInterior}
   ${shelterStage}
 
 SHELTER CONTINUITY RULES:
-  • The shelter must show EXACTLY the same construction progress as previous scenes
-  • Size and proportions must remain constant — do not make it larger or smaller
-  • Location within the environment does not shift between scenes
-  • Materials are consistent — same timber, same stone, same clay throughout
+  • Show ONLY the construction progress level stated above — no more, no less
+  • Do NOT show shelter more complete than stated — this ruins story continuity
+  • Do NOT show shelter less complete than stated — this loses progress
+  • Size and proportions remain constant scene to scene
+  • Same location in landscape — same trees and rocks in background
 
 LOCATION ANCHOR:
   Setting: ${dna.location}
@@ -97,7 +188,6 @@ LOCATION ANCHOR:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`.trim()
 }
-
 // ─── IMAGE REF BLOCK ─────────────────────────────────────────────────────────
 
 function buildImageBlock(
@@ -146,6 +236,8 @@ function buildImageBlock(
 
 function getStoryContext(scene: SceneConfig, dna: ProjectDNA, totalScenes: number): string {
 	const pct = Math.round((scene.id / totalScenes) * 100)
+	const buildPct = getBuildProgress(scene.id, totalScenes)
+	const { constructionAction, constructionDetail } = getBuildSubStage(buildPct, dna)
 
 	const travelModeText: Record<string, string> = {
 		'foot': 'on foot with full backpack',
@@ -155,26 +247,75 @@ function getStoryContext(scene: SceneConfig, dna: ProjectDNA, totalScenes: numbe
 		'motorbike': `by adventure motorcycle (${dna.vehicleDesc.split('—')[0].trim()})`,
 	}
 	const travelText = travelModeText[dna.travelMode] ?? dna.travelMode
+	const pronoun = dna.modelGender === 'male' ? 'man' : 'woman'
+	const he = dna.modelGender === 'male' ? 'he' : 'she'
+	const his = dna.modelGender === 'male' ? 'his' : 'her'
 
 	const phaseContexts: Partial<Record<ScenePhaseKey, string>> = {
-		hook: `OPENING HOOK (Scene ${scene.id}): This is the teaser — rapid cuts of the most dramatic and emotional moments from later in the video. High energy, compelling visuals, no explanation. Show: the completed shelter interior with fire, a dramatic weather moment, the most emotional animal encounter, the character's face in a moment of triumph. Make the viewer desperate to watch the full video.`,
+		hook: `OPENING HOOK (Scene ${scene.id}): Rapid teaser cuts — show the most dramatic moments from later in the video. Include: a glimpse of the completed shelter interior with fire burning, a dramatic weather challenge moment, an emotional animal encounter, the character's face in a moment of quiet triumph. No explanation — pure visual tension. Make the viewer unable to stop watching.`,
 
-		preparation: `PREPARATION PHASE (Scene ${scene.id}): The ${dna.modelGender === 'male' ? 'man' : 'woman'} is getting ready at base — carefully packing and checking all gear. Show every item going in: food supplies (specific cans, dried food, thermos), hand tools (axe, saw, trowel), rope, first aid kit, maps. The deliberate methodical preparation shows deep experience. Viewer feels the weight and reality of what lies ahead.`,
+		preparation: `PREPARATION PHASE (Scene ${scene.id}): The ${pronoun} is packing and checking all gear before departure. Show every item deliberately: food supplies, tools (axe, saw, rope), clothing layers, water. The ${travelText === 'on foot with full backpack' ? 'heavy backpack being loaded and adjusted on back' : `${dna.vehicleDesc.split('—')[0].trim()} being loaded with all gear`}. Methodical competence on display — this person has done this before.`,
 
-		journey: `JOURNEY PHASE (${pct}% into video): Traveling ${travelText}${dna.hasPet ? `, with ${dna.petType} alongside` : ''}. CAMERA MIX THIS SCENE: alternate between the character moving and the surrounding landscape. Use: front tracking, side profile, behind following, drone aerial pull-back. Pure documentary style — never staged-feeling. The journey is the content — show scale of landscape.`,
+		journey: `JOURNEY PHASE (${pct}% into video): Traveling ${travelText}${dna.hasPet ? `, with ${dna.petType} alongside` : ''}. MIX camera angles THIS SCENE: alternate between character moving and surrounding landscape. Choices: front tracking, side profile, behind following, or drone aerial pullback. Pure documentary feel — never staged. The landscape scale dwarfs the traveler. ${pct < 30 ? 'Early journey — energy is high, pace is strong.' : 'Later journey — terrain getting more remote, signs of civilization fading.'}`,
 
-		arrival: `ARRIVAL & SCOUTING (${pct}%): After the journey, the ${dna.modelGender === 'male' ? 'man' : 'woman'} arrives and explores the build site area. Light is turning golden — late afternoon. Finding the right spot feels like discovering something precious. Show: walking the area, testing ground firmness, looking up at trees, touching earth with hands, making the decision with eyes before hands touch tools.`,
+		arrival: `ARRIVAL & SCOUTING (Scene ${scene.id}): After the journey, the ${pronoun} arrives and explores the area on foot. Light is turning golden — late afternoon. ${he.charAt(0).toUpperCase() + he.slice(1)} walks the area slowly, testing soil with foot, looking at trees, assessing terrain. Finding the exact right spot feels like a discovery. Show: crouching to touch earth, looking up through canopy, pacing out distances. The decision is made with eyes and hands before any tool is raised.`,
 
-		build: `BUILD PHASE (${pct}% through video — this is the main event): Constructing ${dna.shelterType}. Using ${dna.buildMaterial}. At this point in the video, the shelter should be visually at approximately ${pct}% of its completed form. Every action should be satisfying and purposeful. Show tools being used correctly, materials being placed with care, progress clearly visible compared to previous scenes.${dna.hasCargoDrop && pct > 35 && pct < 65 ? ' A cargo delivery vehicle arrives with additional materials — coordinate timing.' : ''}`,
+		build: `BUILD PHASE — SCENE ${scene.id} (${buildPct}% of construction complete):
+CRITICAL: This is an ACTIVE CONSTRUCTION SCENE. The character must be shown physically building.
+DO NOT show character standing still or just looking at materials.
+DO NOT show the shelter already complete — it is only ${buildPct}% done.
 
-		challenge: `CHALLENGE SCENE (${pct}%): Something difficult interrupts the build — nature pushes back. This adds drama and tension to the story arc. The obstacle must feel real and threatening. The character overcomes it through skill, patience, and determination. After this scene, work resumes with renewed purpose. The challenge makes the eventual completion more emotionally earned.`,
+${constructionAction}
 
-		living: `LIVING PHASE — RELAXING (${pct}%): The shelter is complete. Now it is time to inhabit it. This is the most ASMR and satisfying phase — hunting, fishing, foraging, preparing food, cooking over fire, eating, resting. The character is at peace in the shelter they built. Every activity shown in beautiful sensory detail with ambient sound.`,
+SCENE FOCUS: ${constructionDetail}
 
-		closing: `CLOSING CREDITS (${pct}%): The final scene — wide establishing shot of the completed shelter in its natural environment as the day ends. The ${dna.modelGender === 'male' ? 'man' : 'woman'} sits quietly watching the forest, the water, or the fire. Credit title sequence styled like a real film rolls over the image. Fade slowly to pure natural ambient sound. Peaceful, complete, deeply earned.`,
+What the viewer should see: hands actively working on the structure, physical effort visible, construction material being shaped and placed, the shelter growing or changing state from the beginning to the end of this 10-second clip.${dna.hasCargoDrop && buildPct > 35 && buildPct < 65 ? '\nCARGO DELIVERY: A delivery vehicle arrives at or near the site with additional materials — show vehicle, materials being unloaded, handed to builder.' : ''}`,
+
+		challenge: `CHALLENGE SCENE (Scene ${scene.id} — ${buildPct}% of construction complete):
+The shelter is ${buildPct}% built when nature intervenes with a serious obstacle.
+The construction is ${buildPct}% done — SHOW this incomplete structure being threatened or damaged.
+
+CHALLENGE TYPE (choose the most dramatic appropriate to ${dna.climate}):
+${dna.climate.includes('winter') || dna.climate.includes('snow') || dna.climate.includes('arctic')
+				? '• Heavy snowfall burying the work site — drifts covering materials, structure threatened\n• Blizzard winds threatening the partially-built frame\n• Ice forming on surfaces, making work dangerous and slippery'
+				: dna.climate.includes('tropical') || dna.climate.includes('rain')
+					? '• Sudden torrential downpour flooding the excavation or washing away materials\n• Strong winds pulling at the partial roof structure\n• Mud slide threatening the foundation'
+					: '• Sudden heavy rainstorm — materials soaking, site becoming mud\n• Strong gusting wind destabilizing the partial frame\n• A section of the structure fails and must be rebuilt'
+			}
+
+RESPONSE: The ${pronoun} does NOT give up. ${he.charAt(0).toUpperCase() + he.slice(1)} adapts, protects what can be protected, waits out what must be waited, and CONTINUES BUILDING as soon as possible. End this scene with work resuming — determination visible on face.
+
+Construction status remains ${buildPct}% — the challenge interrupted but did not reverse the progress.`,
+
+		living: `LIVING PHASE — SHELTER COMPLETE (Scene ${scene.id}):
+The ${dna.shelterType.split('—')[0].trim()} is now FULLY BUILT and inhabited.
+Interior: ${dna.shelterInterior}
+Exterior: ${dna.shelterExterior}
+
+The ${pronoun} is now living in the completed shelter. This is the reward phase.
+
+ACTIVITY THIS SCENE (most ASMR and satisfying):
+${scene.sceneType === 'emo-cook' || scene.sceneType === 'action'
+				? `Preparing and cooking food — hunting/fishing/foraging from ${dna.location.split('—')[0].trim()}, then cooking inside or in front of shelter over fire. Every sound: sizzling, bubbling, fire crackling. Eating slowly with full satisfaction.`
+				: scene.sceneType === 'nature' || scene.sceneType === 'establishing'
+					? `Sitting at the entrance of the shelter watching the natural world — rain falling, wind moving trees, birds calling. The shelter is warm and dry. Pure peace and ASMR immersion.`
+					: `Inside the completed shelter — tending fire, organizing tools, making it more comfortable. The contrast between wild exterior and warm interior is powerful.`
+			}
+Sound: ${dna.soundscape}`,
+
+		closing: `CLOSING CREDITS (Scene ${scene.id} — Final Scene):
+The complete ${dna.shelterType.split('—')[0].trim()} stands in ${dna.location.split('—')[0].trim()}.
+Exterior fully visible: ${dna.shelterExterior}
+
+The ${pronoun} sits quietly at the entrance or on a nearby rock, watching the natural world. ${his.charAt(0).toUpperCase() + his.slice(1)} face shows quiet earned satisfaction — not triumph, just peace.
+
+Camera: wide shot, slowly pulling back to reveal shelter within landscape.
+Film-style credit title sequence rolls over the image — like a real film.
+Fade slowly to black with ambient natural sound continuing.
+The final image: the shelter, small but perfect, held within the vast wilderness.`,
 	}
 
-	return phaseContexts[scene.phase] ?? `Scene ${scene.id}: ${PHASE_META[scene.phase].note}`
+	return phaseContexts[scene.phase] ?? `Scene ${scene.id} (${pct}%): ${PHASE_META[scene.phase].note}`
 }
 
 // ─── EMOTIONAL INJECTION BUILDER ─────────────────────────────────────────────
@@ -185,30 +326,33 @@ function buildEmotionalBlock(scene: SceneConfig, dna: ProjectDNA): string {
 	const genderPos = dna.modelGender === 'male' ? 'his' : 'her'
 
 	const emoContexts: Partial<Record<SceneTypeKey, string>> = {
+		// 		'emo-animal': `EMOTIONAL INJECTION — ANIMAL ENCOUNTER:
+		// A wild animal native to ${dna.location.split('—')[0].trim()} appears naturally — discovered, not staged. Could be drinking at a stream, resting on a rock, moving along a forest path. Camera slowly closes in — no sudden movement that might startle it. The character freezes, watches with pure quiet wonder and respect. ${genderCap} may slowly lower to a crouch. If safe and the animal stays, ${gender} may slowly offer something small. The animal must be 100% ecologically accurate to this specific location and climate.`,
+
 		'emo-animal': `EMOTIONAL INJECTION — ANIMAL ENCOUNTER:
-A wild animal native to ${dna.location.split('—')[0].trim()} appears naturally — discovered, not staged. Could be drinking at a stream, resting on a rock, moving along a forest path. Camera slowly closes in — no sudden movement that might startle it. The character freezes, watches with pure quiet wonder and respect. ${genderCap} may slowly lower to a crouch. If safe and the animal stays, ${gender} may slowly offer something small. The animal must be 100% ecologically accurate to this specific location and climate.`,
+A wild animal native to ${dna.location.split('—')[0].trim()} appears naturally — discovered, not staged. Could be drinking at a stream, resting on a rock, moving along a forest path. Camera slowly closes in — no sudden movement. The character freezes, watches with quiet wonder and respect. ${genderCap} may slowly lower to a crouch. The animal must be 100% ecologically accurate to this specific location.`,
 
 		'emo-civilian': `EMOTIONAL INJECTION — CIVILIAN ENCOUNTER:
-A local person appears passing through naturally — a fisherman, woodcutter, berry picker, shepherd with animals. Their presence is authentic and completely unposed. Camera catches them candidly before any interaction. ${genderCap} approaches slowly, non-threatening. A brief wordless or minimal exchange — a nod, a pointed gesture, sharing information about the area. The encounter is warm, brief, human. Both go their own ways after. It makes the wilderness feel inhabited and real.`,
+A local person passes through naturally — a fisherman, woodcutter, berry picker, shepherd. Their presence is authentic and unposed. Camera catches them candidly first. ${genderCap} approaches slowly. A brief wordless exchange — a nod, a gesture, sharing information about the area. The encounter is warm and brief. Both continue on their way. The wilderness feels inhabited and alive.`,
 
 		'emo-wonder': `EMOTIONAL INJECTION — WONDER DISCOVERY:
-Something extraordinary appears — an ancient tree of impossible size, a strangely shaped boulder that looks almost carved, an unexplained old stone structure deep in the wilderness, a natural formation that takes the breath away. Camera slowly approaches and circles it. ${genderCap} reaches out and touches it with genuine reverence. Stands in silence for a long moment. Pure wonder, no commentary needed. The wilderness contains mysteries older than memory.`,
+Something extraordinary appears — an ancient tree of impossible size, a strangely shaped rock formation, an unexplained old structure in the wilderness. Camera slowly approaches and circles. ${genderCap} reaches out and touches it with genuine reverence. Stands in silence. Pure wonder — no explanation needed.`,
 
 		'emo-rescue': `EMOTIONAL INJECTION — RESCUE / HELPING MOMENT:
-An animal or person needs urgent help — an injured bird with a broken wing, a small animal with a leg caught, a local person with a stuck vehicle in mud or snow. The response is immediate, calm, and highly skilled. Gentle and deliberate hands. Patient methodical action. The moment of successful rescue — relief clearly visible on ${genderPos} face. Watching the animal recover or fly away, or the person drive off with a grateful wave.`,
+An animal or person needs help — an injured bird, a small animal trapped, a local person with a stuck vehicle. The response is immediate, calm, and skilled. Gentle deliberate hands. Patient methodical action. The moment of successful rescue — relief clearly on ${genderPos} face. Watching the animal fly away or person drive off safely.`,
 
 		'emo-cook': `EMOTIONAL INJECTION — HUNT, GATHER & COOK:
-${genderCap} hunts, fishes, or forages food from the immediate environment — species appropriate to ${dna.location.split('—')[0].trim()} and ${dna.climate.split('—')[0].trim()}. Then prepares and cooks a simple meal over fire inside or beside the shelter. Every sound is captured: sizzling, bubbling, the snap of fresh herbs, the scrape of a pan. Eating alone in the wilderness — one of the deepest human satisfactions. Close-up: food, hands, the expression of genuine satisfaction.`,
+${genderCap} hunts, fishes, or forages from ${dna.location.split('—')[0].trim()}. Then prepares and cooks over fire inside or beside the shelter. Every sound captured: sizzling, bubbling, fire crackling, the scrape of a pan. Eating alone in the wilderness — one of the deepest human satisfactions. Close-up: food, hands, quiet expression of genuine satisfaction.`,
 
 		'emo-fire': `EMOTIONAL INJECTION — PRIMITIVE FIRE MAKING:
-The ancient act of making fire from materials found in the immediate environment. Every attempt shown in real time — no shortcuts or cuts. First spark, carefully nursed to ember, fed to flame. The character's full focus is on this one small task. The moment it catches — the subtle shift in expression from concentration to quiet triumph. Fire means warmth, light, cooking, safety. The shelter becomes home the moment the first fire burns inside it.`,
+Making fire from materials found on site. Every attempt shown in real time — no shortcuts. First spark, nursed to ember, fed to flame. The moment it catches — subtle shift from concentration to quiet triumph. Fire means warmth, safety, home. The shelter becomes truly alive the moment first fire burns inside it.`,
 
 		'emo-reflect': `EMOTIONAL INJECTION — QUIET REFLECTION:
-${genderCap} stops all activity and simply exists in this place. Sits on a rock, a log, or in the doorway of the shelter. Watching the forest move, the water flow, the sky change. Maybe with a warm drink or simple food. No building, no working — just being profoundly present in an extraordinary place. Camera holds absolutely still. Nature sounds fill everything. The viewer breathes and slows with the moment.`,
+${genderCap} stops all activity and simply exists in this place. Sits watching the forest, the water, the sky. Maybe a warm drink or small food. No building, no working — just being profoundly present. Camera holds still. Nature sounds fill everything. The viewer breathes and slows with the moment.`,
 	}
 
 	const emoKey = scene.sceneType as SceneTypeKey
-	const emoText = emoContexts[emoKey] ?? `EMOTIONAL INJECTION — ${getTypeLabel(emoKey).toUpperCase()}: A genuine unscripted-feeling moment of human connection with the natural environment.`
+	const emoText = emoContexts[emoKey] ?? `EMOTIONAL INJECTION — ${getTypeLabel(emoKey).toUpperCase()}: A genuine unscripted moment of human connection with the natural environment.`
 
 	return `
 ${'◆'.repeat(4)} EMOTIONAL INJECTION SCENE ${'◆'.repeat(4)}
@@ -231,6 +375,7 @@ export function buildScenePrompt(
 	const startSec = (scene.id - 1) * secPerScene
 	const endSec = startSec + secPerScene
 	const pct = Math.round((scene.id / totalScenes) * 100)
+	const buildPct = getBuildProgress(scene.id, totalScenes)
 	const tod = TOD_DATA[scene.timeOfDay]
 	const phase = PHASE_META[scene.phase]
 	const typeLabel = getTypeLabel(scene.sceneType)
@@ -239,9 +384,25 @@ export function buildScenePrompt(
 	const storyCtx = getStoryContext(scene, dna, totalScenes)
 	const anchorBlock = buildConsistencyAnchor(dna, scene.id, totalScenes)
 
+	// Inject construction action directly into SCENE ACTIVITY for build/challenge phases
+	const isBuildPhase = scene.phase === 'build' || scene.phase === 'challenge'
+	const { constructionAction, constructionDetail } = getBuildSubStage(buildPct, dna)
+
+	const activityLine = isBuildPhase
+		? `${constructionAction}`
+		: scene.activity
+
+	const detailLine = isBuildPhase
+		? `${constructionDetail}`
+		: scene.detailFocus
+
+	const progressLine = isBuildPhase
+		? `Shelter is ${buildPct}% complete in this scene — show this exact level of completion. No more, no less.`
+		: scene.progressNote
+
 	return `${'═'.repeat(64)}
 [SCENE ${scene.id}/${totalScenes}  |  ${fmtTime(startSec)} – ${fmtTime(endSec)}  |  ${secPerScene}sec]
-PHASE: ${phase.emoji} ${phase.label.toUpperCase()}  |  TYPE: ${typeLabel}  |  PROGRESS: ${pct}%
+PHASE: ${phase.emoji} ${phase.label.toUpperCase()}  |  TYPE: ${typeLabel}  |  VIDEO PROGRESS: ${pct}%${isBuildPhase ? `  |  BUILD: ${buildPct}%` : ''}
 ${scene.isEmotional ? '⭐ EMOTIONAL INJECTION SCENE' : ''}
 ${'═'.repeat(64)}
 
@@ -271,9 +432,9 @@ Film quality: ${scene.filmQuality}
 Color grade: ${scene.colorGrade}
 
 SCENE ACTIVITY:
-Primary action: ${scene.activity}
-Detail focus: ${scene.detailFocus}
-Progress shown: ${scene.progressNote}
+Primary action: ${activityLine}
+Detail focus: ${detailLine}
+Progress shown: ${progressLine}
 Satisfying moment: ${scene.satisfyMoment}
 
 SOUND DESIGN:
