@@ -34,6 +34,7 @@ export default function HeaderSection({
 						["Durasi", `${gen.totalMinutes} menit`],
 						["Per-scene", `${gen.secPerScene} detik`],
 						["Platform", "Grok + VEO"],
+						["Mode", gen.visualStyleLabel],
 					].map(([k, v]) => (
 						<div
 							key={k}

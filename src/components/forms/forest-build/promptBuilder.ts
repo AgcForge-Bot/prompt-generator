@@ -1,5 +1,6 @@
 import type { SceneConfig, ProjectDNA, ImageRef, ScenePhaseKey, SceneTypeKey } from './types'
 import { PHASE_META, PHASE_RATIOS, TOD_DATA, ANTI_CGI_RULES, SCENE_TYPES_NORMAL, SCENE_TYPES_EMOTION } from './utils'
+import { VISUAL_STYLE_HINTS, VISUAL_STYLE_LABELS } from './constants'
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -414,6 +415,7 @@ ${storyCtx}
 
 VIDEO: "${dna.videoTitle}"
 FILM STYLE: ${dna.filmStyle}
+VISUAL STYLE: ${VISUAL_STYLE_LABELS[dna.visualStyle]} — ${VISUAL_STYLE_HINTS[dna.visualStyle]}
 SOUNDSCAPE: ${dna.soundscape}
 
 ${scene.isEmotional ? buildEmotionalBlock(scene, dna) + '\n\n' : ''}TIME OF DAY: ${tod.emoji} ${tod.label} (${tod.range})

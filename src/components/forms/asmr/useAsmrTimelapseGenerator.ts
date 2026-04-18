@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { DNA_OPTIONS, OPTIONS, SCENE_TYPES } from "./constants";
+import { DNA_OPTIONS, OPTIONS, SCENE_TYPES, VISUAL_STYLE_LABELS } from "./constants";
 import { buildPrompt } from "./promptBuilder";
-import type { AsmrTimelapseGenerator, DnaState, ProjectTypeKey, RandomGroupKey, SceneConfig, SceneTypeKey, TabKey, TodKey } from "./types";
+import type { AsmrTimelapseGenerator, DnaState, ProjectTypeKey, RandomGroupKey, SceneConfig, SceneTypeKey, TabKey, TodKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultSceneTypes, getSceneTypeLabel, rnd } from "./utils";
 
 export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
@@ -28,6 +28,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	const [timeOfDay, setTimeOfDay] = useState<TodKey>("noon");
 	const [totalMinutes, setTotalMinutes] = useState(3);
 	const [secPerScene, setSecPerScene] = useState(15);
+	const [visualStyle, setVisualStyle] = useState<VisualStyleKey>("cinematic-realistic");
 	const [dnaLocked, setDnaLocked] = useState(false);
 	const [dnaPreviewOpen, setDnaPreviewOpen] = useState(false);
 	const [currentScene, setCurrentScene] = useState(1);
@@ -74,6 +75,56 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 
 	const { toast, show: showToast } = useToast();
 
+	function pickOption(options: readonly string[], prefers: string[]) {
+		const lower = options.map((o) => o.toLowerCase());
+		for (const p of prefers) {
+			const idx = lower.findIndex((o) => o.includes(p.toLowerCase()));
+			if (idx >= 0) return options[idx];
+		}
+		return options[0] ?? "";
+	}
+
+	function getVisualPreset(style: VisualStyleKey): Partial<SceneConfig> {
+		if (style === "cinematic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["red camera", "8k"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["kodak", "rich warm", "bleach bypass"]),
+				camLens: pickOption(OPTIONS.camLens, ["wide 24mm", "tilt-shift"]),
+				camMood: pickOption(OPTIONS.camMood, ["industrial poetry", "triumphant"]),
+			};
+		}
+		if (style === "semi-cinematic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["8k", "professional drone"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["clean documentary", "warm natural"]),
+				camLens: pickOption(OPTIONS.camLens, ["standard 35mm", "wide 24mm"]),
+				camMood: pickOption(OPTIONS.camMood, ["immersive asmr", "contemplative"]),
+			};
+		}
+		if (style === "cinematic-realistic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["8k", "red camera", "professional drone"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["clean documentary", "warm natural"]),
+				camLens: pickOption(OPTIONS.camLens, ["standard 35mm", "wide 24mm"]),
+				camMood: pickOption(OPTIONS.camMood, ["documentary realism", "immersive asmr"]),
+			};
+		}
+		if (style === "realistic") {
+			return {
+				camQuality: pickOption(OPTIONS.camQuality, ["professional drone", "red camera"]),
+				camGrade: pickOption(OPTIONS.camGrade, ["clean documentary", "desaturated cool"]),
+				camLens: pickOption(OPTIONS.camLens, ["standard 35mm", "telephoto 85mm"]),
+				camMood: pickOption(OPTIONS.camMood, ["documentary realism", "contemplative"]),
+			};
+		}
+		return {
+			camQuality: pickOption(OPTIONS.camQuality, ["unreal engine", "8k"]),
+			camGrade: pickOption(OPTIONS.camGrade, ["bleach bypass", "rich warm", "deep amber"]),
+			camLens: pickOption(OPTIONS.camLens, ["macro", "telephoto 85mm"]),
+			camMood: pickOption(OPTIONS.camMood, ["immersive asmr", "industrial poetry"]),
+		};
+	}
+
 	function getSceneConfig(sceneNum: number): SceneConfig {
 		return sceneConfigs[sceneNum] ?? getDefaultSceneConfig();
 	}
@@ -110,6 +161,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			totalScenes: effectiveTotalScenes,
 			secPerScene: effectiveSecPerScene,
 			sceneType,
+			visualStyle,
 			projectType: projectType2,
 			narratorGender,
 			timeOfDay,
@@ -154,6 +206,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 				totalScenes,
 				secPerScene,
 				sceneType,
+				visualStyle,
 				projectType,
 				narratorGender,
 				timeOfDay,
@@ -339,6 +392,21 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		}
 	}
 
+	function setVisualStyleSafe(next: VisualStyleKey) {
+		setVisualStyle(next);
+		const preset = getVisualPreset(next);
+		setSceneConfigs((prev) => {
+			const nextMap: Record<number, SceneConfig> = { ...prev };
+			for (let s = 1; s <= totalScenes; s++) {
+				const base = nextMap[s] ?? getDefaultSceneConfig();
+				nextMap[s] = { ...base, ...preset };
+			}
+			return nextMap;
+		});
+		if (dnaLocked) setTimeout(() => generatePromptFor(currentScene), 50);
+		showToast(`🎞️ Visual style: ${VISUAL_STYLE_LABELS[next]}`);
+	}
+
 	function setProjectTypeSafe(next: ProjectTypeKey) {
 		setProjectType(next);
 		setSceneTypes(getDefaultSceneTypes(next, totalScenes));
@@ -370,6 +438,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	const scType = (sceneTypes[currentScene] ?? fallbackSceneType) as SceneTypeKey;
 	const scTypeLabel = getSceneTypeLabel(projectType, scType);
 	const progressPct = Math.round((currentScene / totalScenes) * 100);
+	const visualStyleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
 
 	return {
 		tabs,
@@ -378,6 +447,10 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		secPerScene,
 		totalScenes,
 		onDurationChange,
+
+		visualStyle,
+		visualStyleLabel,
+		setVisualStyleSafe,
 
 		projectType,
 		setProjectTypeSafe,

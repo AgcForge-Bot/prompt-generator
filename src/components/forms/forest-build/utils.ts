@@ -140,6 +140,7 @@ export const DNA_DEFAULTS: ProjectDNA = {
 	colorPalette: 'deep forest green, rich earth brown, moss grey, warm amber firelight',
 	soundscape: 'zero music — pure ambient forest sound, ASMR craft sounds, natural environment only',
 	filmStyle: 'shot on Sony FX3 or RED Komodo — handheld documentary, organic natural motion, 24fps cinematic',
+	visualStyle: 'cinematic-realistic',
 	locked: false,
 	characterAge: 'appears early 30s — mature but young, slight weathering on skin',
 	characterFace: 'strong square jaw, high cheekbones, slightly weathered tan skin, calm deep-set brown eyes, short neat beard — 3 to 5 day stubble',

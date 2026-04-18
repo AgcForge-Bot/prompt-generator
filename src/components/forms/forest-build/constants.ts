@@ -90,6 +90,27 @@ export const COLOR_GRADE_OPTIONS = [
 	"night fire glow — warm amber vs deep blue-black, high contrast",
 ];
 
+export const VISUAL_STYLE_LABELS = {
+	cinematic: "Cinematic",
+	"semi-cinematic": "Semi-Cinematic",
+	"cinematic-realistic": "Cinematic Realistic",
+	realistic: "Realistic",
+	"hyper-realistic": "Hyper Realistic",
+} as const;
+
+export const VISUAL_STYLE_HINTS = {
+	cinematic:
+		"strong cinematic lighting, dramatic composition, filmic contrast, tasteful grain",
+	"semi-cinematic":
+		"balanced cinematic look, clean composition, moderate depth of field, polished feel",
+	"cinematic-realistic":
+		"photorealistic baseline with cinematic framing and lighting, natural textures, film-grade polish",
+	realistic:
+		"natural documentary realism, neutral grading, minimal stylization, true-to-life lighting and colors",
+	"hyper-realistic":
+		"ultra photoreal, micro-detail textures, crisp clarity, high dynamic range realism",
+} as const;
+
 export const EMO_TONE_OPTIONS = [
 	"quiet joy — subtle, genuine, never over-performed",
 	"deep relief — tension releasing, shoulders drop, peace returns",

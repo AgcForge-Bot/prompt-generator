@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ProjectDNATab, ProjectDNA, SceneConfig, ScenePhaseKey } from "./types"
+import type { ProjectDNATab, ProjectDNA, SceneConfig, ScenePhaseKey, VisualStyleKey } from "./types"
 import {
 	CLIMATE_OPTIONS,
 	DNA_DEFAULTS,
@@ -11,6 +11,7 @@ import {
 	TRAVEL_MODE_OPTIONS,
 } from "./utils";
 import { generateScenes } from "./sceneGenerator";
+import { CAM_MOODS, COLOR_GRADE_OPTIONS, LENS_OPTIONS, VISUAL_STYLE_LABELS } from "./constants";
 
 export default function useForestBuildProjectState({
 	showToast,
@@ -30,6 +31,61 @@ export default function useForestBuildProjectState({
 	const [currentPhase, setCurrentPhase] = useState<ScenePhaseKey>("hook");
 	const [activeTab, setActiveTab] = useState("shot");
 
+	function pickOption(options: readonly string[], prefers: string[]) {
+		const lower = options.map((o) => o.toLowerCase());
+		for (const p of prefers) {
+			const idx = lower.findIndex((o) => o.includes(p.toLowerCase()));
+			if (idx >= 0) return options[idx];
+		}
+		return options[0] ?? "";
+	}
+
+	function getVisualPreset(style: VisualStyleKey) {
+		if (style === "cinematic") {
+			return {
+				filmQuality: pickOption(FILM_STYLE_OPTIONS.map((o) => o.value), ["red", "cinematic"]),
+				colorGrade: pickOption(COLOR_GRADE_OPTIONS, ["golden hour", "warm natural"]),
+				camLens: pickOption(LENS_OPTIONS, ["wide 24mm", "telephoto 85mm"]),
+				camMood: pickOption(CAM_MOODS, ["lyrical", "wonder"]),
+			};
+		}
+		if (style === "semi-cinematic") {
+			return {
+				filmQuality: pickOption(FILM_STYLE_OPTIONS.map((o) => o.value), ["sony fx3", "cinematic"]),
+				colorGrade: pickOption(COLOR_GRADE_OPTIONS, ["warm natural", "clean documentary"]),
+				camLens: pickOption(LENS_OPTIONS, ["standard 35mm", "wide 24mm"]),
+				camMood: pickOption(CAM_MOODS, ["meditative", "intimate"]),
+			};
+		}
+		if (style === "cinematic-realistic") {
+			return {
+				filmQuality: pickOption(FILM_STYLE_OPTIONS.map((o) => o.value), ["sony fx3", "red"]),
+				colorGrade: pickOption(COLOR_GRADE_OPTIONS, ["clean documentary", "warm natural"]),
+				camLens: pickOption(LENS_OPTIONS, ["standard 35mm", "wide 24mm"]),
+				camMood: pickOption(CAM_MOODS, ["documentary realism", "meditative"]),
+			};
+		}
+		if (style === "realistic") {
+			return {
+				filmQuality: pickOption(FILM_STYLE_OPTIONS.map((o) => o.value), ["documentary", "sony fx3"]),
+				colorGrade: pickOption(COLOR_GRADE_OPTIONS, ["clean documentary", "desaturated naturalistic"]),
+				camLens: pickOption(LENS_OPTIONS, ["standard 35mm", "wide 24mm"]),
+				camMood: pickOption(CAM_MOODS, ["documentary realism", "primitive & earthy"]),
+			};
+		}
+		return {
+			filmQuality: pickOption(FILM_STYLE_OPTIONS.map((o) => o.value), ["red", "sony fx3"]),
+			colorGrade: pickOption(COLOR_GRADE_OPTIONS, ["clean documentary", "warm natural"]),
+			camLens: pickOption(LENS_OPTIONS, ["macro 100mm", "telephoto 85mm"]),
+			camMood: pickOption(CAM_MOODS, ["wonder", "triumphant"]),
+		};
+	}
+
+	function applyVisualStyleToScenes(nextScenes: SceneConfig[], style: VisualStyleKey) {
+		const preset = getVisualPreset(style);
+		return nextScenes.map((s) => ({ ...s, ...preset }));
+	}
+
 	function handleDurationChange(min: number, sec: number) {
 		setTotalMinutes(min);
 		setSecPerScene(sec);
@@ -37,12 +93,12 @@ export default function useForestBuildProjectState({
 		setCurrentPhase("hook");
 		if (dnaLocked) {
 			const newTotal = Math.floor((min * 60) / sec);
-			setScenes(generateScenes(newTotal, dna));
+			setScenes(applyVisualStyleToScenes(generateScenes(newTotal, dna), dna.visualStyle));
 		}
 	}
 
 	function lockDNA() {
-		const newScenes = generateScenes(totalScenes, dna);
+		const newScenes = applyVisualStyleToScenes(generateScenes(totalScenes, dna), dna.visualStyle);
 		setScenes(newScenes);
 		setDnaLocked(true);
 		setCurrentScene(1);
@@ -70,6 +126,14 @@ export default function useForestBuildProjectState({
 				].value,
 		});
 		showToast("🎲 DNA di-randomize!");
+	}
+
+	function setVisualStyleSafe(next: VisualStyleKey) {
+		setDna({ ...dna, visualStyle: next });
+		if (dnaLocked) {
+			setScenes((prev) => applyVisualStyleToScenes(prev, next));
+		}
+		showToast(`🎞️ Visual style: ${VISUAL_STYLE_LABELS[next]}`);
 	}
 
 	function getScene(id: number): SceneConfig {
@@ -103,7 +167,7 @@ export default function useForestBuildProjectState({
 		setTotalMinutes,
 		totalMinutes,
 		totalScenes,
+		setVisualStyleSafe,
 		updateScene,
 	};
 }
-

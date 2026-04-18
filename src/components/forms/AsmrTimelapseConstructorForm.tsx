@@ -13,6 +13,7 @@ import SceneConfigSection from "./asmr/sections/SceneConfigSection";
 import ScenePhaseSection from "./asmr/sections/ScenePhaseSection";
 import TimeOfDaySection from "./asmr/sections/TimeOfDaySection";
 import TimelineSection from "./asmr/sections/TimelineSection";
+import VisualStyleSection from "./asmr/sections/VisualStyleSection";
 
 export default function AsmrTimelapseConstructorForm() {
 	const gen = useAsmrTimelapseGenerator();
@@ -22,6 +23,7 @@ export default function AsmrTimelapseConstructorForm() {
 			<div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pt-6">
 				<HeaderSection gen={gen} />
 				<DurationEngineSection gen={gen} />
+				<VisualStyleSection gen={gen} />
 				<ProjectDnaSection gen={gen} />
 				<ProgressSection gen={gen} />
 				<TimeOfDaySection gen={gen} />

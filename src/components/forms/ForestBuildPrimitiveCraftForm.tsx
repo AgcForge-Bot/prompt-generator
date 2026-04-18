@@ -7,6 +7,8 @@ import PromptOutputSection from "@/components/forms/forest-build/PromptOutputSec
 import ProjectDnaSection from "@/components/forms/forest-build/ProjectDnaSection";
 import SceneConfigSection from "@/components/forms/forest-build/SceneConfigSection";
 import TimeOfDaySection from "@/components/forms/forest-build/TimeOfDaySection";
+import VisualStyleSection from "@/components/forms/forest-build/VisualStyleSection";
+import { VISUAL_STYLE_LABELS } from "@/components/forms/forest-build/constants";
 import useForestBuildGenerator from "@/components/forms/forest-build/useForestBuildGenerator";
 
 export default function ForestBuildPrimitiveCraftForm() {
@@ -54,6 +56,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		setImgModel,
 		setImgModelId,
 		setImgScope,
+		setVisualStyleSafe,
 		setShowAllPrompts,
 		setUrlInput,
 		showAllPrompts,
@@ -63,6 +66,8 @@ export default function ForestBuildPrimitiveCraftForm() {
 		updateScene,
 		urlInput,
 	} = useForestBuildGenerator();
+
+	const modeLabel = VISUAL_STYLE_LABELS[dna.visualStyle] ?? dna.visualStyle;
 
 	return (
 		<div>
@@ -93,6 +98,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 								["Durasi", `${totalMinutes} menit`],
 								["Per-scene", `${secPerScene} detik`],
 								["Platform", "Grok + VEO"],
+								["Mode", modeLabel],
 							].map(([k, v]) => (
 								<div
 									key={k}
@@ -110,6 +116,10 @@ export default function ForestBuildPrimitiveCraftForm() {
 					secPerScene={secPerScene}
 					totalScenes={totalScenes}
 					onDurationChange={handleDurationChange}
+				/>
+				<VisualStyleSection
+					visualStyle={dna.visualStyle}
+					onChange={setVisualStyleSafe}
 				/>
 
 				<ProjectDnaSection

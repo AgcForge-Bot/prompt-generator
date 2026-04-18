@@ -2,6 +2,12 @@ export type ProjectType = 'survival-build' | 'restoration'
 export type ModelGender = 'male' | 'female'
 export type TravelMode = 'foot' | 'camper-van' | 'snowfox' | 'bicycle' | 'motorbike'
 export type TimeOfDay = 'morning' | 'noon' | 'afternoon' | 'night'
+export type VisualStyleKey =
+	| 'cinematic'
+	| 'semi-cinematic'
+	| 'cinematic-realistic'
+	| 'realistic'
+	| 'hyper-realistic'
 export type ScenePhaseKey =
 	| 'hook' | 'preparation' | 'journey' | 'arrival'
 	| 'build' | 'challenge' | 'living' | 'closing'
@@ -52,6 +58,7 @@ export interface ProjectDNA {
 	colorPalette: string
 	soundscape: string
 	filmStyle: string
+	visualStyle: VisualStyleKey
 
 	// Locked status
 	locked: boolean

@@ -16,6 +16,13 @@ export type TabKey =
 
 export type RandomGroupKey = keyof typeof RANDOM_IDS;
 
+export type VisualStyleKey =
+	| "cinematic"
+	| "semi-cinematic"
+	| "cinematic-realistic"
+	| "realistic"
+	| "hyper-realistic";
+
 export type DnaState = {
 	building: string;
 	location: string;
@@ -68,6 +75,10 @@ export type AsmrTimelapseGenerator = {
 	secPerScene: number;
 	totalScenes: number;
 	onDurationChange: (min: number, sec: number) => void;
+
+	visualStyle: VisualStyleKey;
+	visualStyleLabel: string;
+	setVisualStyleSafe: (next: VisualStyleKey) => void;
 
 	projectType: ProjectTypeKey;
 	setProjectTypeSafe: (next: ProjectTypeKey) => void;
