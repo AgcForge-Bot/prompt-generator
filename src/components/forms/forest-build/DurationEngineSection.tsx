@@ -23,7 +23,7 @@ export default function DurationEngineSection({
 						id="dur-total"
 						value={String(totalMinutes)}
 						onChange={(v) => onDurationChange(+v, secPerScene)}
-						options={["8", "10", "12", "15", "18", "20"].map((v) => ({
+						options={["3", "5", "8", "10", "12", "15", "18", "20"].map((v) => ({
 							value: v,
 							label: `${v} Menit`,
 						}))}
