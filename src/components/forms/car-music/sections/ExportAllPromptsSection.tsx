@@ -22,7 +22,12 @@ export default function ExportAllPromptsSection({
 						onClick={gen.generateAllWithAI}
 						disabled={gen.isGeneratingAI}
 					>
-						🤖 Generate All With AI
+						<span className="inline-flex items-center gap-2">
+							{gen.isGeneratingAI && (
+								<span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+							)}
+							{gen.isGeneratingAI ? "Generating..." : "🤖 Generate All With AI"}
+						</span>
 					</button>
 				)}
 				<button type="button" className="btn-outline" onClick={gen.copyAll}>

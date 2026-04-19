@@ -48,7 +48,12 @@ export default function ExportAllPromptsSection({
 						onClick={onGenerateAllWithAI}
 						disabled={isGeneratingAI}
 					>
-						🤖 Generate All With AI
+						<span className="inline-flex items-center gap-2">
+							{isGeneratingAI && (
+								<span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+							)}
+							{isGeneratingAI ? "Generating..." : "🤖 Generate All With AI"}
+						</span>
 					</button>
 				)}
 				<button className="btn-ghost" onClick={onCopyAll}>
