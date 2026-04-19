@@ -228,6 +228,7 @@ export default function useAllInOneGenerator() {
 						userPrompt,
 						provider: dna.aiProvider,
 						modelId: dna.aiModelId,
+					maxTokens: 8000,
 						images,
 					}),
 				});

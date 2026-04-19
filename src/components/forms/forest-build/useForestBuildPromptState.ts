@@ -194,6 +194,7 @@ Output hanya JSON.`;
 					userPrompt,
 					provider: dna.storyAiProvider,
 					modelId: dna.storyAiModelId,
+					maxTokens: 8000,
 				}),
 			});
 			const data = await res.json();

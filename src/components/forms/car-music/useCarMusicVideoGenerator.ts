@@ -410,6 +410,7 @@ Output hanya JSON.`;
 					userPrompt,
 					provider: aiProvider,
 					modelId: aiModelId,
+					maxTokens: 8000,
 				}),
 			});
 			const data = await res.json();

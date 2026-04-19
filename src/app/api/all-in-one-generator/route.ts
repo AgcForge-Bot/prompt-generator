@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { OpenRouter } from "@openrouter/sdk";
 import { GoogleGenAI, createPartFromBase64, createPartFromText } from "@google/genai";
+import { parseJsonFromModelOutput } from "@/lib/aiJson";
 
 // ─── LAZY CLIENTS ─────────────────────────────────────────────────────────────
 
@@ -167,6 +168,7 @@ export async function POST(req: NextRequest) {
 		provider: string;
 		modelId: string;
 		images?: { base64: string; mediaType: string }[];
+		maxTokens?: number;
 	};
 
 	try {
@@ -175,7 +177,7 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
 	}
 
-	const { systemPrompt, userPrompt, provider, modelId, images = [] } = body;
+	const { systemPrompt, userPrompt, provider, modelId, images = [], maxTokens = 8000 } = body;
 
 	if (!userPrompt?.trim()) {
 		return NextResponse.json({ error: "userPrompt tidak boleh kosong" }, { status: 400 });
@@ -197,8 +199,20 @@ export async function POST(req: NextRequest) {
 	}
 
 	try {
-		const result = await callAI(provider, modelId, systemPrompt, userPrompt, images, 1500);
-		return NextResponse.json({ prompt: result.trim() });
+		const raw = (await callAI(provider, modelId, systemPrompt, userPrompt, images, maxTokens)).trim();
+		try {
+			const parsed = parseJsonFromModelOutput(raw);
+			return NextResponse.json({ prompt: JSON.stringify(parsed, null, 2) });
+		} catch {
+			const fixSystem =
+				"Kamu adalah JSON repair tool. Tugasmu memperbaiki output menjadi JSON valid. Output HARUS JSON valid saja, tanpa markdown/backticks.";
+			const fixUser =
+				"Perbaiki JSON berikut agar valid (tanpa mengubah makna/isi). Pastikan string ter-escape benar, tanpa trailing comma, tanpa komentar.\n\n" +
+				raw;
+			const fixedRaw = (await callAI(provider, modelId, fixSystem, fixUser, [], maxTokens)).trim();
+			const parsed2 = parseJsonFromModelOutput(fixedRaw);
+			return NextResponse.json({ prompt: JSON.stringify(parsed2, null, 2), repaired: true });
+		}
 	} catch (err) {
 		const message = err instanceof Error ? err.message : "Unknown error";
 		return NextResponse.json({ error: message }, { status: 500 });
