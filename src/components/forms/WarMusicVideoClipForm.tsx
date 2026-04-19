@@ -10,6 +10,7 @@ import SceneConfigSection from "./war-music/sections/SceneConfigSection";
 import SceneTypeSection from "./war-music/sections/SceneTypeSection";
 import TimelineSection from "./war-music/sections/TimelineSection";
 import VisualStyleSection from "./war-music/sections/VisualStyleSection";
+import ClipModeSection from "./war-music/sections/ClipModeSection";
 
 export default function WarMusicVideoClipForm() {
 	const gen = useWarMusicVideoGenerator();
@@ -20,8 +21,9 @@ export default function WarMusicVideoClipForm() {
 				<HeaderSection gen={gen} />
 				<DurationEngineSection gen={gen} />
 				<VisualStyleSection gen={gen} />
+				<ClipModeSection gen={gen} />
 				<TimelineSection gen={gen} />
-				<SceneTypeSection gen={gen} />
+				{gen.clipMode === "classic" && <SceneTypeSection gen={gen} />}
 				<SceneConfigSection gen={gen} />
 				<RandomGeneratorSection gen={gen} />
 				<PromptOutputSection gen={gen} />

@@ -8,6 +8,7 @@ import DjTab from "./tabs/DjTab";
 import LightingTab from "./tabs/LightingTab";
 import LocationTab from "./tabs/LocationTab";
 import PropsTab from "./tabs/PropsTab";
+import TrailerTab from "./tabs/TrailerTab";
 
 export default function SceneConfigSection({ gen }: { gen: CarMusicVideoGenerator }) {
 	return (
@@ -28,6 +29,8 @@ export default function SceneConfigSection({ gen }: { gen: CarMusicVideoGenerato
 
 			{gen.activeTab === "cars" ? (
 				<CarsTab gen={gen} />
+			) : gen.activeTab === "trailer" ? (
+				<TrailerTab gen={gen} />
 			) : gen.activeTab === "dj" ? (
 				<DjTab gen={gen} />
 			) : gen.activeTab === "crowd" ? (
@@ -44,4 +47,3 @@ export default function SceneConfigSection({ gen }: { gen: CarMusicVideoGenerato
 		</section>
 	);
 }
-

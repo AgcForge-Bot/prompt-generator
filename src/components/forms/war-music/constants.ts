@@ -48,6 +48,66 @@ export const DEFAULT_TYPES = [
 	"hero-charge",
 ] as const;
 
+export const CLIP_MODE_LABELS = {
+	classic: "Classic Warzone DJ (Mode Lama)",
+	trailer: "Film Trailer / Opening (Mode Baru)",
+} as const;
+
+export const WAR_MOVIE_REFS = [
+	"The Hobbit: The Battle of the Five Armies (2014)",
+	"The Lord of the Rings: The Return of the King (2003)",
+	"300 (2006)",
+	"Troy (2004)",
+	"Braveheart (1995)",
+	"Kingdom of Heaven (Director's Cut) (2005)",
+	"Gladiator (2000)",
+	"Warcraft (2016)",
+	"The Chronicles of Narnia: The Lion, the Witch and the Wardrobe (2005)",
+	"Red Cliff (2008)",
+	"The Last Samurai (2003)",
+] as const;
+
+export const TRAILER_BEAT_OPTIONS = [
+	"establishing",
+	"inciting",
+	"character-intro",
+	"setpiece",
+	"duel",
+	"emotional",
+	"climax",
+	"closing",
+] as const;
+
+export const WAR_TRAILER_SETPIECES = [
+	"armies gathering on the horizon, banners snapping in wind",
+	"cavalry charge across muddy battlefield, slow-motion impact",
+	"siege towers advancing toward massive city walls",
+	"hero rally speech in torchlit hall before battle",
+	"duel between champions, swords clashing, sparks and sweat",
+	"archers volley, arrows darkening the sky",
+	"explosions/firestorm across war camp, chaos and smoke",
+	"quiet aftermath, wounded survivors, rain and ashes",
+] as const;
+
+export const TRAILER_EMOTION_BEATS = [
+	"honor",
+	"sacrifice",
+	"rage",
+	"grief",
+	"hope",
+	"vengeance",
+	"triumph",
+	"silence-before-storm",
+] as const;
+
+export const TRAILER_CHARACTER_ROLES = [
+	"the commander",
+	"the champion",
+	"the strategist",
+	"the scout",
+	"the noble",
+] as const;
+
 export const OPTIONS = {
 	solHero: [
 		"battle-hardened US Army Ranger, sergeant, WWII uniform, steely gaze",

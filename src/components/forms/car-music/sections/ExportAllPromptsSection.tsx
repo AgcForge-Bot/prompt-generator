@@ -15,6 +15,16 @@ export default function ExportAllPromptsSection({
 				<button type="button" className="btn-primary" onClick={gen.generateAll}>
 					🎬 Generate Semua {gen.totalScenes} Prompt
 				</button>
+				{gen.clipMode === "trailer" && (
+					<button
+						type="button"
+						className="btn-amber"
+						onClick={gen.generateAllWithAI}
+						disabled={gen.isGeneratingAI}
+					>
+						🤖 Generate All With AI
+					</button>
+				)}
 				<button type="button" className="btn-outline" onClick={gen.copyAll}>
 					📋 Copy Semua
 				</button>

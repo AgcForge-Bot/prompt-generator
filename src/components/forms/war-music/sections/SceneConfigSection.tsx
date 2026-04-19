@@ -7,6 +7,7 @@ import DjTab from "./tabs/DjTab";
 import LightingTab from "./tabs/LightingTab";
 import LocationTab from "./tabs/LocationTab";
 import SoldiersTab from "./tabs/SoldiersTab";
+import TrailerTab from "./tabs/TrailerTab";
 import VehiclesTab from "./tabs/VehiclesTab";
 import VfxTab from "./tabs/VfxTab";
 
@@ -29,6 +30,8 @@ export default function SceneConfigSection({ gen }: { gen: WarMusicVideoGenerato
 
 			{gen.activeTab === "soldiers" ? (
 				<SoldiersTab gen={gen} />
+			) : gen.activeTab === "trailer" ? (
+				<TrailerTab gen={gen} />
 			) : gen.activeTab === "dj" ? (
 				<DjTab gen={gen} />
 			) : gen.activeTab === "civilian" ? (
@@ -47,4 +50,3 @@ export default function SceneConfigSection({ gen }: { gen: WarMusicVideoGenerato
 		</section>
 	);
 }
-

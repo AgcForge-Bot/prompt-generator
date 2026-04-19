@@ -5,12 +5,21 @@ export type TabKey =
 	| "dj"
 	| "civilian"
 	| "vehicles"
+	| "trailer"
 	| "location"
 	| "lighting"
 	| "vfx"
 	| "camera";
 
 export type SceneTypeKey = keyof typeof SCENE_TYPE_LABELS;
+export type ClipModeKey = "classic" | "trailer";
+export type AIProviderKey = "CLAUDE" | "OPENAI" | "GEMINI" | "OPENROUTER";
+export type TrailerCharacter = {
+	name: string;
+	role: string;
+	faceDescription: string;
+	introSceneNumber?: number;
+};
 export type VisualStyleKey =
 	| "cinematic"
 	| "semi-cinematic"
@@ -67,6 +76,12 @@ export type SceneConfig = {
 	camGrade: string;
 	camLens: string;
 
+	trailerBeat?: string;
+	trailerSetpiece?: string;
+	trailerEmotion?: string;
+	trailerFocusCharacter?: string;
+	trailerCreditText?: string;
+
 	generatedPrompt?: string;
 };
 
@@ -83,6 +98,21 @@ export type WarMusicVideoGenerator = {
 	visualStyle: VisualStyleKey;
 	visualStyleLabel: string;
 	setVisualStyleSafe: (next: VisualStyleKey) => void;
+
+	clipMode: ClipModeKey;
+	setClipMode: (next: ClipModeKey) => void;
+	filmRef: string;
+	setFilmRef: (next: string) => void;
+	aiProvider: AIProviderKey;
+	aiModelId: string;
+	setAiProvider: (next: AIProviderKey) => void;
+	setAiModelId: (next: string) => void;
+	isGeneratingAI: boolean;
+
+	trailerCharacters: TrailerCharacter[];
+	updateTrailerCharacter: (index: number, next: Partial<TrailerCharacter>) => void;
+	randomizeTrailerCharacters: () => void;
+	normalizeTrailerIntroScenes: () => void;
 
 	currentScene: number;
 	setCurrentSceneSafe: (sceneNum: number) => void;
@@ -109,6 +139,7 @@ export type WarMusicVideoGenerator = {
 	copyPrompt: () => void;
 	copyAll: () => void;
 	downloadAllJson: () => void;
+	generateAllWithAI: () => void;
 	generateAll: () => void;
 
 	randomizeCurrentScene: () => void;

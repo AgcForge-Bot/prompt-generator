@@ -48,6 +48,66 @@ export const DEFAULT_TYPES = [
 	"hero-shot",
 ] as const;
 
+export const CLIP_MODE_LABELS = {
+	classic: "Classic DJ Car Party (Mode Lama)",
+	trailer: "Film Trailer / Opening (Mode Baru)",
+} as const;
+
+export const CAR_MOVIE_REFS = [
+	"The Fast and the Furious (2001)",
+	"Ford v Ferrari (2019)",
+	"Rush (2013)",
+	"Mad Max: Fury Road (2015)",
+	"Gone in 60 Seconds (2000)",
+	"Need for Speed (2014)",
+	"Baby Driver (2017)",
+	"Gran Turismo (2023)",
+	"The Transporter (2002)",
+	"Death Race (2008)",
+	"Initial D (Live Action - 2005)",
+] as const;
+
+export const TRAILER_BEAT_OPTIONS = [
+	"establishing",
+	"inciting",
+	"character-intro",
+	"setpiece",
+	"chase",
+	"emotional",
+	"climax",
+	"closing",
+] as const;
+
+export const CAR_TRAILER_SETPIECES = [
+	"underground street race start line, engines revving",
+	"high-speed city chase through narrow streets",
+	"precision drifting through mountain hairpins",
+	"night highway pursuit with headlights streaks",
+	"desert convoy chase with dust and chaos",
+	"heist getaway, near-miss collisions, tight corners",
+	"pit garage prep montage, tools, tire swap, tension",
+	"slow-motion crash avoidance, sparks, close calls",
+] as const;
+
+export const TRAILER_EMOTION_BEATS = [
+	"determination",
+	"rivalry",
+	"fear",
+	"hope",
+	"loss",
+	"redemption",
+	"victory",
+	"silence-before-storm",
+] as const;
+
+export const TRAILER_CHARACTER_ROLES = [
+	"the driver",
+	"the rival",
+	"the mentor",
+	"the mechanic",
+	"the strategist",
+] as const;
+
 export const OPTIONS = {
 	carHero: [
 		"Nissan Skyline GTR R34, midnight purple",

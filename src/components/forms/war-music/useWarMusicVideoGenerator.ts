@@ -2,29 +2,120 @@
 
 import { useMemo, useState } from "react";
 import useToast from "@/components/forms/forest-build/useToast";
-import { OPTIONS, SCENE_TYPE_LABELS, VISUAL_STYLE_LABELS } from "./constants";
+import {
+	OPTIONS,
+	SCENE_TYPE_LABELS,
+	TRAILER_BEAT_OPTIONS,
+	TRAILER_CHARACTER_ROLES,
+	TRAILER_EMOTION_BEATS,
+	VISUAL_STYLE_LABELS,
+	WAR_MOVIE_REFS,
+	WAR_TRAILER_SETPIECES,
+} from "./constants";
 import { buildPrompt } from "./promptBuilder";
-import type { SceneConfig, SceneTypeKey, TabKey, VisualStyleKey, WarMusicVideoGenerator } from "./types";
+import type { AIProviderKey, ClipModeKey, SceneConfig, SceneTypeKey, TabKey, TrailerCharacter, VisualStyleKey, WarMusicVideoGenerator } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
 import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
+import { getDefaultModelId } from "@/lib/modelProviders";
+import { parseJsonFromModelOutput } from "@/lib/aiJson";
 
 export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
-	const tabs = useMemo(
-		() =>
-			[
-				{ key: "soldiers", label: "⚔️ Pasukan" },
-				{ key: "dj", label: "🎧 DJ" },
-				{ key: "civilian", label: "👥 Sipil" },
-				{ key: "vehicles", label: "🚁 Kendaraan" },
+	const { toast, show: showToast } = useToast();
+
+	const [clipMode, setClipModeState] = useState<ClipModeKey>("classic");
+	const [filmRef, setFilmRef] = useState<string>(WAR_MOVIE_REFS[0] ?? "War Movie");
+	const [aiProvider, setAiProvider] = useState<AIProviderKey>("CLAUDE");
+	const [aiModelId, setAiModelId] = useState<string>(getDefaultModelId("CLAUDE"));
+	const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+	const [trailerCharacters, setTrailerCharacters] = useState<TrailerCharacter[]>(() => [
+		{
+			name: "Kael Draven",
+			role: "the commander",
+			faceDescription:
+				"male, late 30s, stern eyes, short dark hair, weathered face, subtle facial scar",
+			introSceneNumber: 2,
+		},
+		{
+			name: "Raya Solenne",
+			role: "the strategist",
+			faceDescription:
+				"female, early 30s, braided hair, sharp cheekbones, focused gaze, calm authority",
+			introSceneNumber: 3,
+		},
+		{
+			name: "Arden Vale",
+			role: "the champion",
+			faceDescription:
+				"male, early 30s, rugged stubble, intense eyes, battle-worn expression",
+			introSceneNumber: 4,
+		},
+	]);
+
+	function updateTrailerCharacter(index: number, next: Partial<TrailerCharacter>) {
+		setTrailerCharacters((prev) => prev.map((c, i) => (i === index ? { ...c, ...next } : c)));
+	}
+
+	function randomizeTrailerCharacters() {
+		const first = ["Kael", "Arden", "Raya", "Sora", "Juno", "Dain", "Lyra", "Ronan"];
+		const last = ["Draven", "Vale", "Storm", "Kane", "Ashford", "Blackwood", "Sable", "Varyn"];
+		const faces = [
+			"male, late 30s, stern gaze, short hair, weathered face",
+			"female, early 30s, braided hair, focused eyes, calm authority",
+			"male, early 30s, rugged stubble, intense eyes, battle-worn expression",
+			"female, late 20s, sharp eyes, windswept hair, determined expression",
+		];
+		setTrailerCharacters((prev) =>
+			prev.map((c, i) => ({
+				...c,
+				name: `${rnd(first)} ${rnd(last)}`,
+				role: c.role || "the commander",
+				faceDescription: rnd(faces),
+				introSceneNumber: i + 2,
+			})),
+		);
+		showToast("🎭 Karakter trailer di-randomize!");
+	}
+
+	function normalizeTrailerIntroScenes() {
+		setTrailerCharacters((prev) => {
+			const used = new Set<number>();
+			const next = prev.map((c, i) => {
+				const preferred = c.introSceneNumber ?? i + 2;
+				let pick = Math.min(totalScenes, Math.max(1, preferred));
+				while (used.has(pick)) {
+					pick++;
+					if (pick > totalScenes) pick = 1;
+					if (used.size >= totalScenes) break;
+				}
+				used.add(pick);
+				return { ...c, introSceneNumber: pick };
+			});
+			return next;
+		});
+		showToast("✅ Intro scene karakter dirapikan (unik).");
+	}
+
+	const tabs = useMemo(() => {
+		if (clipMode === "trailer") {
+			return [
+				{ key: "trailer", label: "🎞️ Trailer" },
 				{ key: "location", label: "📍 Lokasi" },
 				{ key: "lighting", label: "💡 Lighting" },
-				{ key: "vfx", label: "💥 VFX & Senjata" },
 				{ key: "camera", label: "🎬 Kamera" },
-			] as { key: TabKey; label: string }[],
-		[],
-	);
-
-	const { toast, show: showToast } = useToast();
+			] as { key: TabKey; label: string }[];
+		}
+		return [
+			{ key: "soldiers", label: "⚔️ Pasukan" },
+			{ key: "dj", label: "🎧 DJ" },
+			{ key: "civilian", label: "👥 Sipil" },
+			{ key: "vehicles", label: "🚁 Kendaraan" },
+			{ key: "location", label: "📍 Lokasi" },
+			{ key: "lighting", label: "💡 Lighting" },
+			{ key: "vfx", label: "💥 VFX & Senjata" },
+			{ key: "camera", label: "🎬 Kamera" },
+		] as { key: TabKey; label: string }[];
+	}, [clipMode]);
 
 	const [activeTab, setActiveTab] = useState<TabKey>("soldiers");
 	const [totalMinutes, setTotalMinutes] = useState(2);
@@ -47,6 +138,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		dj: true,
 		civilian: true,
 		vehicles: true,
+		trailer: true,
 		location: true,
 		lighting: true,
 		vfx: true,
@@ -58,6 +150,15 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 	);
 	const [allPrompts, setAllPrompts] = useState<string[]>([]);
 	const [showAllPrompts, setShowAllPrompts] = useState(false);
+
+	function setClipMode(next: ClipModeKey) {
+		setClipModeState(next);
+		setAllPrompts([]);
+		setShowAllPrompts(false);
+		setPromptOutput("Klik ⚡ Generate Prompt untuk membuat prompt scene ini...");
+		setActiveTab(next === "trailer" ? "trailer" : "soldiers");
+		showToast(`🎬 Mode: ${next}`);
+	}
 
 	function pickOption(options: readonly string[], prefers: string[]) {
 		const lower = options.map((o) => o.toLowerCase());
@@ -129,6 +230,9 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		const sceneType = sceneTypes[sceneNum] ?? "ground-assault";
 		const config = getSceneConfig(sceneNum);
 		const promptObj = buildPrompt({
+			clipMode,
+			filmRef,
+			trailerCharacters,
 			sceneNum,
 			totalScenes: effectiveTotalScenes,
 			secPerScene: effectiveSecPerScene,
@@ -165,6 +269,9 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			const sceneType = sceneTypes[s] ?? "ground-assault";
 			const config = getSceneConfig(s);
 			const promptObj = buildPrompt({
+				clipMode,
+				filmRef,
+				trailerCharacters,
 				sceneNum: s,
 				totalScenes,
 				secPerScene,
@@ -201,6 +308,9 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 				const sceneType = sceneTypes[s] ?? "ground-assault";
 				const config = getSceneConfig(s);
 				const promptObj = buildPrompt({
+					clipMode,
+					filmRef,
+					trailerCharacters,
 					sceneNum: s,
 					totalScenes,
 					secPerScene,
@@ -224,9 +334,109 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
+	async function generateAllWithAI() {
+		if (clipMode !== "trailer") {
+			showToast("⚠ Fitur AI ini khusus untuk Mode Trailer.");
+			return;
+		}
+		setIsGeneratingAI(true);
+		try {
+			const systemPrompt =
+				"Kamu adalah penulis trailer film epik + prompt engineer untuk AI video. Output HARUS JSON valid tanpa markdown.";
+			const userPrompt = `Buat AI video prompt berbentuk JSON dengan schema aiVideoPrompt.v1.
+
+KONTEKS:
+- Tool: war-music-video-clip
+- Mode: film trailer/opening (tanpa DJ, tanpa stage DJ, tanpa rave)
+- Referensi film: ${filmRef}
+- Durasi: ${totalMinutes} menit
+- Sec per scene: ${secPerScene}
+- Total scene: ${totalScenes}
+- Visual style: ${visualStyle}
+- Karakter (gunakan persis, tidak meniru aktor asli):
+${trailerCharacters
+	.map(
+		(c, i) =>
+			`${i + 1}. ${c.name} (${c.role}) — ${c.faceDescription} | introScene=${c.introSceneNumber ?? i + 2}`,
+	)
+	.join("\n")}
+
+ATURAN:
+- Trailer/opening berupa cuplikan-cuplikan penting (gathering armies, rally speech, duel, siege, cavalry charge, emotional vow, climax, closing).
+- Karakter harus original (nama & wajah original, tidak meniru aktor/cast film asli).
+- Sisipkan scene "character-intro" bergaya opening credits (close-up wajah, nama + peran) persis di introScene yang ditentukan setiap karakter. Masing-masing karakter tepat 1 kali.
+- Wajib output JSON yang mengikuti struktur aiVideoPrompt.v1, dan field scenes adalah array panjang tepat ${totalScenes}.
+- Di tiap scene wajib ada:
+  - id (1..${totalScenes})
+  - sceneNumber ("Scene X")
+  - time.startSec / endSec sesuai durasi
+  - deliverable.prompt (1 paragraf padat, sangat visual)
+  - deliverable.negativePrompt
+- Jangan menyebut DJ sama sekali.
+- Pacing trailer: establish -> inciting -> character intros -> setpieces -> emotional beat -> climax -> closing.
+
+OPTIONAL BEAT KEYS: ${TRAILER_BEAT_OPTIONS.join(", ")}
+SETPIECES IDE: ${WAR_TRAILER_SETPIECES.join(" | ")}
+EMOTION IDE: ${TRAILER_EMOTION_BEATS.join(", ")}
+ROLE IDE: ${TRAILER_CHARACTER_ROLES.join(", ")}
+
+Output hanya JSON.`;
+
+			const res = await fetch("/api/all-in-one-generator", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					systemPrompt,
+					userPrompt,
+					provider: aiProvider,
+					modelId: aiModelId,
+				}),
+			});
+			const data = await res.json();
+			if (!res.ok) {
+				throw new Error(data?.error || "AI request failed");
+			}
+			const raw = String(data?.prompt ?? "");
+			const bundle = parseJsonFromModelOutput(raw) as { scenes?: unknown[] };
+			if (!bundle || !Array.isArray(bundle.scenes)) {
+				throw new Error("AI output tidak mengandung scenes[]");
+			}
+			if (bundle.scenes.length !== totalScenes) {
+				throw new Error(`AI scenes tidak sesuai. Dapat ${bundle.scenes.length}, harus ${totalScenes}`);
+			}
+			const prompts = bundle.scenes.map((scene) =>
+				jsonStringify({ ...bundle, scenes: [scene] }),
+			);
+			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
+			for (let s = 1; s <= totalScenes; s++) {
+				updated[s] = { ...getSceneConfig(s), generatedPrompt: prompts[s - 1] };
+			}
+			setSceneConfigs(updated);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+			showToast(`🤖 AI: ${totalScenes} prompt trailer berhasil dibuat!`);
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : "Unknown error";
+			showToast(`⚠ ${msg}`);
+		} finally {
+			setIsGeneratingAI(false);
+		}
+	}
+
 	function randomizeCurrentScene() {
 		const updates: Partial<SceneConfig> = {};
-		if (randomGroups.soldiers) {
+		if (clipMode === "trailer") {
+			if (randomGroups.trailer) {
+				updates.trailerBeat = rnd(TRAILER_BEAT_OPTIONS);
+				updates.trailerSetpiece = rnd(WAR_TRAILER_SETPIECES);
+				updates.trailerEmotion = rnd(TRAILER_EMOTION_BEATS);
+				updates.trailerFocusCharacter =
+					rnd(trailerCharacters).name || rnd(TRAILER_CHARACTER_ROLES);
+				const c = rnd(trailerCharacters);
+				updates.trailerCreditText = `${c.name || "Kael Draven"} — ${c.role || rnd(TRAILER_CHARACTER_ROLES)}`;
+			}
+		} else if (randomGroups.soldiers) {
 			updates.solHero = rnd(OPTIONS.solHero);
 			updates.solSquad = rnd(OPTIONS.solSquad);
 			updates.solAction = rnd(OPTIONS.solAction);
@@ -234,7 +444,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			updates.solScale = rnd(OPTIONS.solScale);
 			updates.solEnemy = rnd(OPTIONS.solEnemy);
 		}
-		if (randomGroups.dj) {
+		if (clipMode !== "trailer" && randomGroups.dj) {
 			updates.djType = rnd(OPTIONS.djType);
 			updates.djSetup = rnd(OPTIONS.djSetup);
 			updates.djAction = rnd(OPTIONS.djAction);
@@ -242,13 +452,13 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			updates.djFx = rnd(OPTIONS.djFx);
 			updates.djSound = rnd(OPTIONS.djSound);
 		}
-		if (randomGroups.civilian) {
+		if (clipMode !== "trailer" && randomGroups.civilian) {
 			updates.civType = rnd(OPTIONS.civType);
 			updates.civEmotion = rnd(OPTIONS.civEmotion);
 			updates.civInteraction = rnd(OPTIONS.civInteraction);
 			updates.civDensity = rnd(OPTIONS.civDensity);
 		}
-		if (randomGroups.vehicles) {
+		if (clipMode !== "trailer" && randomGroups.vehicles) {
 			updates.vehGround = rnd(OPTIONS.vehGround);
 			updates.vehAir = rnd(OPTIONS.vehAir);
 			updates.vehNaval = rnd(OPTIONS.vehNaval);
@@ -266,7 +476,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			updates.lightColor = rnd(OPTIONS.lightColor);
 			updates.lightShadow = rnd(OPTIONS.lightShadow);
 		}
-		if (randomGroups.vfx) {
+		if (clipMode !== "trailer" && randomGroups.vfx) {
 			updates.vfxFire = rnd(OPTIONS.vfxFire);
 			updates.vfxSmoke = rnd(OPTIONS.vfxSmoke);
 			updates.vfxWeapons = rnd(OPTIONS.vfxWeapons);
@@ -288,6 +498,10 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 	}
 
 	function randomSceneType() {
+		if (clipMode === "trailer") {
+			showToast("🎴 Mode Trailer tidak memakai Scene Type (pakai Trailer Beat).");
+			return;
+		}
 		const keys = Object.keys(SCENE_TYPE_LABELS) as SceneTypeKey[];
 		const pick = rnd(keys);
 		setSceneTypes((prev) => ({ ...prev, [currentScene]: pick }));
@@ -303,33 +517,43 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 			nextTypes[s] = Math.random() > 0.4 ? rnd(keys) : keys[s % keys.length];
 			const base = getDefaultSceneConfig();
 			const updates: Partial<SceneConfig> = {};
-			if (randomGroups.soldiers) {
-				updates.solHero = rnd(OPTIONS.solHero);
-				updates.solSquad = rnd(OPTIONS.solSquad);
-				updates.solAction = rnd(OPTIONS.solAction);
-				updates.solGear = rnd(OPTIONS.solGear);
-				updates.solScale = rnd(OPTIONS.solScale);
-				updates.solEnemy = rnd(OPTIONS.solEnemy);
-			}
-			if (randomGroups.dj) {
-				updates.djType = rnd(OPTIONS.djType);
-				updates.djSetup = rnd(OPTIONS.djSetup);
-				updates.djAction = rnd(OPTIONS.djAction);
-				updates.djOutfit = rnd(OPTIONS.djOutfit);
-				updates.djFx = rnd(OPTIONS.djFx);
-				updates.djSound = rnd(OPTIONS.djSound);
-			}
-			if (randomGroups.civilian) {
-				updates.civType = rnd(OPTIONS.civType);
-				updates.civEmotion = rnd(OPTIONS.civEmotion);
-				updates.civInteraction = rnd(OPTIONS.civInteraction);
-				updates.civDensity = rnd(OPTIONS.civDensity);
-			}
-			if (randomGroups.vehicles) {
-				updates.vehGround = rnd(OPTIONS.vehGround);
-				updates.vehAir = rnd(OPTIONS.vehAir);
-				updates.vehNaval = rnd(OPTIONS.vehNaval);
-				updates.vehAction = rnd(OPTIONS.vehAction);
+			if (clipMode === "trailer") {
+				if (randomGroups.trailer) {
+					updates.trailerBeat = rnd(TRAILER_BEAT_OPTIONS);
+					updates.trailerSetpiece = rnd(WAR_TRAILER_SETPIECES);
+					updates.trailerEmotion = rnd(TRAILER_EMOTION_BEATS);
+					updates.trailerFocusCharacter =
+						rnd(trailerCharacters).name || rnd(TRAILER_CHARACTER_ROLES);
+				}
+			} else {
+				if (randomGroups.soldiers) {
+					updates.solHero = rnd(OPTIONS.solHero);
+					updates.solSquad = rnd(OPTIONS.solSquad);
+					updates.solAction = rnd(OPTIONS.solAction);
+					updates.solGear = rnd(OPTIONS.solGear);
+					updates.solScale = rnd(OPTIONS.solScale);
+					updates.solEnemy = rnd(OPTIONS.solEnemy);
+				}
+				if (randomGroups.dj) {
+					updates.djType = rnd(OPTIONS.djType);
+					updates.djSetup = rnd(OPTIONS.djSetup);
+					updates.djAction = rnd(OPTIONS.djAction);
+					updates.djOutfit = rnd(OPTIONS.djOutfit);
+					updates.djFx = rnd(OPTIONS.djFx);
+					updates.djSound = rnd(OPTIONS.djSound);
+				}
+				if (randomGroups.civilian) {
+					updates.civType = rnd(OPTIONS.civType);
+					updates.civEmotion = rnd(OPTIONS.civEmotion);
+					updates.civInteraction = rnd(OPTIONS.civInteraction);
+					updates.civDensity = rnd(OPTIONS.civDensity);
+				}
+				if (randomGroups.vehicles) {
+					updates.vehGround = rnd(OPTIONS.vehGround);
+					updates.vehAir = rnd(OPTIONS.vehAir);
+					updates.vehNaval = rnd(OPTIONS.vehNaval);
+					updates.vehAction = rnd(OPTIONS.vehAction);
+				}
 			}
 			if (randomGroups.location) {
 				updates.locMain = rnd(OPTIONS.locMain);
@@ -343,7 +567,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 				updates.lightColor = rnd(OPTIONS.lightColor);
 				updates.lightShadow = rnd(OPTIONS.lightShadow);
 			}
-			if (randomGroups.vfx) {
+			if (clipMode !== "trailer" && randomGroups.vfx) {
 				updates.vfxFire = rnd(OPTIONS.vfxFire);
 				updates.vfxSmoke = rnd(OPTIONS.vfxSmoke);
 				updates.vfxWeapons = rnd(OPTIONS.vfxWeapons);
@@ -438,6 +662,20 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		visualStyleLabel,
 		setVisualStyleSafe,
 
+		clipMode,
+		setClipMode,
+		filmRef,
+		setFilmRef,
+		aiProvider,
+		aiModelId,
+		setAiProvider,
+		setAiModelId,
+		isGeneratingAI,
+		trailerCharacters,
+		updateTrailerCharacter,
+		randomizeTrailerCharacters,
+		normalizeTrailerIntroScenes,
+
 		currentScene,
 		setCurrentSceneSafe,
 
@@ -463,6 +701,7 @@ export default function useWarMusicVideoGenerator(): WarMusicVideoGenerator {
 		copyPrompt,
 		copyAll,
 		downloadAllJson,
+		generateAllWithAI,
 		generateAll,
 
 		randomizeCurrentScene,

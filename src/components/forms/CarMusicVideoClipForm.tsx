@@ -10,6 +10,7 @@ import SceneConfigSection from "./car-music/sections/SceneConfigSection";
 import SceneTypeSection from "./car-music/sections/SceneTypeSection";
 import TimelineSection from "./car-music/sections/TimelineSection";
 import VisualStyleSection from "./car-music/sections/VisualStyleSection";
+import ClipModeSection from "./car-music/sections/ClipModeSection";
 
 export default function CarMusicVideoClipForm() {
 	const gen = useCarMusicVideoGenerator();
@@ -20,8 +21,9 @@ export default function CarMusicVideoClipForm() {
 				<HeaderSection gen={gen} />
 				<DurationEngineSection gen={gen} />
 				<VisualStyleSection gen={gen} />
+				<ClipModeSection gen={gen} />
 				<TimelineSection gen={gen} />
-				<SceneTypeSection gen={gen} />
+				{gen.clipMode === "classic" && <SceneTypeSection gen={gen} />}
 				<SceneConfigSection gen={gen} />
 				<RandomGeneratorSection gen={gen} />
 				<PromptOutputSection gen={gen} />

@@ -25,13 +25,14 @@ export default function RandomGeneratorSection({ gen }: { gen: WarMusicVideoGene
 					🎲 Random Scene Ini
 				</button>
 				<button type="button" className="btn-outline" onClick={gen.randomAllScenes}>
-					🎰 Random Semua 12 Scene
+					🎰 Random Semua {gen.totalScenes} Scene
 				</button>
-				<button type="button" className="btn-amber" onClick={gen.randomSceneType}>
-					🎴 Random Tipe Adegan
-				</button>
+				{gen.clipMode === "classic" && (
+					<button type="button" className="btn-amber" onClick={gen.randomSceneType}>
+						🎴 Random Tipe Adegan
+					</button>
+				)}
 			</div>
 		</section>
 	);
 }
-
