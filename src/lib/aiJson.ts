@@ -16,10 +16,59 @@ export function parseJsonFromModelOutput(raw: string): unknown {
 		return s.slice(start, end + 1);
 	}
 
+	function stripJsonComments(s: string) {
+		let out = "";
+		let inString: '"' | "'" | null = null;
+		let escaped = false;
+		for (let i = 0; i < s.length; i++) {
+			const ch = s[i];
+			const next = s[i + 1];
+
+			if (inString) {
+				out += ch;
+				if (escaped) {
+					escaped = false;
+				} else if (ch === "\\") {
+					escaped = true;
+				} else if (ch === inString) {
+					inString = null;
+				}
+				continue;
+			}
+
+			if (ch === '"' || ch === "'") {
+				inString = ch;
+				out += ch;
+				continue;
+			}
+
+			if (ch === "/" && next === "/") {
+				while (i < s.length && s[i] !== "\n") i++;
+				out += "\n";
+				continue;
+			}
+			if (ch === "/" && next === "*") {
+				i += 2;
+				while (i < s.length) {
+					if (s[i] === "*" && s[i + 1] === "/") {
+						i++;
+						break;
+					}
+					i++;
+				}
+				continue;
+			}
+
+			out += ch;
+		}
+		return out;
+	}
+
 	function repairJsonString(s: string) {
 		let out = s.replace(/^\uFEFF/, "").trim();
+		out = stripJsonComments(out);
 		out = out.replace(/,\s*([}\]])/g, "$1");
-		out = out.replace(/([{,]\s*)([A-Za-z_][$\w-]*)(\s*:)/g, '$1"$2"$3');
+		out = out.replace(/([{,]\s*)([A-Za-z_][$\w.-]*)(\s*:)/g, '$1"$2"$3');
 		out = out.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_, inner: string) => {
 			const unescaped = inner.replace(/\\'/g, "'").replace(/\\"/g, '"');
 			return `: ${JSON.stringify(unescaped)}`;
