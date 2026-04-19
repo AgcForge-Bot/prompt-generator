@@ -225,7 +225,7 @@
 
 	/* Buttons */
 	.btn-primary {
-		@apply rounded-xl font-bold cursor-pointer transition-all duration-150;
+		@apply rounded-xl font-bold cursor-pointer transition-all duration-150 active:scale-95;
 		background: linear-gradient(135deg, #3d5c2e, #4e7a3a);
 		border: none;
 		color: #fff;
@@ -241,7 +241,7 @@
 	}
 
 	.btn-amber {
-		@apply rounded-xl font-bold cursor-pointer transition-all duration-150;
+		@apply rounded-xl font-bold cursor-pointer transition-all duration-150 active:scale-95;
 		background: rgba(212, 148, 26, 0.15);
 		border: 1.5px solid rgba(212, 148, 26, 0.4);
 		color: var(--amber2);
@@ -254,7 +254,7 @@
 	}
 
 	.btn-outline {
-		@apply rounded-xl font-bold cursor-pointer transition-all duration-150;
+		@apply rounded-xl font-bold cursor-pointer transition-all duration-150 active:scale-95;
 		background: transparent;
 		border: 1.5px solid rgba(122, 182, 72, 0.3);
 		color: var(--leaf2);
@@ -267,7 +267,7 @@
 	}
 
 	.btn-ghost {
-		@apply rounded-lg cursor-pointer transition-all duration-150;
+		@apply rounded-lg cursor-pointer transition-all duration-150 active:scale-95;
 		background: rgba(45, 31, 14, 0.4);
 		border: 1px solid rgba(122, 182, 72, 0.15);
 		color: var(--stone2);
@@ -283,7 +283,7 @@
 
 	/* Tab system */
 	.tab-btn {
-		@apply rounded-t-lg cursor-pointer transition-all duration-150;
+		@apply rounded-t-lg cursor-pointer transition-all duration-150 active:scale-95;
 		border: 1px solid transparent;
 		border-bottom: 2px solid transparent;
 		background: transparent;

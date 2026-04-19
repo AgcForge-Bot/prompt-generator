@@ -79,6 +79,7 @@ export function buildPrompt(args: {
 		scenes: [
 			{
 				id: sceneNum,
+				sceneNumber: `Scene ${sceneNum}`,
 				time: {
 					startSec: start,
 					endSec: end,

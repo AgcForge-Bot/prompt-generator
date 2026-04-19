@@ -134,6 +134,7 @@ export function buildPrompt(args: {
 		scenes: [
 			{
 				id: sceneNum,
+				sceneNumber: `Scene ${sceneNum}`,
 				time: { startSec: start, endSec: end, label: `${mmss(start)}-${mmss(end)}` },
 				sceneType,
 				beat: { purpose: "progress", emotion: "satisfying" },

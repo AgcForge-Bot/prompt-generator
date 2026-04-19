@@ -91,6 +91,7 @@ export function buildPrompt(args: {
 		scenes: [
 			{
 				id: sceneNum,
+				sceneNumber: `Scene ${sceneNum}`,
 				time: { startSec: start, endSec: end, label: `${start}s-${end}s` },
 				sceneType,
 				beat: { purpose: "impact", emotion: config.camMood },

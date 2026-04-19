@@ -376,6 +376,7 @@ Realism priority: photographic, no CGI artifacts, natural human movement.
 		scenes: [
 			{
 				id: scene.id,
+				sceneNumber: `Scene ${scene.id}`,
 				time: {
 					startSec: sceneIndex * scene.duration,
 					endSec: (sceneIndex + 1) * scene.duration,

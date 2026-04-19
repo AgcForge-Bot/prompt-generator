@@ -511,6 +511,7 @@ TARGET PLATFORMS: Grok, VEO`
 		scenes: [
 			{
 				id: scene.id,
+				sceneNumber: `Scene ${scene.id}`,
 				time: {
 					startSec,
 					endSec,
