@@ -1,11 +1,14 @@
 "use client";
 
-import type { SceneConfig } from "./types";
+import type { SceneConfig, StoryModeKey } from "./types";
 import { PHASE_META } from "./utils";
 
 export default function ExportAllPromptsSection({
 	totalScenes,
 	onGenerateAll,
+	storyMode,
+	onGenerateAllWithAI,
+	isGeneratingAI,
 	onCopyAll,
 	onDownloadAllJson,
 	showAllPrompts,
@@ -15,6 +18,9 @@ export default function ExportAllPromptsSection({
 }: {
 	totalScenes: number;
 	onGenerateAll: () => void;
+	storyMode: StoryModeKey;
+	onGenerateAllWithAI: () => void;
+	isGeneratingAI: boolean;
 	onCopyAll: () => void;
 	onDownloadAllJson: () => void;
 	showAllPrompts: boolean;
@@ -31,9 +37,20 @@ export default function ExportAllPromptsSection({
 				sekaligus.
 			</p>
 			<div className="flex gap-2 flex-wrap mb-4">
-				<button className="btn-primary" onClick={onGenerateAll}>
-					🎬 Generate Semua {totalScenes} Prompt
-				</button>
+				{storyMode !== "ai-film" && (
+					<button className="btn-primary" onClick={onGenerateAll}>
+						🎬 Generate Semua {totalScenes} Prompt
+					</button>
+				)}
+				{storyMode === "ai-film" && (
+					<button
+						className="btn-amber"
+						onClick={onGenerateAllWithAI}
+						disabled={isGeneratingAI}
+					>
+						🤖 Generate All With AI
+					</button>
+				)}
 				<button className="btn-ghost" onClick={onCopyAll}>
 					📋 Copy Semua
 				</button>

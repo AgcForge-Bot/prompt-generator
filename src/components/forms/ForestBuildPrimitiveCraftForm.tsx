@@ -6,6 +6,7 @@ import ImageReferenceSection from "@/components/forms/forest-build/ImageReferenc
 import PromptOutputSection from "@/components/forms/forest-build/PromptOutputSection";
 import ProjectDnaSection from "@/components/forms/forest-build/ProjectDnaSection";
 import SceneConfigSection from "@/components/forms/forest-build/SceneConfigSection";
+import StoryModeSection from "@/components/forms/forest-build/StoryModeSection";
 import TimeOfDaySection from "@/components/forms/forest-build/TimeOfDaySection";
 import VisualStyleSection from "@/components/forms/forest-build/VisualStyleSection";
 import { VISUAL_STYLE_LABELS } from "@/components/forms/forest-build/constants";
@@ -19,6 +20,10 @@ export default function ForestBuildPrimitiveCraftForm() {
 		autoInjectEmotions,
 		copyAll,
 		copyPrompt,
+		copySeoDescription,
+		copySeoTags,
+		copySeoThumbnailPrompt,
+		copySeoTitle,
 		currentPhase,
 		currentPhaseScenes,
 		currentScene,
@@ -26,7 +31,10 @@ export default function ForestBuildPrimitiveCraftForm() {
 		dnaLocked,
 		dnaTab,
 		downloadAllJson,
+		downloadSeoPackJson,
+		downloadSeoPackTxt,
 		generateAll,
+		generateAllWithAI,
 		generatePrompt,
 		generatePromptFor,
 		generatedCount,
@@ -39,6 +47,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		imgModelId,
 		imgProgress,
 		imgScope,
+		isGeneratingAI,
 		lockDNA,
 		setDnaTab,
 		nextScene,
@@ -49,6 +58,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		sc,
 		scenes,
 		secPerScene,
+		seoPack,
 		setActiveTab,
 		setCurrentPhase,
 		setCurrentScene,
@@ -123,6 +133,13 @@ export default function ForestBuildPrimitiveCraftForm() {
 					onChange={setVisualStyleSafe}
 				/>
 
+				<StoryModeSection
+					dna={dna}
+					onChange={setDna}
+					disabled={dnaLocked}
+					totalScenes={totalScenes}
+				/>
+
 				<ProjectDnaSection
 					dna={dna}
 					dnaTab={dnaTab}
@@ -134,62 +151,68 @@ export default function ForestBuildPrimitiveCraftForm() {
 					onRandom={randomDNA}
 				/>
 
-				<ImageReferenceSection
-					imgScope={imgScope}
-					setImgScope={setImgScope}
-					imgAnalyzing={imgAnalyzing}
-					imgProgress={imgProgress}
-					imgModel={imgModel}
-					setImgModel={setImgModel}
-					imgModelId={imgModelId}
-					setImgModelId={setImgModelId}
-					urlInput={urlInput}
-					setUrlInput={setUrlInput}
-					onUpload={handleImageUpload}
-					onAddUrl={addImageURL}
-					images={imagesForScope}
-					hasAnyImages={hasAnyImages}
-					onRemoveAt={(i) => {
-						if (imgScope === "global") {
-							setGlobalImages((g) => g.filter((_, j) => j !== i));
-							return;
-						}
-						updateScene(currentScene, {
-							imageRefs: (sc?.imageRefs ?? []).filter((_, j) => j !== i),
-						});
-					}}
-					currentScene={currentScene}
-				/>
+				{dna.storyMode !== "ai-film" && (
+					<ImageReferenceSection
+						imgScope={imgScope}
+						setImgScope={setImgScope}
+						imgAnalyzing={imgAnalyzing}
+						imgProgress={imgProgress}
+						imgModel={imgModel}
+						setImgModel={setImgModel}
+						imgModelId={imgModelId}
+						setImgModelId={setImgModelId}
+						urlInput={urlInput}
+						setUrlInput={setUrlInput}
+						onUpload={handleImageUpload}
+						onAddUrl={addImageURL}
+						images={imagesForScope}
+						hasAnyImages={hasAnyImages}
+						onRemoveAt={(i) => {
+							if (imgScope === "global") {
+								setGlobalImages((g) => g.filter((_, j) => j !== i));
+								return;
+							}
+							updateScene(currentScene, {
+								imageRefs: (sc?.imageRefs ?? []).filter((_, j) => j !== i),
+							});
+						}}
+						currentScene={currentScene}
+					/>
+				)}
 
-				<TimeOfDaySection
-					sc={sc}
-					currentScene={currentScene}
-					updateScene={updateScene}
-				/>
+				{dna.storyMode !== "ai-film" && (
+					<TimeOfDaySection
+						sc={sc}
+						currentScene={currentScene}
+						updateScene={updateScene}
+					/>
+				)}
 
-				<SceneConfigSection
-					dnaLocked={dnaLocked}
-					sc={sc}
-					scenes={scenes}
-					phases={phases}
-					currentPhase={currentPhase}
-					setCurrentPhase={setCurrentPhase}
-					currentPhaseScenes={currentPhaseScenes}
-					currentScene={currentScene}
-					setCurrentScene={setCurrentScene}
-					secPerScene={secPerScene}
-					totalScenes={totalScenes}
-					activeTab={activeTab}
-					setActiveTab={setActiveTab}
-					generatedCount={generatedCount}
-					updateScene={updateScene}
-					generatePromptFor={generatePromptFor}
-					onGeneratePrompt={generatePrompt}
-					onGenerateAll={generateAll}
-					onRandomScene={randomCurrentScene}
-					onAutoInjectEmotions={autoInjectEmotions}
-					onNextScene={nextScene}
-				/>
+				{dna.storyMode !== "ai-film" && (
+					<SceneConfigSection
+						dnaLocked={dnaLocked}
+						sc={sc}
+						scenes={scenes}
+						phases={phases}
+						currentPhase={currentPhase}
+						setCurrentPhase={setCurrentPhase}
+						currentPhaseScenes={currentPhaseScenes}
+						currentScene={currentScene}
+						setCurrentScene={setCurrentScene}
+						secPerScene={secPerScene}
+						totalScenes={totalScenes}
+						activeTab={activeTab}
+						setActiveTab={setActiveTab}
+						generatedCount={generatedCount}
+						updateScene={updateScene}
+						generatePromptFor={generatePromptFor}
+						onGeneratePrompt={generatePrompt}
+						onGenerateAll={generateAll}
+						onRandomScene={randomCurrentScene}
+						onAutoInjectEmotions={autoInjectEmotions}
+						onNextScene={nextScene}
+					/>
+				)}
 
 				<PromptOutputSection
 					promptOutput={promptOutput}
@@ -200,11 +223,22 @@ export default function ForestBuildPrimitiveCraftForm() {
 					onCopyPrompt={copyPrompt}
 					onCopyAll={copyAll}
 					onNextScene={nextScene}
+					storyMode={dna.storyMode}
+					seoPack={seoPack}
+					onCopySeoTitle={copySeoTitle}
+					onCopySeoDescription={copySeoDescription}
+					onCopySeoTags={copySeoTags}
+					onCopySeoThumbnailPrompt={copySeoThumbnailPrompt}
+					onDownloadSeoPackJson={downloadSeoPackJson}
+					onDownloadSeoPackTxt={downloadSeoPackTxt}
 				/>
 
 				<ExportAllPromptsSection
 					totalScenes={totalScenes}
 					onGenerateAll={generateAll}
+					storyMode={dna.storyMode}
+					onGenerateAllWithAI={generateAllWithAI}
+					isGeneratingAI={isGeneratingAI}
 					onCopyAll={copyAll}
 					onDownloadAllJson={downloadAllJson}
 					showAllPrompts={showAllPrompts}

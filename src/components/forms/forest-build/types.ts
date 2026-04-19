@@ -18,12 +18,31 @@ export type SceneTypeKey =
 	| 'emo-animal' | 'emo-civilian' | 'emo-wonder'
 	| 'emo-rescue' | 'emo-cook' | 'emo-fire' | 'emo-reflect'
 export type ModelType = "CLAUDE" | "OPENAI" | "GEMINI" | "OPENROUTER"
+export type StoryModeKey = "classic" | "ai-film"
+export type StoryCastCountMode = "auto" | "manual"
+export type StoryGenderMode = "auto" | "manual"
+export type StoryIntensityKey = "relaxing" | "balanced" | "intense"
+export type SeoPack = {
+	title: string
+	description: string
+	tags: string[]
+	thumbnailPrompt: string
+}
 // ─── PROJECT DNA ─────────────────────────────────────────────────────────────
 
 export interface ProjectDNA {
 	// Identity
 	videoTitle: string
 	modelGender: ModelGender
+	storyGenderMode: StoryGenderMode
+	storyCastCountMode: StoryCastCountMode
+	storyCastCount: number
+	storyMode: StoryModeKey
+	storyIntensity: StoryIntensityKey
+	storyMovieRefTitle: string
+	storyMovieRefStory: string
+	storyAiProvider: ModelType
+	storyAiModelId: string
 	hasPet: boolean
 	petType: string
 

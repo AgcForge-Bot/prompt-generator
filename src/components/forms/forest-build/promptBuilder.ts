@@ -481,7 +481,13 @@ TARGET PLATFORMS: Grok, VEO`
 			rendering: { look: "photorealistic", cgiLevel: "none" },
 			colorGrade: scene.colorGrade,
 			quality: scene.filmQuality,
-			references: { filmRefs: [], shotRefs: [] },
+			references: {
+				filmRefs:
+					dna.storyMode === "ai-film" && dna.storyMovieRefTitle
+						? [dna.storyMovieRefTitle]
+						: [],
+				shotRefs: [],
+			},
 		},
 		continuity: {
 			anchor: anchorBlock,

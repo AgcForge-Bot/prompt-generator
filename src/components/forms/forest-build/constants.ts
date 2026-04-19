@@ -153,3 +153,40 @@ export function getDefaultVisionModelId(provider: ModelType) {
 			return "google/gemini-3.1-flash-lite-preview";
 	}
 }
+
+export const STORY_MODE_LABELS = {
+	classic: "Classic (Mode Lama)",
+	"ai-film": "Short Film Inspired by Movie (Mode 2 — AI Utama)",
+} as const;
+
+export const SURVIVAL_MOVIE_REFS = [
+	{ title: "Cast Away (2000)", story: "A man stranded on a remote island after a plane crash, learning to survive alone." },
+	{ title: "The Revenant (2015)", story: "A frontiersman fights for survival and revenge after being mauled by a bear and left for dead." },
+	{ title: "Into the Wild (2007)", story: "A young man rejects society and ventures into the Alaskan wilderness, seeking freedom but facing harsh realities." },
+	{ title: "127 Hours (2010)", story: "A hiker gets trapped by a boulder in a remote canyon and must make a life-changing decision to survive." },
+	{ title: "The Edge (1997)", story: "Two men stranded in the wilderness must outsmart nature and a deadly bear to stay alive." },
+	{ title: "Life of Pi (2012)", story: "A boy survives a shipwreck and drifts on a lifeboat with a Bengal tiger, testing faith and endurance." },
+	{ title: "All Is Lost (2013)", story: "A lone sailor battles the elements and isolation after his yacht is damaged in the Indian Ocean." },
+	{ title: "The Martian (2015)", story: "An astronaut is stranded on Mars and must use ingenuity and science to stay alive and signal for rescue." },
+	{ title: "Arctic (2018)", story: "A man stranded in the Arctic must choose between staying safe or risking everything to rescue another survivor." },
+	{ title: "Jungle (2017)", story: "A traveler gets lost in the Amazon jungle and struggles against hunger, injury, and despair to survive." },
+	{ title: "Alive (1993)", story: "Survivors of a plane crash in the Andes face extreme cold, starvation, and moral dilemmas to stay alive." },
+	{ title: "The Grey (2011)", story: "Plane crash survivors in the wilderness fight the elements and a pack of wolves while searching for safety." },
+	{ title: "Swiss Army Man (2016)", story: "A stranded man forms an unlikely bond with a corpse, using it as a tool to survive and find purpose." },
+	{ title: "The Road (2009)", story: "A father and son journey through a post-apocalyptic wasteland, fighting hunger and danger to survive." },
+	{ title: "I Am Legend (2007)", story: "A man believes he is the last human in a city overrun by infected creatures, struggling to survive and find a cure." },
+	{ title: "A Quiet Place (2018)", story: "A family survives in silence while hunted by creatures that attack anything making noise." },
+	{ title: "The Hunger Games (2012)", story: "A young woman fights for survival in a deadly televised arena, balancing strategy, alliances, and sacrifice." },
+	{ title: "Dunkirk (2017)", story: "Soldiers trapped on a beach during WWII attempt evacuation while facing relentless attacks." },
+	{ title: "War for the Planet of the Apes (2017)", story: "An ape leader and his tribe struggle for survival against a ruthless military force." },
+	{ title: "No Country for Old Men (2007)", story: "A man stumbles upon a drug deal gone wrong and is hunted relentlessly after taking the money." },
+	{ title: "Gravity (2013)", story: "Astronauts are stranded in space after debris destroys their shuttle, forcing them to improvise to survive." },
+	{ title: "The Book of Eli (2010)", story: "A lone traveler carries a sacred book across a violent wasteland, facing threats and protecting his mission." },
+	{ title: "The Purge (2013)", story: "A family must survive a night when all crime is legal, facing intruders and moral choices." },
+	{ title: "The Maze Runner (2014)", story: "A group of teens trapped in a mysterious maze must work together to escape and survive." },
+	{ title: "Oblivion (2013)", story: "A technician stationed on a devastated Earth uncovers a conspiracy and must fight to survive and reveal truth." },
+	{ title: "Avatar (2009)", story: "A human in an alien world must survive, adapt, and choose sides amid conflict and discovery." },
+	{ title: "Lost (TV Series) (2004)", story: "Plane crash survivors on a mysterious island face survival challenges and uncover strange secrets." },
+	{ title: "The Walking Dead (TV Series) (2010)", story: "A group of survivors navigate a zombie apocalypse while battling scarcity, threats, and internal conflict." },
+	{ title: "The 100 (TV Series) (2014)", story: "Teenagers sent back to Earth after a nuclear apocalypse must survive hostile conditions and moral conflicts." },
+] as const;

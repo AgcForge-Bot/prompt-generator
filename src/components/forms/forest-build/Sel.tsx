@@ -5,11 +5,13 @@ export default function Sel({
 	value,
 	onChange,
 	options,
+	disabled,
 }: {
 	id: string;
 	value: string;
 	onChange: (v: string) => void;
 	options: string[] | { value: string; label: string }[];
+	disabled?: boolean;
 }) {
 	return (
 		<select
@@ -17,6 +19,7 @@ export default function Sel({
 			className="forest-select"
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
+			disabled={disabled}
 		>
 			{options.map((o, i) =>
 				typeof o === "string" ? (
@@ -32,4 +35,3 @@ export default function Sel({
 		</select>
 	);
 }
-

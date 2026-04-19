@@ -13,9 +13,9 @@ import {
 	VISUAL_STYLE_LABELS,
 } from "./constants";
 import { buildPrompt } from "./promptBuilder";
-import type { AIProviderKey, CarMusicVideoGenerator, ClipModeKey, SceneConfig, SceneTypeKey, TabKey, TrailerCharacter, VisualStyleKey } from "./types";
+import type { AIProviderKey, CarMusicVideoGenerator, ClipModeKey, SceneConfig, SceneTypeKey, SeoPack, TabKey, TrailerCharacter, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
-import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
+import { downloadJsonFile, downloadTextFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 import { getDefaultModelId } from "@/lib/modelProviders";
 import { parseJsonFromModelOutput } from "@/lib/aiJson";
 
@@ -27,6 +27,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 	const [aiProvider, setAiProvider] = useState<AIProviderKey>("CLAUDE");
 	const [aiModelId, setAiModelId] = useState<string>(getDefaultModelId("CLAUDE"));
 	const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+	const [seoPack, setSeoPack] = useState<SeoPack | null>(null);
 
 	const [trailerCharacters, setTrailerCharacters] = useState<TrailerCharacter[]>(() => [
 		{
@@ -153,6 +154,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		setClipModeState(next);
 		setAllPrompts([]);
 		setShowAllPrompts(false);
+		setSeoPack(null);
 		setPromptOutput("Klik ⚡ Generate Prompt untuk membuat prompt scene ini...");
 		setActiveTab(next === "trailer" ? "trailer" : "cars");
 		showToast(`🎬 Mode: ${next}`);
@@ -378,6 +380,26 @@ SETPIECES IDE: ${CAR_TRAILER_SETPIECES.join(" | ")}
 EMOTION IDE: ${TRAILER_EMOTION_BEATS.join(", ")}
 ROLE IDE: ${TRAILER_CHARACTER_ROLES.join(", ")}
 
+SEO PACK (WAJIB):
+- Buat rekomendasi SEO untuk upload YouTube:
+  - seo.title: 1 judul SEO yang terinspirasi dari judul film referensi, tapi original (remix judul, bukan menyalin), menggambarkan isi trailer (berdasarkan semua scenes).
+  - seo.description: deskripsi Indonesia siap tempel, min 900 karakter, 2 baris pertama hook kuat, rangkum story beats, CTA halus, 5-10 hashtag relevan.
+  - seo.tags: array tepat 30 tag (mix broad/niche/long-tail), relevan dengan filmRef + isi scenes + trailer music.
+  - seo.thumbnailPrompt: prompt thumbnail untuk AI image generator, sangat spesifik (komposisi, subject, ekspresi, lighting, warna, background, style, teks overlay 3-5 kata). Tidak boleh pakai nama film asli atau wajah aktor asli.
+
+JSON SCHEMA MINIMAL:
+{
+  "schema": "aiVideoPrompt.v1",
+  "tool": "car-music-video-clip",
+  "scenes": [...],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "tags": ["..."],
+    "thumbnailPrompt": "string"
+  }
+}
+
 Output hanya JSON.`;
 
 			const res = await fetch("/api/all-in-one-generator", {
@@ -395,12 +417,15 @@ Output hanya JSON.`;
 				throw new Error(data?.error || "AI request failed");
 			}
 			const raw = String(data?.prompt ?? "");
-			const bundle = parseJsonFromModelOutput(raw) as { scenes?: unknown[] };
+			const bundle = parseJsonFromModelOutput(raw) as { scenes?: unknown[]; seo?: SeoPack };
 			if (!bundle || !Array.isArray(bundle.scenes)) {
 				throw new Error("AI output tidak mengandung scenes[]");
 			}
 			if (bundle.scenes.length !== totalScenes) {
 				throw new Error(`AI scenes tidak sesuai. Dapat ${bundle.scenes.length}, harus ${totalScenes}`);
+			}
+			if (bundle.seo) {
+				setSeoPack(bundle.seo);
 			}
 			const prompts = bundle.scenes.map((scene) =>
 				jsonStringify({ ...bundle, scenes: [scene] }),
@@ -420,6 +445,63 @@ Output hanya JSON.`;
 		} finally {
 			setIsGeneratingAI(false);
 		}
+	}
+
+	function copySeoTitle() {
+		if (!seoPack?.title) return;
+		navigator.clipboard.writeText(seoPack.title);
+		showToast("📋 Judul SEO tersalin!");
+	}
+
+	function copySeoDescription() {
+		if (!seoPack?.description) return;
+		navigator.clipboard.writeText(seoPack.description);
+		showToast("📋 Deskripsi SEO tersalin!");
+	}
+
+	function copySeoTags() {
+		if (!seoPack?.tags?.length) return;
+		navigator.clipboard.writeText(seoPack.tags.join(", "));
+		showToast("📋 Tags SEO tersalin!");
+	}
+
+	function copySeoThumbnailPrompt() {
+		if (!seoPack?.thumbnailPrompt) return;
+		navigator.clipboard.writeText(seoPack.thumbnailPrompt);
+		showToast("📋 Prompt thumbnail tersalin!");
+	}
+
+	function downloadSeoPackJson() {
+		if (!seoPack) return;
+		const payload = {
+			schema: "aiSeoPack.v1",
+			tool: "car-music-video-clip",
+			clipMode,
+			filmRef,
+			createdAt: new Date().toISOString(),
+			seo: seoPack,
+		};
+		downloadJsonFile(
+			`seo-pack-car-music-video-clip-${Date.now()}.json`,
+			JSON.stringify(payload, null, 2),
+		);
+		showToast("💾 SEO pack .json berhasil didownload!");
+	}
+
+	function downloadSeoPackTxt() {
+		if (!seoPack) return;
+		const text =
+			`SEO PACK (AI)\n` +
+			`Tool: car-music-video-clip\n` +
+			`Mode: ${clipMode}\n` +
+			`Film Ref: ${filmRef}\n` +
+			`\n` +
+			`TITLE:\n${seoPack.title}\n\n` +
+			`DESCRIPTION:\n${seoPack.description}\n\n` +
+			`TAGS (30):\n${seoPack.tags.join(", ")}\n\n` +
+			`THUMBNAIL PROMPT:\n${seoPack.thumbnailPrompt}\n`;
+		downloadTextFile(`seo-pack-car-music-video-clip-${Date.now()}.txt`, text);
+		showToast("💾 SEO pack .txt berhasil didownload!");
 	}
 
 	function randomizeCurrentScene() {
@@ -595,6 +677,7 @@ Output hanya JSON.`;
 		setSceneTypes(getDefaultTypes(nextTotalScenes));
 		setAllPrompts([]);
 		setShowAllPrompts(false);
+		setSeoPack(null);
 		setTimeout(
 			() =>
 				generatePromptFor(1, {
@@ -685,6 +768,14 @@ Output hanya JSON.`;
 		allPrompts,
 		showAllPrompts,
 		setShowAllPrompts,
+
+		seoPack,
+		copySeoTitle,
+		copySeoDescription,
+		copySeoTags,
+		copySeoThumbnailPrompt,
+		downloadSeoPackJson,
+		downloadSeoPackTxt,
 
 		generatePrompt,
 		nextScene,

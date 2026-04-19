@@ -43,12 +43,18 @@ export default function ProjectDnaSection({
 	onLock: () => void;
 	onRandom: () => void;
 }) {
+	const dnaModeHint =
+		dna.storyMode === "ai-film"
+			? "Mode 2 (AI): DNA dipakai sebagai pembatas visual/world constraints."
+			: "Mode Classic: DNA dipakai untuk setup manual scene-by-scene.";
+
 	return (
 		<section className="card mb-5 relative overflow-hidden">
 			<div className="absolute top-3 right-4 font-mono text-[9px] tracking-[0.15em] text-leaf/25 font-bold">
 				🧬 DNA
 			</div>
 			<div className="section-label">🧬 Project DNA — Master Config</div>
+			<div className="font-mono text-[10px] text-stone2 mb-2">{dnaModeHint}</div>
 			<div className="bg-leaf/10 border border-leaf/20 rounded-xl p-3 mb-4 font-mono text-[11px] text-sand leading-relaxed">
 				<span className="text-leaf2 font-bold">
 					⚠ Dikunci untuk semua scene.

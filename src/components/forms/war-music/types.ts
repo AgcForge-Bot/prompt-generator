@@ -20,6 +20,12 @@ export type TrailerCharacter = {
 	faceDescription: string;
 	introSceneNumber?: number;
 };
+export type SeoPack = {
+	title: string;
+	description: string;
+	tags: string[];
+	thumbnailPrompt: string;
+};
 export type VisualStyleKey =
 	| "cinematic"
 	| "semi-cinematic"
@@ -133,6 +139,14 @@ export type WarMusicVideoGenerator = {
 	allPrompts: string[];
 	showAllPrompts: boolean;
 	setShowAllPrompts: (next: boolean) => void;
+
+	seoPack: SeoPack | null;
+	copySeoTitle: () => void;
+	copySeoDescription: () => void;
+	copySeoTags: () => void;
+	copySeoThumbnailPrompt: () => void;
+	downloadSeoPackJson: () => void;
+	downloadSeoPackTxt: () => void;
 
 	generatePrompt: () => void;
 	nextScene: () => void;
