@@ -6,6 +6,7 @@ import { OPTIONS, SCENE_TYPE_LABELS, VISUAL_STYLE_LABELS } from "./constants";
 import { buildPrompt } from "./promptBuilder";
 import type { CarMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
+import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 	const tabs = useMemo(
@@ -125,7 +126,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		const effectiveSecPerScene = durOverride?.secPerScene ?? secPerScene;
 		const sceneType = sceneTypes[sceneNum] ?? "dj-party";
 		const config = getSceneConfig(sceneNum);
-		const prompt = buildPrompt({
+		const promptObj = buildPrompt({
 			sceneNum,
 			totalScenes: effectiveTotalScenes,
 			secPerScene: effectiveSecPerScene,
@@ -133,6 +134,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 			visualStyle,
 			config,
 		});
+		const prompt = jsonStringify(promptObj);
 		setPromptOutput(prompt);
 		updateSceneConfig(sceneNum, { generatedPrompt: prompt });
 	}
@@ -160,7 +162,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = sceneTypes[s] ?? "dj-party";
 			const config = getSceneConfig(s);
-			const prompt = buildPrompt({
+			const promptObj = buildPrompt({
 				sceneNum: s,
 				totalScenes,
 				secPerScene,
@@ -168,6 +170,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 				visualStyle,
 				config,
 			});
+			const prompt = jsonStringify(promptObj);
 			prompts.push(prompt);
 			updated[s] = { ...config, generatedPrompt: prompt };
 		}
@@ -183,8 +186,40 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 			generateAll();
 			return;
 		}
-		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
+		navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
+	}
+
+	function downloadAllJson() {
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = [];
+			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
+			for (let s = 1; s <= totalScenes; s++) {
+				const sceneType = sceneTypes[s] ?? "dj-party";
+				const config = getSceneConfig(s);
+				const promptObj = buildPrompt({
+					sceneNum: s,
+					totalScenes,
+					secPerScene,
+					sceneType,
+					visualStyle,
+					config,
+				});
+				const prompt = jsonStringify(promptObj);
+				prompts.push(prompt);
+				updated[s] = { ...config, generatedPrompt: prompt };
+			}
+			setSceneConfigs(updated);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+		downloadJsonFile(
+			`car-music-video-clip-${Date.now()}.json`,
+			jsonBundleFromSceneJsonStrings(prompts),
+		);
+		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
 	function randomizeCurrentScene() {
@@ -417,6 +452,7 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		nextScene,
 		copyPrompt,
 		copyAll,
+		downloadAllJson,
 		generateAll,
 
 		randomizeCurrentScene,

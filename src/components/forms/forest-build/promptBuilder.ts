@@ -372,7 +372,7 @@ export function buildScenePrompt(
 	globalImages: ImageRef[],
 	totalScenes: number,
 	secPerScene: number
-): string {
+){
 	const startSec = (scene.id - 1) * secPerScene
 	const endSec = startSec + secPerScene
 	const pct = Math.round((scene.id / totalScenes) * 100)
@@ -401,7 +401,7 @@ export function buildScenePrompt(
 		? `Shelter is ${buildPct}% complete in this scene — show this exact level of completion. No more, no less.`
 		: scene.progressNote
 
-	return `${'═'.repeat(64)}
+	const promptText = `${'═'.repeat(64)}
 [SCENE ${scene.id}/${totalScenes}  |  ${fmtTime(startSec)} – ${fmtTime(endSec)}  |  ${secPerScene}sec]
 PHASE: ${phase.emoji} ${phase.label.toUpperCase()}  |  TYPE: ${typeLabel}  |  VIDEO PROGRESS: ${pct}%${isBuildPhase ? `  |  BUILD: ${buildPct}%` : ''}
 ${scene.isEmotional ? '⭐ EMOTIONAL INJECTION SCENE' : ''}
@@ -460,4 +460,115 @@ ${'─'.repeat(64)}
 ${ANTI_CGI_RULES}
 ${'─'.repeat(64)}
 TARGET PLATFORMS: Grok, VEO`
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "forest-build-primitive-craft",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: dna.videoTitle,
+			durationSec: totalScenes * secPerScene,
+			aspectRatio: "16:9",
+			fps: 24,
+			resolution: "1920x1080",
+			platformTargets: ["youtube"],
+		},
+		style: {
+			visualStyle: dna.visualStyle,
+			visualStyleHint: VISUAL_STYLE_HINTS[dna.visualStyle],
+			genre: "Forest Build Primitive Craft",
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: scene.colorGrade,
+			quality: scene.filmQuality,
+			references: { filmRefs: [], shotRefs: [] },
+		},
+		continuity: {
+			anchor: anchorBlock,
+			mustKeepConsistent: ["location_identity", "character_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs"],
+			safety: { noWeapons: true, noGore: true },
+		},
+		audio: {
+			music: { enabled: false, genre: "none", bpm: 0, mood: "ambient", instruments: [] },
+			voiceover: { enabled: false, language: "id", voice: null, lines: [] },
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [scene.soundPrimary, scene.soundAmbient, scene.soundBG].filter(Boolean),
+		},
+		references: {
+			images: [...globalImages, ...sceneImages].map((img) => ({
+				type: "reference",
+				url: img.url,
+				note: img.aiDescription || img.name || "",
+			})),
+		},
+		scenes: [
+			{
+				id: scene.id,
+				time: {
+					startSec,
+					endSec,
+					label: `${fmtTime(startSec)}-${fmtTime(endSec)}`,
+				},
+				sceneType: scene.sceneType,
+				beat: { purpose: phase.label, emotion: scene.camMood },
+				environment: {
+					location: dna.location,
+					timeOfDay: scene.timeOfDay,
+					weather: scene.weather,
+					atmosphere: scene.atmosphere,
+				},
+				subject: {
+					characters: [
+						{ name: dna.characterFace, role: "hero", appearanceLock: true },
+					],
+					product: null,
+				},
+				camera: {
+					shot: scene.camAngle,
+					lens: scene.camLens,
+					movement: scene.camMove,
+					stabilization: "handheld_smooth",
+					focus: scene.camDOF,
+				},
+				lighting: {
+					setup: `${scene.lightSource} — ${tod.light}`,
+					fx: [scene.lightFX].filter(Boolean),
+					color: scene.colorGrade,
+					shadow: "",
+				},
+				action: {
+					summary: { id: activityLine, en: "" },
+					details: [detailLine, progressLine].filter(Boolean),
+					blocking: storyCtx,
+				},
+				composition: {
+					mustShow: ["authentic_materials", "hands_working", "progression"],
+					avoidShowing: ["text_overlay", "watermark", "logos"],
+				},
+				audioCues: { sfx: [], musicNote: "", voIds: [], subtitleIds: [] },
+				deliverable: {
+					prompt: promptText,
+					negativePrompt: "text overlay, watermark, logo, lowres, cgi artifacts, extra limbs, face distortion",
+				},
+				toolConfig: {
+					dna,
+					scene,
+					meta: {
+						videoProgressPct: pct,
+						buildProgressPct: isBuildPhase ? buildPct : undefined,
+						isEmotional: scene.isEmotional,
+						timeOfDayLabel: tod.label,
+						antiCgiRules: ANTI_CGI_RULES,
+					},
+				},
+			},
+		],
+	};
 }

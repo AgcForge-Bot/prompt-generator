@@ -6,6 +6,7 @@ import { DNA_OPTIONS, OPTIONS, SCENE_TYPES, VISUAL_STYLE_LABELS } from "./consta
 import { buildPrompt } from "./promptBuilder";
 import type { AsmrTimelapseGenerator, DnaState, ProjectTypeKey, RandomGroupKey, SceneConfig, SceneTypeKey, TabKey, TodKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultSceneTypes, getSceneTypeLabel, rnd } from "./utils";
+import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 	const tabs = useMemo(
@@ -156,7 +157,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		const sceneType = (sceneTypes[sceneNum] ??
 			fallbackSceneType) as SceneTypeKey;
 		const config = getSceneConfig(sceneNum);
-		const prompt = buildPrompt({
+		const promptObj = buildPrompt({
 			sceneNum,
 			totalScenes: effectiveTotalScenes,
 			secPerScene: effectiveSecPerScene,
@@ -168,6 +169,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			dna,
 			config,
 		});
+		const prompt = jsonStringify(promptObj);
 		setPromptOutput(prompt);
 		updateSceneConfig(sceneNum, { generatedPrompt: prompt });
 	}
@@ -201,7 +203,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			projectType === "restoration" ? "assess" : "groundwork";
 		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = (sceneTypes[s] ?? fallbackSceneType) as SceneTypeKey;
-			const prompt = buildPrompt({
+			const promptObj = buildPrompt({
 				sceneNum: s,
 				totalScenes,
 				secPerScene,
@@ -213,6 +215,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 				dna,
 				config: getSceneConfig(s),
 			});
+			const prompt = jsonStringify(promptObj);
 			prompts.push(prompt);
 			updated[s] = { ...getSceneConfig(s), generatedPrompt: prompt };
 		}
@@ -228,8 +231,49 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 			generateAll();
 			return;
 		}
-		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
+		navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
+	}
+
+	function downloadAllJson() {
+		if (!dnaLocked) {
+			showToast("⚠ Kunci DNA dulu!");
+			return;
+		}
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = [];
+			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
+			const fallbackSceneType =
+				projectType === "restoration" ? "assess" : "groundwork";
+			for (let s = 1; s <= totalScenes; s++) {
+				const sceneType = (sceneTypes[s] ?? fallbackSceneType) as SceneTypeKey;
+				const promptObj = buildPrompt({
+					sceneNum: s,
+					totalScenes,
+					secPerScene,
+					sceneType,
+					visualStyle,
+					projectType,
+					narratorGender,
+					timeOfDay,
+					dna,
+					config: getSceneConfig(s),
+				});
+				const prompt = jsonStringify(promptObj);
+				prompts.push(prompt);
+				updated[s] = { ...getSceneConfig(s), generatedPrompt: prompt };
+			}
+			setSceneConfigs(updated);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+		downloadJsonFile(
+			`asmr-timelapse-constructor-${Date.now()}.json`,
+			jsonBundleFromSceneJsonStrings(prompts),
+		);
+		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
 	function randomizeDNA() {
@@ -494,6 +538,7 @@ export default function useAsmrTimelapseGenerator(): AsmrTimelapseGenerator {
 		nextScene,
 		copyPrompt,
 		copyAll,
+		downloadAllJson,
 		generateAll,
 
 		randomizeDNA,

@@ -35,6 +35,7 @@ import {
 	getModelOptions,
 	getProviderLabel,
 } from "@/lib/modelProviders";
+import { jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 // ─── HELPER: SELECT OPTIONS ──────────────────────────────────────────────────
 
@@ -298,13 +299,13 @@ export default function Home() {
 		}
 		const sc = scenes.find((s) => s.id === sceneId);
 		if (!sc) return;
-		const prompt = buildScenePrompt(
+		const prompt = jsonStringify(buildScenePrompt(
 			sc,
 			dna,
 			globalImages,
 			totalScenes,
 			secPerScene,
-		);
+		));
 		setPromptOutput(prompt);
 		updateScene(sceneId, { generatedPrompt: prompt });
 		showToast(`✓ Prompt Scene ${sceneId} berhasil!`);
@@ -320,7 +321,7 @@ export default function Home() {
 			return;
 		}
 		const prompts = scenes.map((sc) =>
-			buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene),
+			jsonStringify(buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene)),
 		);
 		setAllPrompts(prompts);
 		setShowAllPrompts(true);
@@ -345,9 +346,7 @@ export default function Home() {
 			generateAll();
 			return;
 		}
-		navigator.clipboard.writeText(
-			allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"),
-		);
+		navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
 	}
 

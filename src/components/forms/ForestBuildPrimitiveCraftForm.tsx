@@ -25,6 +25,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		dna,
 		dnaLocked,
 		dnaTab,
+		downloadAllJson,
 		generateAll,
 		generatePrompt,
 		generatePromptFor,
@@ -205,6 +206,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 					totalScenes={totalScenes}
 					onGenerateAll={generateAll}
 					onCopyAll={copyAll}
+					onDownloadAllJson={downloadAllJson}
 					showAllPrompts={showAllPrompts}
 					setShowAllPrompts={setShowAllPrompts}
 					allPrompts={allPrompts}

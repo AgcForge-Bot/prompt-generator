@@ -19,6 +19,9 @@ export default function ExportAllPromptsSection({
 				<button type="button" className="btn-outline" onClick={gen.copyAll}>
 					📋 Copy Semua
 				</button>
+				<button type="button" className="btn-outline" onClick={gen.downloadAllJson}>
+					💾 Download JSON
+				</button>
 				<button
 					type="button"
 					className="btn-ghost"

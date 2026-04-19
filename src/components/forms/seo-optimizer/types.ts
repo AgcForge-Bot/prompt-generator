@@ -105,6 +105,12 @@ export type AnalyzeOutput = {
 	overallScore: number;
 	overallGrade: "A" | "B" | "C" | "D" | "F";
 	priorityFixes: string[];
+	recommendedTitleVariants?: TitleVariant[];
+	bestRecommendedTitleIndex?: number;
+	recommendedDescription?: string;
+	recommendedDescriptionKeywords?: string[];
+	recommendedTags?: TagItem[];
+	recommendedThumbnailPrompt?: string;
 	analyzedAt: string;
 	aiModel: string;
 };

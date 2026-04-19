@@ -28,25 +28,110 @@ export function buildPrompt(args: {
 		"night-vibe": `MAIN ACTION: NIGHT ATMOSPHERE — ${config.crowdMoment}. ${config.crowdAction}. Fire: ${config.propFire}.`,
 	};
 
-	return `[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ★ ${typeLabel.toUpperCase()} ★]
-THEME: Fast & Furious Car Party × DJ Music Video | ${styleLabel}
-VISUAL STYLE: ${styleLabel} — ${styleHint}
-
-${actionLines[sceneType] ?? actionLines["dj-party"]}
-
-CARS: ${config.carHero}. Background: ${config.carSecondary}. Color scheme: ${config.carColor}.
-
-DJ SETUP: ${config.djType} wearing ${config.djOutfit}. Platform: ${config.djSetup}.
-
-CROWD: ${config.crowdMix}, ${config.crowdDensity}. Fashion: ${config.crowdFashion}.
-
-LOCATION: ${config.locMain} | Time: ${config.locTime} | Palette: ${config.locPalette} | Atmo: ${config.locAtmo}.
-
-LIGHTING: ${config.lightMain}. Effects: ${config.lightFx}. Colors: ${config.lightColor}. ${config.lightShadow}.
-
-PROPS: Fire — ${config.propFire}. Smoke — ${config.propSmoke}. Animal — ${config.propAnimal}. Deco — ${config.propDeco}. SFX — ${config.propSfx}.
-
-CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${config.camMood}.
-
-STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and animals. ${styleLabel} music video production quality.`;
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "car-music-video-clip",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: "Car Music Video Clip",
+			durationSec: totalScenes * secPerScene,
+			aspectRatio: "16:9",
+			fps: 24,
+			resolution: "1920x1080",
+			platformTargets: ["youtube", "tiktok", "instagram_reels"],
+		},
+		style: {
+			visualStyle,
+			visualStyleHint: styleHint,
+			genre: "Fast & Furious Car Party × DJ Music Video",
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: config.camGrade,
+			quality: config.camQuality,
+			references: { filmRefs: [], shotRefs: [] },
+		},
+		continuity: {
+			anchor: "Fast & Furious Car Party × DJ Music Video",
+			mustKeepConsistent: ["location_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs"],
+			safety: { noWeapons: false, noGore: true },
+		},
+		audio: {
+			music: {
+				enabled: true,
+				genre: "EDM / DJ",
+				bpm: 128,
+				mood: "energetic",
+				instruments: [],
+			},
+			voiceover: { enabled: false, language: "id", voice: null, lines: [] },
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [config.djSound, config.propSfx].filter(Boolean),
+		},
+		references: { images: [] },
+		scenes: [
+			{
+				id: sceneNum,
+				time: {
+					startSec: start,
+					endSec: end,
+					label: `${mmss(start)}-${mmss(end)}`,
+				},
+				sceneType,
+				beat: { purpose: "energy", emotion: config.crowdEnergy },
+				environment: {
+					location: config.locMain,
+					timeOfDay: config.locTime,
+					weather: "",
+					atmosphere: config.locAtmo,
+				},
+				subject: {
+					characters: [
+						{ name: config.djType, role: "dj", appearanceLock: false },
+					],
+					product: null,
+				},
+				camera: {
+					shot: config.camAngle,
+					lens: config.camLens,
+					movement: config.camMove,
+					stabilization: "handheld_smooth",
+					focus: "shallow_dof",
+				},
+				lighting: {
+					setup: config.lightMain,
+					fx: [config.lightFx].filter(Boolean),
+					color: config.lightColor,
+					shadow: config.lightShadow,
+				},
+				action: {
+					summary: { id: actionLines[sceneType] ?? actionLines["dj-party"], en: "" },
+					details: [
+						`Cars: ${config.carHero} + ${config.carSecondary} (${config.carCount})`,
+						`DJ: ${config.djSetup} — ${config.djFx}`,
+						`Crowd: ${config.crowdMix}, ${config.crowdDensity}, ${config.crowdFashion}`,
+						`Props: fire=${config.propFire}, smoke=${config.propSmoke}`,
+					],
+					blocking: "",
+				},
+				composition: {
+					mustShow: ["dj", "hero_car", "crowd_energy"],
+					avoidShowing: ["text_overlay", "watermark", "logos"],
+				},
+				audioCues: { sfx: [], musicNote: "", voIds: [], subtitleIds: [] },
+				deliverable: {
+					prompt: `Theme: Fast & Furious Car Party × DJ Music Video. Visual: ${styleLabel}. Location: ${config.locMain} (${config.locTime}). Action: ${actionLines[sceneType] ?? actionLines["dj-party"]} Camera: ${config.camAngle}, ${config.camMove}, ${config.camLens}. Lighting: ${config.lightMain}. No text, no watermark, no logos.`,
+					negativePrompt: "text overlay, watermark, logo, lowres, cgi artifacts, extra limbs, face distortion",
+				},
+				toolConfig: config,
+			},
+		],
+	};
 }

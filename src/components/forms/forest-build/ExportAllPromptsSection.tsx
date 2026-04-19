@@ -7,6 +7,7 @@ export default function ExportAllPromptsSection({
 	totalScenes,
 	onGenerateAll,
 	onCopyAll,
+	onDownloadAllJson,
 	showAllPrompts,
 	setShowAllPrompts,
 	allPrompts,
@@ -15,6 +16,7 @@ export default function ExportAllPromptsSection({
 	totalScenes: number;
 	onGenerateAll: () => void;
 	onCopyAll: () => void;
+	onDownloadAllJson: () => void;
 	showAllPrompts: boolean;
 	setShowAllPrompts: (v: boolean) => void;
 	allPrompts: string[];
@@ -34,6 +36,9 @@ export default function ExportAllPromptsSection({
 				</button>
 				<button className="btn-ghost" onClick={onCopyAll}>
 					📋 Copy Semua
+				</button>
+				<button className="btn-ghost" onClick={onDownloadAllJson}>
+					💾 Download JSON
 				</button>
 				<button
 					className="btn-ghost"

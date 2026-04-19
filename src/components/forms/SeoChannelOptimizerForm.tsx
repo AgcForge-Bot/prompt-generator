@@ -161,7 +161,14 @@ export default function SeoChannelOptimizerForm() {
 						/>
 
 						{state.analyzeOutput && (
-							<AnalyzeOutputSection output={state.analyzeOutput} />
+							<AnalyzeOutputSection
+								output={state.analyzeOutput}
+								onApplyToGenerate={gen.applyAnalyzeToGenerate}
+								onCopyRecommendedTitle={gen.copyAnalyzeTitle}
+								onCopyRecommendedDescription={gen.copyAnalyzeDescription}
+								onCopyRecommendedTags={gen.copyAnalyzeTags}
+								onCopyRecommendedThumbnailPrompt={gen.copyAnalyzeThumbnailPrompt}
+							/>
 						)}
 					</>
 				)}

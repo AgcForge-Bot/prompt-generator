@@ -27,30 +27,120 @@ export function buildPrompt(args: {
 		aftermath: `MAIN ACTION: AFTERMATH — ${config.civEmotion}. ${config.vfxProps}. ${config.civInteraction}. Silence after battle.`,
 	};
 
-	return `[SCENE ${sceneNum}/${totalScenes} | ${start}s – ${end}s | ★ ${typeLabel.toUpperCase()} ★]
-THEME: WAR CINEMATIC × DJ Battle Zone | ${styleLabel}
-VISUAL STYLE: ${styleLabel} — ${styleHint}
-FILM REFS: Saving Private Ryan · 1917 · LOTR Return of the King · Braveheart · Gladiator · Dunkirk · Apocalypse Now · Hacksaw Ridge · Troy
-
-${actionLines[sceneType] || actionLines["ground-assault"]}
-
-HERO SOLDIER: ${config.solHero}. Gear: ${config.solGear}.
-SQUAD / ARMY: ${config.solSquad}. Scale: ${config.solScale}.
-
-DJ INTERCUT: ${config.djType} performing on ${config.djSetup} amid chaos. Action: ${config.djAction}. Outfit: ${config.djOutfit}.
-DJ EFFECT: ${config.djFx}. ${config.djSound}.
-
-CIVILIAN: ${config.civType} — ${config.civEmotion}. ${config.civInteraction}. Density: ${config.civDensity}.
-
-VEHICLES: Ground: ${config.vehGround}. Air: ${config.vehAir}. Naval: ${config.vehNaval}. Action: ${config.vehAction}.
-
-LOCATION: ${config.locMain} | Time: ${config.locTime} | Palette: ${config.locPalette} | Atmosphere: ${config.locAtmo}.
-
-LIGHTING: ${config.lightMain}. FX: ${config.lightFx}. Colors: ${config.lightColor}. ${config.lightShadow}.
-
-VFX: Fire/Explosion — ${config.vfxFire}. Smoke — ${config.vfxSmoke}. Weapons — ${config.vfxWeapons}. Duel — ${config.vfxDuel}. Props — ${config.vfxProps}. SFX — ${config.vfxSfx}.
-
-CAMERA: ${config.camAngle}, ${config.camMove}. Lens: ${config.camLens}. Mood: ${config.camMood}.
-
-STYLE: ${config.camQuality}, ${config.camGrade}. No watermarks. No text overlays. Photorealistic humans and environments. ${styleLabel} war epic production quality. Sound: war music atmosphere — drums, brass, tension underscore.`;
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "war-music-video-clip",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: "War Music Video Clip",
+			durationSec: totalScenes * secPerScene,
+			aspectRatio: "16:9",
+			fps: 24,
+			resolution: "1920x1080",
+			platformTargets: ["youtube", "tiktok", "instagram_reels"],
+		},
+		style: {
+			visualStyle,
+			visualStyleHint: styleHint,
+			genre: "WAR CINEMATIC × DJ Battle Zone",
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: config.camGrade,
+			quality: config.camQuality,
+			references: {
+				filmRefs: [
+					"Saving Private Ryan",
+					"1917",
+					"LOTR Return of the King",
+					"Braveheart",
+					"Gladiator",
+					"Dunkirk",
+					"Apocalypse Now",
+					"Hacksaw Ridge",
+					"Troy",
+				],
+				shotRefs: [],
+			},
+		},
+		continuity: {
+			anchor: "WAR CINEMATIC × DJ Battle Zone",
+			mustKeepConsistent: ["location_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs"],
+			safety: { noWeapons: false, noGore: true },
+		},
+		audio: {
+			music: {
+				enabled: true,
+				genre: "war music atmosphere — drums, brass, tension underscore",
+				bpm: 140,
+				mood: "intense",
+				instruments: ["drums", "brass", "strings"],
+			},
+			voiceover: { enabled: false, language: "id", voice: null, lines: [] },
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [config.vfxSfx, config.vfxFire, config.vfxWeapons].filter(Boolean),
+		},
+		references: { images: [] },
+		scenes: [
+			{
+				id: sceneNum,
+				time: { startSec: start, endSec: end, label: `${start}s-${end}s` },
+				sceneType,
+				beat: { purpose: "impact", emotion: config.camMood },
+				environment: {
+					location: config.locMain,
+					timeOfDay: config.locTime,
+					weather: "",
+					atmosphere: config.locAtmo,
+				},
+				subject: {
+					characters: [
+						{ name: config.solHero, role: "hero", appearanceLock: false },
+					],
+					product: null,
+				},
+				camera: {
+					shot: config.camAngle,
+					lens: config.camLens,
+					movement: config.camMove,
+					stabilization: "handheld_smooth",
+					focus: "shallow_dof",
+				},
+				lighting: {
+					setup: config.lightMain,
+					fx: [config.lightFx].filter(Boolean),
+					color: config.lightColor,
+					shadow: config.lightShadow,
+				},
+				action: {
+					summary: { id: actionLines[sceneType] || actionLines["ground-assault"], en: "" },
+					details: [
+						`Soldiers: ${config.solSquad}, scale=${config.solScale}, gear=${config.solGear}`,
+						`Enemy: ${config.solEnemy}`,
+						`Vehicles: ground=${config.vehGround}, air=${config.vehAir}, naval=${config.vehNaval}`,
+						`VFX: fire=${config.vfxFire}, smoke=${config.vfxSmoke}, weapons=${config.vfxWeapons}`,
+						`DJ intercut: ${config.djType} — ${config.djAction} (${config.djFx})`,
+					],
+					blocking: "",
+				},
+				composition: {
+					mustShow: ["hero", "battle_scale", "warzone_detail"],
+					avoidShowing: ["text_overlay", "watermark", "logos", "gore"],
+				},
+				audioCues: { sfx: [], musicNote: "", voIds: [], subtitleIds: [] },
+				deliverable: {
+					prompt: `Theme: WAR CINEMATIC × DJ Battle Zone. Visual: ${styleLabel}. Action: ${actionLines[sceneType] || actionLines["ground-assault"]} Location: ${config.locMain} (${config.locTime}). Camera: ${config.camAngle}, ${config.camMove}, ${config.camLens}. Lighting: ${config.lightMain}. No text, no watermark, no logos. No gore.`,
+					negativePrompt: "text overlay, watermark, logo, lowres, cgi artifacts, gore, dismemberment, extra limbs, face distortion",
+				},
+				toolConfig: config,
+			},
+		],
+	};
 }

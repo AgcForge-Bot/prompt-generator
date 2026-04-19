@@ -106,6 +106,7 @@ export type RelaxingMusicVideoGenerator = {
 	nextScene: () => void;
 	copyPrompt: () => void;
 	copyAll: () => void;
+	downloadAllJson: () => void;
 	generateAll: () => void;
 
 	randomizeCurrentScene: () => void;

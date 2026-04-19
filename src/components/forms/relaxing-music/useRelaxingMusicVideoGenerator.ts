@@ -6,6 +6,7 @@ import { OPTIONS, RANDOM_GROUP_FIELDS, SCENE_TYPES, TOD_DATA, VISUAL_STYLE_LABEL
 import { buildPrompt } from "./promptBuilder";
 import type { RandomGroupKey, RelaxingMusicVideoGenerator, SceneConfig, SceneTypeKey, TabKey, TodKey, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
+import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGenerator {
 	const tabs = useMemo(
@@ -130,7 +131,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 	function generatePromptFor(sceneNum: number) {
 		const sceneType = sceneTypes[sceneNum] ?? "mountain";
 		const config = getSceneConfig(sceneNum);
-		const prompt = buildPrompt({
+		const promptObj = buildPrompt({
 			sceneNum,
 			totalScenes,
 			secPerScene,
@@ -139,6 +140,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 			timeOfDay,
 			config,
 		});
+		const prompt = jsonStringify(promptObj);
 		setPromptOutput(prompt);
 		updateSceneConfig(sceneNum, { generatedPrompt: prompt });
 	}
@@ -166,7 +168,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		for (let s = 1; s <= totalScenes; s++) {
 			const sceneType = sceneTypes[s] ?? "mountain";
 			const config = getSceneConfig(s);
-			const prompt = buildPrompt({
+			const promptObj = buildPrompt({
 				sceneNum: s,
 				totalScenes,
 				secPerScene,
@@ -175,6 +177,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 				timeOfDay,
 				config,
 			});
+			const prompt = jsonStringify(promptObj);
 			prompts.push(prompt);
 			updated[s] = { ...config, generatedPrompt: prompt };
 		}
@@ -190,8 +193,41 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 			generateAll();
 			return;
 		}
-		navigator.clipboard.writeText(allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"));
+		navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
+	}
+
+	function downloadAllJson() {
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = [];
+			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
+			for (let s = 1; s <= totalScenes; s++) {
+				const sceneType = sceneTypes[s] ?? "mountain";
+				const config = getSceneConfig(s);
+				const promptObj = buildPrompt({
+					sceneNum: s,
+					totalScenes,
+					secPerScene,
+					sceneType,
+					visualStyle,
+					timeOfDay,
+					config,
+				});
+				const prompt = jsonStringify(promptObj);
+				prompts.push(prompt);
+				updated[s] = { ...config, generatedPrompt: prompt };
+			}
+			setSceneConfigs(updated);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+		downloadJsonFile(
+			`relaxing-music-video-clip-${Date.now()}.json`,
+			jsonBundleFromSceneJsonStrings(prompts),
+		);
+		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
 	function randomizeCurrentScene() {
@@ -382,6 +418,7 @@ export default function useRelaxingMusicVideoGenerator(): RelaxingMusicVideoGene
 		nextScene,
 		copyPrompt,
 		copyAll,
+		downloadAllJson,
 		generateAll,
 
 		randomizeCurrentScene,

@@ -104,6 +104,7 @@ export type CarMusicVideoGenerator = {
 	nextScene: () => void;
 	copyPrompt: () => void;
 	copyAll: () => void;
+	downloadAllJson: () => void;
 	generateAll: () => void;
 
 	randomizeCurrentScene: () => void;

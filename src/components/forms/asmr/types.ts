@@ -122,6 +122,7 @@ export type AsmrTimelapseGenerator = {
 	nextScene: () => void;
 	copyPrompt: () => void;
 	copyAll: () => void;
+	downloadAllJson: () => void;
 	generateAll: () => void;
 
 	randomizeDNA: () => void;

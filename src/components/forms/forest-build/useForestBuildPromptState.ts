@@ -12,6 +12,7 @@ import {
 } from "@/components/forms/forest-build/constants";
 import { buildScenePrompt } from "./promptBuilder";
 import { computePhases } from "./sceneGenerator";
+import { downloadJsonFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 export default function useForestBuildPromptState({
 	currentPhase,
@@ -57,13 +58,14 @@ export default function useForestBuildPromptState({
 		}
 		const sc = scenes.find((s) => s.id === sceneId);
 		if (!sc) return;
-		const prompt = buildScenePrompt(
+		const promptObj = buildScenePrompt(
 			sc,
 			dna,
 			globalImages,
 			totalScenes,
 			secPerScene,
 		);
+		const prompt = jsonStringify(promptObj);
 		setPromptOutput(prompt);
 		updateScene(sceneId, { generatedPrompt: prompt });
 		showToast(`✓ Prompt Scene ${sceneId} berhasil!`);
@@ -79,7 +81,7 @@ export default function useForestBuildPromptState({
 			return;
 		}
 		const prompts = scenes.map((sc) =>
-			buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene),
+			jsonStringify(buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene)),
 		);
 		setAllPrompts(prompts);
 		setShowAllPrompts(true);
@@ -104,10 +106,36 @@ export default function useForestBuildPromptState({
 			generateAll();
 			return;
 		}
-		navigator.clipboard.writeText(
-			allPrompts.join("\n\n" + "─".repeat(64) + "\n\n"),
-		);
+		navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast(`📋 Semua ${totalScenes} prompt tersalin!`);
+	}
+
+	function downloadAllJson() {
+		if (!dnaLocked) {
+			showToast("⚠ Kunci DNA dulu!");
+			return;
+		}
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = scenes.map((sc) =>
+				jsonStringify(
+					buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene),
+				),
+			);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			const updated = scenes.map((sc, i) => ({
+				...sc,
+				generatedPrompt: prompts[i],
+			}));
+			setScenes(updated);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+		downloadJsonFile(
+			`forest-build-primitive-craft-${Date.now()}.json`,
+			jsonBundleFromSceneJsonStrings(prompts),
+		);
+		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
 	function nextScene() {
@@ -174,6 +202,7 @@ export default function useForestBuildPromptState({
 		autoInjectEmotions,
 		copyAll,
 		copyPrompt,
+		downloadAllJson,
 		currentPhaseScenes,
 		generateAll,
 		generatePrompt,
@@ -188,4 +217,3 @@ export default function useForestBuildPromptState({
 		showAllPrompts,
 	};
 }
-

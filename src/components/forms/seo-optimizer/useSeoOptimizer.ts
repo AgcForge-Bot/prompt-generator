@@ -272,6 +272,36 @@ export default function useSeoOptimizer() {
 		copyToClipboard(state.generateOutput.thumbnailPrompt, "Thumbnail prompt");
 	}
 
+	function copyAnalyzeTitle(index?: number) {
+		const out = state.analyzeOutput;
+		if (!out?.recommendedTitleVariants?.length) return;
+		const i = index ?? out.bestRecommendedTitleIndex ?? 0;
+		copyToClipboard(out.recommendedTitleVariants[i]?.title ?? "", "Judul rekomendasi");
+	}
+
+	function copyAnalyzeDescription() {
+		const out = state.analyzeOutput;
+		if (!out?.recommendedDescription) return;
+		copyToClipboard(out.recommendedDescription, "Deskripsi rekomendasi");
+	}
+
+	function copyAnalyzeTags() {
+		const out = state.analyzeOutput;
+		if (out?.recommendedTags?.length) {
+			copyToClipboard(out.recommendedTags.map((t) => t.tag).join(", "), "Tags rekomendasi");
+			return;
+		}
+		if (out?.tagsScore?.detectedTags?.length) {
+			copyToClipboard(out.tagsScore.detectedTags.join(", "), "Tags terdeteksi");
+		}
+	}
+
+	function copyAnalyzeThumbnailPrompt() {
+		const out = state.analyzeOutput;
+		if (!out?.recommendedThumbnailPrompt) return;
+		copyToClipboard(out.recommendedThumbnailPrompt, "Thumbnail prompt rekomendasi");
+	}
+
 	function copyStoryboardCore() {
 		if (!state.generateOutput) return;
 		copyToClipboard(state.generateOutput.storyboardCore, "Storyboard inti");
@@ -310,6 +340,59 @@ export default function useSeoOptimizer() {
 		showToast("💾 File .txt berhasil didownload!");
 	}
 
+	function applyAnalyzeToGenerate() {
+		const out = state.analyzeOutput;
+		if (!out) return;
+		const titles = out.recommendedTitleVariants ?? [];
+		const description = out.recommendedDescription ?? "";
+		const tags = out.recommendedTags ?? [];
+		const thumbnailPrompt = out.recommendedThumbnailPrompt ?? "";
+
+		if (!titles.length && !description && !tags.length && !thumbnailPrompt) {
+			update({ error: "Belum ada rekomendasi siap pakai dari hasil analisa." });
+			return;
+		}
+
+		const tagScore =
+			tags.length > 0
+				? Math.round(
+						tags.reduce((sum, t) => sum + (t.relevance ?? 0), 0) / tags.length,
+					)
+				: out.tagsScore?.score ?? 0;
+
+		update({
+			mode: "generate",
+			activeOutputTab: "titles",
+			generateOutput: {
+				titleVariants: titles.length ? titles : [
+					{
+						title: out.titleScore.detectedTitle ?? "Judul rekomendasi belum tersedia",
+						seoScore: out.titleScore.score ?? 0,
+						searchVolume: "Medium",
+						clickbaitScore: 50,
+						charCount: (out.titleScore.detectedTitle ?? "").length,
+						keywords: [],
+						reason: "Hasil analisa belum mengembalikan variasi judul rekomendasi.",
+					},
+				],
+				bestTitleIndex: out.bestRecommendedTitleIndex ?? 0,
+				description,
+				descriptionKeywords: out.recommendedDescriptionKeywords ?? [],
+				descriptionCharCount: description.length,
+				tags,
+				totalTagCount: tags.length,
+				overallTagScore: tagScore,
+				thumbnailPrompt,
+				storyboardCore: "",
+				storyboardScenes: [],
+				theme: out.theme,
+				generatedAt: new Date().toLocaleString("id-ID"),
+				aiModel: out.aiModel,
+			},
+		});
+		showToast("✅ Rekomendasi diterapkan ke Mode Generate!");
+	}
+
 	return {
 		state,
 		update,
@@ -327,6 +410,11 @@ export default function useSeoOptimizer() {
 		copyDescription,
 		copyTags,
 		copyThumbnailPrompt,
+		copyAnalyzeTitle,
+		copyAnalyzeDescription,
+		copyAnalyzeTags,
+		copyAnalyzeThumbnailPrompt,
+		applyAnalyzeToGenerate,
 		copyStoryboardCore,
 		copyStoryboardScene,
 		copyAllOutput,

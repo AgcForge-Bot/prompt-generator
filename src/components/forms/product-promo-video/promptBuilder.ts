@@ -139,7 +139,7 @@ export function buildScenePrompt(
 	sceneIndex: number,
 	totalScenes: number,
 	images: ImageRef[]
-): string {
+){
 	const sceneMeta = SCENE_TYPE_META[scene.sceneType];
 	const locationContext = buildLocationContext(dna);
 	const voiceSpec = buildVoiceSpec(dna);
@@ -278,7 +278,7 @@ Durasi: ${scene.duration} detik`;
 
 	// ─── ASSEMBLE FULL PROMPT ─────────────────────────────────────────────────
 
-	return `═══════════════════════════════════════════
+	const promptText = `═══════════════════════════════════════════
 🎬 SCENE ${scene.id} / ${totalScenes} — ${sceneMeta.emoji} ${sceneMeta.label.toUpperCase()}
 Durasi: ${scene.duration} detik | Rasio: ${dna.aspectRatio} | Platform: TikTok/Instagram/YouTube Shorts
 ═══════════════════════════════════════════
@@ -310,6 +310,120 @@ Gunakan gambar referensi produk yang disertakan sebagai anchor visual UTAMA.
 Pastikan ${dna.productName} terlihat IDENTIK dengan referensi di setiap shot.
 Realism priority: photographic, no CGI artifacts, natural human movement.
 ═══════════════════════════════════════════`;
+
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "product-promo-video",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: `Promo — ${dna.productName}`,
+			durationSec: dna.totalDurationSec,
+			aspectRatio: dna.aspectRatio,
+			fps: 30,
+			resolution: dna.aspectRatio === "9:16" ? "1080x1920" : "1920x1080",
+			platformTargets: ["tiktok", "instagram_reels", "youtube_shorts"],
+		},
+		style: {
+			visualStyle: dna.cinematicStyle,
+			visualStyleHint: dna.cinematicStyle,
+			genre: VIDEO_STYLES[dna.videoStyle].label,
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: dna.cinematicStyle,
+			quality: "4K ultra-realistic",
+			references: { filmRefs: [], shotRefs: [] },
+		},
+		continuity: {
+			anchor: consistencyNote,
+			mustKeepConsistent: ["product_identity", "location_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs", "brand mismatch"],
+			safety: { noWeapons: true, noGore: true },
+		},
+		audio: {
+			music: { enabled: true, genre: "promo upbeat", bpm: 120, mood: "energetic", instruments: [] },
+			voiceover: {
+				enabled: true,
+				language: "id",
+				voice: {
+					gender: dna.modelGenderAge.includes("wanita") ? "female" : "male",
+					tone: dna.narrationTone,
+				},
+				lines: [
+					{
+						time: `${sceneIndex * scene.duration}s-${(sceneIndex + 1) * scene.duration}s`,
+						id: "VO1",
+						text: { id: voiceSpec, en: "" },
+					},
+				],
+			},
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [],
+		},
+		references: {
+			images: images.map((img) => ({
+				type: "product",
+				url: img.url,
+				note: img.aiDescription || img.name || "must match exactly",
+			})),
+		},
+		scenes: [
+			{
+				id: scene.id,
+				time: {
+					startSec: sceneIndex * scene.duration,
+					endSec: (sceneIndex + 1) * scene.duration,
+					label: `${sceneIndex * scene.duration}s-${(sceneIndex + 1) * scene.duration}s`,
+				},
+				sceneType: scene.sceneType,
+				beat: { purpose: sceneMeta.label, emotion: dna.videoStyle },
+				environment: {
+					location: locationContext,
+					timeOfDay: "",
+					weather: "",
+					atmosphere: dna.lightingStyle,
+				},
+				subject: {
+					characters: dna.videoStyle === "review-only" ? [] : [{ name: "Model", role: "host", appearanceLock: false }],
+					product: { name: dna.productName, identityLock: true },
+				},
+				camera: {
+					shot: cameraSpec,
+					lens: "",
+					movement: "",
+					stabilization: "gimbal",
+					focus: "shallow_dof",
+				},
+				lighting: {
+					setup: dna.lightingStyle,
+					fx: [],
+					color: dna.cinematicStyle,
+					shadow: "",
+				},
+				action: {
+					summary: { id: sceneMeta.label, en: "" },
+					details: [sceneContent.trim()].filter(Boolean),
+					blocking: productAction,
+				},
+				composition: {
+					mustShow: ["product_clear", "product_identical_to_reference"],
+					avoidShowing: ["text_overlay", "watermark", "logos"],
+				},
+				audioCues: { sfx: [], musicNote: "", voIds: ["VO1"], subtitleIds: [] },
+				deliverable: {
+					prompt: promptText,
+					negativePrompt: "text overlay, watermark, logo, cgi artifacts, wrong product, face distortion, extra limbs",
+				},
+				toolConfig: { dna, scene, meta: { category: dna.productCategory, categoryLabel: catMeta.label } },
+			},
+		],
+	};
 }
 
 // ─── AUTO GENERATE ALL SCENES ─────────────────────────────────────────────────
@@ -318,7 +432,7 @@ export function buildAllScenePrompts(
 	dna: PromoDNA,
 	scenes: SceneConfig[],
 	images: ImageRef[]
-): string[] {
+){
 	return scenes.map((scene, index) =>
 		buildScenePrompt(dna, scene, index, scenes.length, images)
 	);

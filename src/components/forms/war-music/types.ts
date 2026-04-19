@@ -108,6 +108,7 @@ export type WarMusicVideoGenerator = {
 	nextScene: () => void;
 	copyPrompt: () => void;
 	copyAll: () => void;
+	downloadAllJson: () => void;
 	generateAll: () => void;
 
 	randomizeCurrentScene: () => void;

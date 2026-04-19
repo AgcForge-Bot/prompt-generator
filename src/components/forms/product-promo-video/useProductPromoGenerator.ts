@@ -10,6 +10,7 @@ import {
 } from "./constants";
 import { buildScenePrompt, buildAllScenePrompts } from "./promptBuilder";
 import useProductPromoImageState from "./useProductPromoImageState";
+import { jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
 
 // ─── TOAST ───────────────────────────────────────────────────────────────────
 
@@ -119,13 +120,14 @@ export default function useProductPromoGenerator() {
 
 			setIsGeneratingSingle(true);
 			try {
-				const prompt = buildScenePrompt(
+				const promptObj = buildScenePrompt(
 					dna,
 					scene,
 					targetId - 1,
 					scenes.length,
 					imgState.productImages
 				);
+				const prompt = jsonStringify(promptObj);
 				setScenes((prev) =>
 					prev.map((s) =>
 						s.id === targetId ? { ...s, generatedPrompt: prompt } : s
@@ -148,7 +150,8 @@ export default function useProductPromoGenerator() {
 		}
 		setIsGeneratingAll(true);
 		try {
-			const prompts = buildAllScenePrompts(dna, scenes, imgState.productImages);
+			const promptObjs = buildAllScenePrompts(dna, scenes, imgState.productImages);
+			const prompts = (promptObjs as unknown[]).map((o) => jsonStringify(o));
 			setScenes((prev) =>
 				prev.map((s, i) => ({ ...s, generatedPrompt: prompts[i] }))
 			);
@@ -213,9 +216,12 @@ export default function useProductPromoGenerator() {
 				freshScenes,
 				imgState.productImages
 			);
+			const promptsJson = (prompts as unknown[]).map((o) => jsonStringify(o));
 
-			setScenes(freshScenes.map((s, i) => ({ ...s, generatedPrompt: prompts[i] })));
-			setAllPrompts(prompts);
+			setScenes(
+				freshScenes.map((s, i) => ({ ...s, generatedPrompt: promptsJson[i] })),
+			);
+			setAllPrompts(promptsJson);
 			setShowAllPrompts(true);
 			setActiveTab("scenes");
 			showToast(
@@ -244,28 +250,26 @@ export default function useProductPromoGenerator() {
 			showToast("⚠ Generate semua prompt dulu!");
 			return;
 		}
-		await navigator.clipboard.writeText(allPrompts.join("\n\n" + "=".repeat(50) + "\n\n"));
+		await navigator.clipboard.writeText(jsonBundleFromSceneJsonStrings(allPrompts));
 		showToast("📋 Semua prompt disalin ke clipboard!");
 	}
 
-	// ─── DOWNLOAD TXT ────────────────────────────────────────────────────────────
+	// ─── DOWNLOAD JSON ───────────────────────────────────────────────────────────
 
 	function downloadAllPrompts() {
 		if (!allPrompts.length) {
 			showToast("⚠ Generate semua prompt dulu!");
 			return;
 		}
-		const separator = "\n\n" + "=".repeat(60) + "\n\n";
-		const header = `PRODUCT PROMO VIDEO PROMPTS\nProduk: ${dna.productName}\nKategori: ${dna.productCategory} › ${dna.productSubcategory}\nDurasi: ${dna.totalDurationSec} detik | Per scene: ${dna.secPerScene} detik | Total: ${dna.totalScenes} scene\nFormat: ${dna.aspectRatio}\nGenerated: ${new Date().toLocaleString("id-ID")}\n\n` + "=".repeat(60) + "\n\n";
-		const content = header + allPrompts.join(separator);
-		const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+		const content = jsonBundleFromSceneJsonStrings(allPrompts);
+		const blob = new Blob([content], { type: "application/json;charset=utf-8" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = `promo-${dna.productName.replace(/\s+/g, "-").toLowerCase() || "produk"}-${Date.now()}.txt`;
+		a.download = `promo-${dna.productName.replace(/\s+/g, "-").toLowerCase() || "produk"}-${Date.now()}.json`;
 		a.click();
 		URL.revokeObjectURL(url);
-		showToast("💾 File .txt berhasil didownload!");
+		showToast("💾 File .json berhasil didownload!");
 	}
 
 	// ─── COMPUTED ────────────────────────────────────────────────────────────────

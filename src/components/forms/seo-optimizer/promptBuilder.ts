@@ -215,6 +215,7 @@ TUGAS:
 1. Akses atau asumsikan konten dari URL tersebut berdasarkan pola URL (YouTube/Facebook)
 2. Analisa semua elemen SEO yang bisa diidentifikasi
 3. Berikan skor objektif dan saran perbaikan yang konkret dan actionable
+4. Buat versi rekomendasi perbaikan yang SIAP PAKAI (judul, deskripsi, tags, dan prompt thumbnail) berdasarkan tema ${themeLabel}
 
 PENTING: Jika tidak bisa mengakses konten URL secara langsung, analisa berdasarkan:
 - Struktur URL (apakah ada keyword di URL)
@@ -262,7 +263,30 @@ JSON SCHEMA:
   },
   "overallScore": 63,
   "overallGrade": "C",
-  "priorityFixes": ["Perbaikan #1 paling berdampak", "Perbaikan #2", "Perbaikan #3"]
+  "priorityFixes": ["Perbaikan #1 paling berdampak", "Perbaikan #2", "Perbaikan #3"],
+  "recommendedTitleVariants": [
+    {
+      "title": "judul rekomendasi SEO yang layak dipakai sekarang",
+      "seoScore": 85,
+      "searchVolume": "High",
+      "clickbaitScore": 72,
+      "charCount": 62,
+      "keywords": ["keyword1", "keyword2"],
+      "reason": "kenapa judul ini paling cocok untuk tema & platform"
+    }
+  ],
+  "bestRecommendedTitleIndex": 0,
+  "recommendedDescription": "deskripsi baru yang siap ditempel, hook 2 baris pertama kuat, keyword natural, CTA, dan hashtag. Minimum 800 karakter.",
+  "recommendedDescriptionKeywords": ["keyword utama", "secondary keyword"],
+  "recommendedTags": [
+    {
+      "tag": "nama tag",
+      "volume": "High",
+      "relevance": 92,
+      "category": "broad"
+    }
+  ],
+  "recommendedThumbnailPrompt": "prompt thumbnail yang siap dipakai untuk AI image generator (Midjourney/Grok/etc). Sertakan: komposisi, karakter/objek utama, ekspresi, warna, background, gaya visual, dan teks overlay yang disarankan."
 }
 
 ATURAN SKOR:
@@ -273,5 +297,11 @@ ATURAN SKOR:
 - 0-39: Grade F — Critical issues
 
 Setiap suggestions harus spesifik, actionable, dan disesuaikan dengan tema ${themeLabel}.
+ATURAN REKOMENDASI:
+- recommendedTitleVariants: TEPAT 5 variasi judul rekomendasi (variasi angle & gaya). Bahasa sesuai tema. Sertakan keyword utama.
+- bestRecommendedTitleIndex: index 0-4 untuk judul terbaik
+- recommendedDescription: minimal 800 karakter, 2 baris pertama hook kuat, CTA halus, 5-10 hashtag relevan
+- recommendedTags: TEPAT 30 tags. Campuran: 8 broad, 12 niche, 10 long-tail. Semua relevan dengan tema ${themeLabel}
+- recommendedThumbnailPrompt: sangat spesifik dan siap pakai. Wajib ada: subject, background, lighting, composition, style, dan teks overlay yang disarankan (maks 3-5 kata).
 Output HANYA JSON valid.`;
 }

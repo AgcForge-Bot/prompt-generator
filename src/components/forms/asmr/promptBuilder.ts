@@ -70,5 +70,123 @@ export function buildPrompt(args: {
 			? `Scene ${sceneNum + 1} will progress to the next phase.`
 			: "This is the final scene — the complete transformation is shown.";
 
-	return `═══════════════════════════════════════════════════════════════\n[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ${ptLabel}: ${typeLabel.toUpperCase()}]\nSERIES PROGRESS: ${progressPct}% complete | ${prevScene}\nNEXT: ${nextScene}\n═══════════════════════════════════════════════════════════════\n\nTHEME: ASMR Timelapse ${ptLabel} | Cinematic Satisfying Process\nVISUAL STYLE: ${styleLabel} — ${styleHint}\nPHASE: ${phaseNote}\n\nTIME OF DAY: ${tod.label} | ${tod.timeRange}\nSky: ${tod.sky}\nNarrator context: ${tod.narHint}\n\n━━━ PROJECT DNA (CONSISTENT ACROSS ALL ${totalScenes} SCENES) ━━━━━━━━━━━\nBUILDING / STRUCTURE: ${dna.building}\nLOCATION SETTING: ${dna.location}\nCLIMATE & SEASON: ${dna.climate}\nPRIMARY MATERIAL: ${dna.material}\nCOLOR PALETTE: ${dna.palette}\nCREW / TEAM: ${dna.team}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nSCENE-SPECIFIC CONFIGURATION:\n\nTIMELAPSE: ${config.tlMode}\nTime compression: ${config.tlCompression}\nProgress visual: ${config.tlProgress}\nSky / weather: ${config.tlSky}\n\nEQUIPMENT: Primary: ${config.eqMain}\nSupport vehicles: ${config.eqSupport}\nHand tools: ${config.eqHand}\nEquipment motion in timelapse: ${tod.equipMotion} — ${config.eqMotion}\n\n${narSection}\n\nLIGHTING: ${tod.lighting}\nOverride/supplement: ${config.lightMain}\nFX: ${tod.lightFx} — ${config.lightFx}\nColors: ${tod.lightColor}. Additional: ${config.lightColor}\nShadow: ${tod.lightShadow}. ${config.lightShadow}\n\nASMR SOUND: Music — ${config.asmrMusic}\nLayer: ${config.asmrLayer} | Ambient: ${tod.ambientSound} — ${config.asmrAmbient}\nSpecial moment: ${config.asmrMoment}\n\nCAMERA: ${config.camAngle}, ${config.camMove}\nLens: ${config.camLens} | Mood: ${config.camMood}\nStyle: ${config.camQuality}, color grade: ${config.camGrade}\n\nCONTINUITY INSTRUCTIONS:\n- SAME building, location, and materials as all other scenes in this series\n- This scene represents ${progressPct}% completion of the overall project\n- Seamless visual continuity with adjacent scenes — no random location changes\n- Show satisfying progression of construction work and material transformation\n- Emphasize tactile construction ASMR sounds: scraping, sawing, hammering, drilling, pouring, brushing, welding\n- Camera should capture clear visible change over time, with timelapse speed feeling satisfying\n- End frame should clearly set up the next stage\n\nDELIVERABLE:\nGenerate a single cohesive AI video prompt for this scene with vivid visual detail, realistic construction process, cinematic camera language, and ASMR sound design.\n`;
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "asmr-timelapse-constructor",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: `ASMR Timelapse — ${ptLabel}`,
+			durationSec: totalScenes * secPerScene,
+			aspectRatio: "16:9",
+			fps: 24,
+			resolution: "1920x1080",
+			platformTargets: ["youtube", "tiktok", "instagram_reels"],
+		},
+		style: {
+			visualStyle,
+			visualStyleHint: styleHint,
+			genre: `ASMR Timelapse ${ptLabel}`,
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: config.camGrade,
+			quality: config.camQuality,
+			references: { filmRefs: [], shotRefs: [] },
+		},
+		continuity: {
+			anchor: `BUILDING: ${dna.building} | LOCATION: ${dna.location} | MATERIAL: ${dna.material} | PALETTE: ${dna.palette}`,
+			mustKeepConsistent: ["location_identity", "character_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs"],
+			safety: { noWeapons: true, noGore: true },
+		},
+		audio: {
+			music: {
+				enabled: !config.asmrMusic.toLowerCase().includes("none"),
+				genre: config.asmrMusic,
+				bpm: 90,
+				mood: config.asmrLayer,
+				instruments: [],
+			},
+			voiceover: {
+				enabled: !config.narFreq.includes("none"),
+				language: "id",
+				voice: { gender: narratorGender, tone: config.narStyle },
+				lines: config.narFreq.includes("none")
+					? []
+					: [
+							{
+								time: `${mmss(start)}-${mmss(end)}`,
+								id: "VO1",
+								text: { id: config.narLine, en: "" },
+							},
+						],
+			},
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [config.asmrAmbient, config.asmrMoment].filter(Boolean),
+		},
+		references: { images: [] },
+		scenes: [
+			{
+				id: sceneNum,
+				time: { startSec: start, endSec: end, label: `${mmss(start)}-${mmss(end)}` },
+				sceneType,
+				beat: { purpose: "progress", emotion: "satisfying" },
+				environment: {
+					location: dna.location,
+					timeOfDay,
+					weather: config.tlSky,
+					atmosphere: tod.narHint,
+				},
+				subject: {
+					characters: [{ name: dna.team, role: "crew", appearanceLock: false }],
+					product: null,
+				},
+				camera: {
+					shot: config.camAngle,
+					lens: config.camLens,
+					movement: config.camMove,
+					stabilization: "tripod_or_gimbal",
+					focus: "shallow_dof",
+				},
+				lighting: {
+					setup: `${tod.lighting} — ${config.lightMain}`,
+					fx: [tod.lightFx, config.lightFx].filter(Boolean),
+					color: `${tod.lightColor} + ${config.lightColor}`,
+					shadow: `${tod.lightShadow} + ${config.lightShadow}`,
+				},
+				action: {
+					summary: { id: `${typeLabel} — ${phaseNote}`, en: "" },
+					details: [
+						`Project: ${dna.building} (${ptLabel})`,
+						`Timelapse: ${config.tlMode}, compression=${config.tlCompression}, progress=${config.tlProgress}`,
+						`Equipment: ${config.eqMain} + ${config.eqSupport} | tools=${config.eqHand}`,
+						`ASMR: layer=${config.asmrLayer}, ambient=${tod.ambientSound} — ${config.asmrAmbient}`,
+						`Progress: ${progressPct}% | Prev: ${prevScene} | Next: ${nextScene}`,
+					],
+					blocking: "",
+				},
+				composition: {
+					mustShow: ["clear_progression", "material_transformation", "tactile_detail"],
+					avoidShowing: ["text_overlay", "watermark", "logos"],
+				},
+				audioCues: {
+					sfx: [],
+					musicNote: config.asmrMusic,
+					voIds: config.narFreq.includes("none") ? [] : ["VO1"],
+					subtitleIds: [],
+				},
+				deliverable: {
+					prompt: `Theme: ASMR Timelapse ${ptLabel}. Visual: ${styleLabel}. Scene: ${typeLabel}. DNA: ${dna.building}, ${dna.location}, material=${dna.material}. Time: ${tod.label}. Timelapse: ${config.tlMode}. Camera: ${config.camAngle}, ${config.camMove}, lens ${config.camLens}. Lighting: ${tod.lighting} + ${config.lightMain}. ASMR: ${config.asmrLayer}, ${config.asmrAmbient}. No text, no watermark, no logos.`,
+					negativePrompt: "text overlay, watermark, logo, lowres, cgi artifacts, extra limbs, face distortion",
+				},
+				toolConfig: { dna, config, meta: { progressPct, prevScene, nextScene } },
+			},
+		],
+	};
 }

@@ -19,72 +19,105 @@ export function buildPrompt(args: {
 	const styleLabel = VISUAL_STYLE_LABELS[visualStyle] ?? visualStyle;
 	const styleHint = VISUAL_STYLE_HINTS[visualStyle] ?? "";
 
-	return `═══════════════════════════════════════════════════════════════
-[SCENE ${sceneNum}/${totalScenes} | ${mmss(start)} – ${mmss(end)} | ${typeLabel}]
-═══════════════════════════════════════════════════════════════
-
-THEME: Relaxing Music Video Clip — European Nature Drone | ${styleLabel}
-VISUAL STYLE: ${styleLabel} — ${styleHint}
-
-TIME OF DAY: ${tod.label}
-LIGHTING: ${tod.lighting}
-SKY: ${tod.sky}
-
-NATURE VIEW:
-- Spot: ${config.natSpot}
-- Water: ${config.natWater}
-- Vegetation: ${config.natVegetation}
-- Terrain: ${config.natTerrain}
-
-EUROPEAN LOCATION:
-- Region: ${config.locCountry}
-- Setting: ${config.locSetting}
-- Weather: ${config.locWeather}
-- Color palette: ${config.locPalette}
-
-ANIMALS:
-- Birds: ${config.aniBirds}
-- Land animals: ${config.aniLand}
-- Insects: ${config.aniInsects}
-- Water animals: ${config.aniWater}
-
-VISUAL ELEMENTS:
-- Composition: ${config.visComposition}
-- Flowers: ${config.visFlowers}
-- Rocks: ${config.visRocks}
-- Sky detail: ${config.visSky}
-
-LIGHTING DETAILS:
-- Main: ${config.lightMain}
-- FX: ${config.lightFx}
-- Color: ${config.lightColor}
-- Shadow: ${config.lightShadow}
-
-DRONE & CAMERA:
-- Movement: ${config.camMove}
-- Angle: ${config.camAngle}
-- Lens: ${config.camLens}
-- Speed: ${config.camSpeed}
-
-SUPPORT ELEMENTS:
-- Wind: ${config.elemWind}
-- Human element: ${config.elemHuman}
-- Atmosphere: ${config.elemAtmo}
-- Season: ${config.elemSeason}
-
-STYLE & MOOD:
-- Mood: ${config.styMood}
-- Color grade: ${config.styGrade}
-- Quality: ${config.styQuality}
-- Music match: ${config.styMusic}
-
-INSTRUCTIONS:
-- Ultra calming, relaxing, slow cinematic drone footage
-- No text overlay, no watermark, no logos
-- Photorealistic, natural, high detail, smooth motion
-- Prioritize serenity: gentle movements, peaceful ambience, beautiful composition
-
-DELIVERABLE:
-Generate a single cohesive AI video prompt for this scene in vivid detail, cinematic language, and relaxing tone.
-`;
+	return {
+		schema: "aiVideoPrompt.v1",
+		tool: "relaxing-music-video-clip",
+		schemaVersion: 1,
+		generatedAt: new Date().toISOString(),
+		language: { primary: "id" },
+		video: {
+			title: "Relaxing Music Video Clip",
+			durationSec: totalScenes * secPerScene,
+			aspectRatio: "16:9",
+			fps: 24,
+			resolution: "1920x1080",
+			platformTargets: ["youtube", "tiktok", "instagram_reels"],
+		},
+		style: {
+			visualStyle,
+			visualStyleHint: styleHint,
+			genre: "European Nature Drone",
+			rendering: { look: "photorealistic", cgiLevel: "none" },
+			colorGrade: config.styGrade,
+			quality: config.styQuality,
+			references: { filmRefs: [], shotRefs: [] },
+		},
+		continuity: {
+			anchor: "Relaxing Music Video Clip — European Nature Drone",
+			mustKeepConsistent: ["location_identity"],
+		},
+		models: { text: null, vision: null, video: null },
+		constraints: {
+			noTextOverlay: true,
+			noLogo: true,
+			noWatermark: true,
+			avoid: ["cgi artifacts", "face distortion", "extra limbs"],
+			safety: { noWeapons: true, noGore: true },
+		},
+		audio: {
+			music: {
+				enabled: true,
+				genre: "relaxing ambient / nature",
+				bpm: 90,
+				mood: config.styMood,
+				instruments: [],
+			},
+			voiceover: { enabled: false, language: "id", voice: null, lines: [] },
+			subtitles: { enabled: false, style: "minimal", lines: [] },
+			sfx: [],
+		},
+		references: { images: [] },
+		scenes: [
+			{
+				id: sceneNum,
+				time: {
+					startSec: start,
+					endSec: end,
+					label: `${mmss(start)}-${mmss(end)}`,
+				},
+				sceneType,
+				beat: { purpose: "calm", emotion: config.styMood },
+				environment: {
+					location: `${config.locCountry} — ${config.locSetting}`,
+					timeOfDay,
+					weather: config.locWeather,
+					atmosphere: config.elemAtmo,
+				},
+				subject: { characters: [], product: null },
+				camera: {
+					shot: config.camAngle,
+					lens: config.camLens,
+					movement: config.camMove,
+					stabilization: "drone_gimbal",
+					focus: "deep_focus",
+				},
+				lighting: {
+					setup: `${tod.lighting} — ${config.lightMain}`,
+					fx: [config.lightFx].filter(Boolean),
+					color: config.lightColor,
+					shadow: config.lightShadow,
+				},
+				action: {
+					summary: { id: `${typeLabel} — ${config.visComposition}`, en: "" },
+					details: [
+						`Nature: ${config.natSpot}, water=${config.natWater}, terrain=${config.natTerrain}`,
+						`Vegetation: ${config.natVegetation} + flowers=${config.visFlowers}`,
+						`Animals: birds=${config.aniBirds}, land=${config.aniLand}`,
+						`Wind: ${config.elemWind}, season=${config.elemSeason}`,
+					],
+					blocking: "",
+				},
+				composition: {
+					mustShow: ["serene_landscape", "natural_textures"],
+					avoidShowing: ["text_overlay", "watermark", "logos"],
+				},
+				audioCues: { sfx: [], musicNote: config.styMusic, voIds: [], subtitleIds: [] },
+				deliverable: {
+					prompt: `Theme: European Nature Drone. Visual: ${styleLabel}. Time: ${tod.label}. Scene: ${typeLabel}. Location: ${config.locCountry}, ${config.locSetting}. Camera: ${config.camMove}, ${config.camAngle}, ${config.camLens}, ${config.camSpeed}. Mood: ${config.styMood}. No text, no watermark, no logos.`,
+					negativePrompt: "text overlay, watermark, logo, lowres, cgi artifacts, people close-up, shaky cam",
+				},
+				toolConfig: { ...config, timeOfDay: tod.label },
+			},
+		],
+	};
 }

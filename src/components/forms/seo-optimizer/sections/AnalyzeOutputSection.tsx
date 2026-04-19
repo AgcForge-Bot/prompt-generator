@@ -5,6 +5,11 @@ import { getGradeColor, getScoreBarColor } from "../constants";
 
 type Props = {
 	output: AnalyzeOutput;
+	onApplyToGenerate?: () => void;
+	onCopyRecommendedTitle?: (index?: number) => void;
+	onCopyRecommendedDescription?: () => void;
+	onCopyRecommendedTags?: () => void;
+	onCopyRecommendedThumbnailPrompt?: () => void;
 };
 
 function ScoreCard({
@@ -175,7 +180,14 @@ function OverallScoreRing({ score, grade }: { score: number; grade: string }) {
 	);
 }
 
-export default function AnalyzeOutputSection({ output }: Props) {
+export default function AnalyzeOutputSection({
+	output,
+	onApplyToGenerate,
+	onCopyRecommendedTitle,
+	onCopyRecommendedDescription,
+	onCopyRecommendedTags,
+	onCopyRecommendedThumbnailPrompt,
+}: Props) {
 	return (
 		<section className="card mb-5">
 			<div className="section-label">📊 Hasil Analisa SEO</div>
@@ -252,6 +264,179 @@ export default function AnalyzeOutputSection({ output }: Props) {
 							</li>
 						))}
 					</ol>
+				</div>
+			)}
+
+			{/* Recommended replacements */}
+			{(output.recommendedTitleVariants?.length ||
+				output.recommendedDescription ||
+				output.recommendedTags?.length ||
+				output.recommendedThumbnailPrompt) && (
+				<div className="rounded-xl bg-forest/35 border border-leaf/20 p-4 mb-5">
+					<div className="flex items-center justify-between gap-3 mb-3">
+						<div className="font-mono text-[9px] text-leaf uppercase tracking-wider">
+							✅ Rekomendasi Siap Pakai
+						</div>
+						<button
+							type="button"
+							className="btn-primary text-[10px] py-1.5 px-3"
+							onClick={onApplyToGenerate}
+							disabled={!onApplyToGenerate}
+						>
+							➡️ Pakai di Mode Generate
+						</button>
+					</div>
+
+					{/* Title */}
+					{output.recommendedTitleVariants?.length ? (
+						<div className="mb-4">
+							<div className="flex items-center justify-between gap-2 mb-2">
+								<div className="font-mono text-[9px] text-stone2 uppercase tracking-wider">
+									🏆 Judul Baru (Rekomendasi)
+								</div>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => onCopyRecommendedTitle?.()}
+									disabled={!onCopyRecommendedTitle}
+								>
+									📋 Copy
+								</button>
+							</div>
+
+							<div className="space-y-2">
+								{output.recommendedTitleVariants.map((t, i) => {
+									const isBest =
+										i === (output.bestRecommendedTitleIndex ?? 0);
+									return (
+										<div
+											key={i}
+											className={`rounded-lg border p-3 ${
+												isBest
+													? "border-leaf/40 bg-moss/15"
+													: "border-leaf/15 bg-bark/20"
+											}`}
+										>
+											<div className="flex items-start justify-between gap-3">
+												<div className="min-w-0">
+													<div className="font-playfair text-sm text-cream leading-snug">
+														{isBest ? "★ " : ""}
+														{t.title}
+													</div>
+													<div className="font-mono text-[9px] text-stone2 mt-1">
+														SEO {t.seoScore}/100 · Volume {t.searchVolume} · CTR{" "}
+														{t.clickbaitScore}/100 · {t.charCount} char
+													</div>
+												</div>
+												<button
+													type="button"
+													className="btn-ghost text-[10px] py-1 px-3 shrink-0"
+													onClick={() => onCopyRecommendedTitle?.(i)}
+													disabled={!onCopyRecommendedTitle}
+												>
+													📋 Copy
+												</button>
+											</div>
+											{t.reason ? (
+												<div className="font-mono text-[10px] text-stone2 mt-2 leading-relaxed">
+													{t.reason}
+												</div>
+											) : null}
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					) : null}
+
+					{/* Description */}
+					{output.recommendedDescription ? (
+						<div className="mb-4">
+							<div className="flex items-center justify-between gap-2 mb-2">
+								<div className="font-mono text-[9px] text-stone2 uppercase tracking-wider">
+									📝 Deskripsi Baru (Rekomendasi)
+								</div>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => onCopyRecommendedDescription?.()}
+									disabled={!onCopyRecommendedDescription}
+								>
+									📋 Copy
+								</button>
+							</div>
+							<div className="rounded-lg border border-leaf/15 bg-bark/20 p-3">
+								<pre className="font-mono text-[10px] text-stone2 whitespace-pre-wrap leading-relaxed">
+									{output.recommendedDescription}
+								</pre>
+							</div>
+							{output.recommendedDescriptionKeywords?.length ? (
+								<div className="flex flex-wrap gap-1 mt-2">
+									{output.recommendedDescriptionKeywords.map((k) => (
+										<span
+											key={k}
+											className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-bark/40 border border-stone/20 text-stone2"
+										>
+											{k}
+										</span>
+									))}
+								</div>
+							) : null}
+						</div>
+					) : null}
+
+					{/* Tags */}
+					{output.recommendedTags?.length ? (
+						<div className="mb-4">
+							<div className="flex items-center justify-between gap-2 mb-2">
+								<div className="font-mono text-[9px] text-stone2 uppercase tracking-wider">
+									🏷️ Tags Baru (Rekomendasi)
+								</div>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => onCopyRecommendedTags?.()}
+									disabled={!onCopyRecommendedTags}
+								>
+									📋 Copy
+								</button>
+							</div>
+							<div className="flex flex-wrap gap-1">
+								{output.recommendedTags.map((t) => (
+									<span
+										key={t.tag}
+										className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-bark/40 border border-stone/20 text-stone2"
+									>
+										{t.tag}
+									</span>
+								))}
+							</div>
+						</div>
+					) : null}
+
+					{/* Thumbnail prompt */}
+					{output.recommendedThumbnailPrompt ? (
+						<div>
+							<div className="flex items-center justify-between gap-2 mb-2">
+								<div className="font-mono text-[9px] text-stone2 uppercase tracking-wider">
+									🖼️ Ide Thumbnail (Prompt)
+								</div>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => onCopyRecommendedThumbnailPrompt?.()}
+									disabled={!onCopyRecommendedThumbnailPrompt}
+								>
+									📋 Copy
+								</button>
+							</div>
+							<div className="rounded-lg border border-leaf/15 bg-bark/20 p-3">
+								<pre className="font-mono text-[10px] text-stone2 whitespace-pre-wrap leading-relaxed">
+									{output.recommendedThumbnailPrompt}
+								</pre>
+							</div>
+						</div>
+					) : null}
 				</div>
 			)}
 
