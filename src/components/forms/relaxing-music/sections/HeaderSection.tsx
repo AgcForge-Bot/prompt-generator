@@ -1,11 +1,14 @@
 "use client";
 
 import type { RelaxingMusicVideoGenerator } from "../types";
+import type { RelaxingModeKey } from "../RelaxingModeSelector";
 
 export default function HeaderSection({
 	gen,
+	mode,
 }: {
 	gen: RelaxingMusicVideoGenerator;
+	mode: RelaxingModeKey;
 }) {
 	return (
 		<header className="mb-8 pb-6 border-b border-leaf/20">
@@ -29,6 +32,18 @@ export default function HeaderSection({
 					</p>
 				</div>
 				<div className="flex flex-col gap-2 sm:items-end">
+					<span className="font-mono text-[10px] px-3 py-1 rounded-full border border-leaf/20 bg-moss/20 text-stone2 whitespace-nowrap">
+						Mode:{" "}
+						<span
+							className={`ml-2 text-white font-bold rounded-full uppercase px-2 py-0.5 inline-flex items-center justify-center ${
+								mode === "manual"
+									? "bg-transparent border border-leaf"
+									: "bg-leaf"
+							}`}
+						>
+							{mode}
+						</span>
+					</span>
 					{[
 						["Total Scene", `${gen.totalScenes}`],
 						["Durasi", `${gen.totalMinutes} menit`],
