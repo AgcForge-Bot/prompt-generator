@@ -53,13 +53,59 @@ export default function ClipModeSection({
 								id="car-film-ref"
 								value={gen.filmRef}
 								onChange={(v) => gen.setFilmRef(v)}
-								options={CAR_MOVIE_REFS.map((f) => ({ value: f, label: f }))}
+								options={[
+									...((CAR_MOVIE_REFS as readonly string[]).includes(
+										gen.filmRef,
+									)
+										? []
+										: gen.filmRef
+											? [
+													{
+														value: gen.filmRef,
+														label: `${gen.filmRef} (Custom)`,
+													},
+												]
+											: []),
+									...CAR_MOVIE_REFS.map((f) => ({ value: f, label: f })),
+								]}
 							/>
 						</Field>
 						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
 							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
 								Mode Trailer memakai vibe & pacing film referensi, tapi karakter
 								tetap original (bukan meniru aktor asli).
+							</div>
+						</div>
+					</div>
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+						<Field label="⌨️ Atau ketik judul film sendiri">
+							<input
+								className="forest-input"
+								value={gen.filmRef}
+								onChange={(e) => gen.setFilmRef(e.target.value)}
+								placeholder="Contoh: Midnight Asphalt (2026)"
+							/>
+							<div className="flex items-center gap-2 mt-2">
+								<button
+									type="button"
+									className="btn-outline text-[10px] py-1 px-3"
+									onClick={() => gen.setFilmRef(CAR_MOVIE_REFS[0] ?? "")}
+								>
+									Use Dropdown
+								</button>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => gen.setFilmRef("")}
+								>
+									Clear Custom
+								</button>
+							</div>
+						</Field>
+						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
+							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
+								Judul custom akan dipakai di semua prompt/SEO (tetap karakter
+								original, tanpa meniru aktor asli).
 							</div>
 						</div>
 					</div>

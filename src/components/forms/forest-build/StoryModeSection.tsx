@@ -96,12 +96,80 @@ export default function StoryModeSection({
 								value={dna.storyMovieRefTitle || movieRefs[0]?.title || ""}
 								onChange={(v) => setMovie(v)}
 								disabled={disabled}
-								options={movieRefs.map((r) => ({ value: r.title, label: r.title }))}
+								options={[
+									...(movieRefs.some((r) => r.title === dna.storyMovieRefTitle)
+										? []
+										: dna.storyMovieRefTitle
+											? [
+												{
+													value: dna.storyMovieRefTitle,
+													label: `${dna.storyMovieRefTitle} (Custom)`,
+												},
+											]
+											: []),
+									...movieRefs.map((r) => ({ value: r.title, label: r.title })),
+								]}
 							/>
 						</Field>
 						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
 							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
 								Mode 2 fokus short film survival yang ceritanya nyambung antar scene. Scene 1 adalah teaser montage.
+							</div>
+						</div>
+					</div>
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<Field label="⌨️ Atau ketik judul film sendiri">
+							<input
+								className="forest-input"
+								value={dna.storyMovieRefTitle}
+								onChange={(e) => {
+									const title = e.target.value;
+									const ref = movieRefs.find((r) => r.title === title);
+									onChange({
+										...dna,
+										storyMovieRefTitle: title,
+										storyMovieRefStory: ref?.story ?? "",
+									});
+								}}
+								disabled={disabled}
+								placeholder="Contoh: Survive Alone: River Shelter (2026)"
+							/>
+							<div className="flex items-center gap-2 mt-2">
+								<button
+									type="button"
+									className="btn-outline text-[10px] py-1 px-3"
+									disabled={disabled}
+									onClick={() => {
+										const first = movieRefs[0];
+										if (!first) return;
+										onChange({
+											...dna,
+											storyMovieRefTitle: first.title,
+											storyMovieRefStory: first.story,
+										});
+									}}
+								>
+									Use Dropdown
+								</button>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									disabled={disabled}
+									onClick={() =>
+										onChange({
+											...dna,
+											storyMovieRefTitle: "",
+											storyMovieRefStory: "",
+										})
+									}
+								>
+									Clear Custom
+								</button>
+							</div>
+						</Field>
+						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
+							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
+								Judul custom dipakai sebagai referensi vibe cerita + SEO. Storyline referensi akan terisi otomatis jika judul cocok dengan daftar.
 							</div>
 						</div>
 					</div>

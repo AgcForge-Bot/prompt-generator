@@ -2,11 +2,27 @@
 
 import Field from "@/components/forms/forest-build/Field";
 import Sel from "@/components/forms/forest-build/Sel";
-import { AI_MODELS_PROVIDER, getDefaultModelId, getModelOptions } from "@/lib/modelProviders";
-import { CLIP_MODE_LABELS, TRAILER_CHARACTER_ROLES, WAR_MOVIE_REFS } from "../constants";
-import type { AIProviderKey, ClipModeKey, WarMusicVideoGenerator } from "../types";
+import {
+	AI_MODELS_PROVIDER,
+	getDefaultModelId,
+	getModelOptions,
+} from "@/lib/modelProviders";
+import {
+	CLIP_MODE_LABELS,
+	TRAILER_CHARACTER_ROLES,
+	WAR_MOVIE_REFS,
+} from "../constants";
+import type {
+	AIProviderKey,
+	ClipModeKey,
+	WarMusicVideoGenerator,
+} from "../types";
 
-export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }) {
+export default function ClipModeSection({
+	gen,
+}: {
+	gen: WarMusicVideoGenerator;
+}) {
 	const clipModes = Object.keys(CLIP_MODE_LABELS) as ClipModeKey[];
 
 	return (
@@ -37,12 +53,59 @@ export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }
 								id="war-film-ref"
 								value={gen.filmRef}
 								onChange={(v) => gen.setFilmRef(v)}
-								options={WAR_MOVIE_REFS.map((f) => ({ value: f, label: f }))}
+								options={[
+									...((WAR_MOVIE_REFS as readonly string[]).includes(
+										gen.filmRef,
+									)
+										? []
+										: gen.filmRef
+											? [
+													{
+														value: gen.filmRef,
+														label: `${gen.filmRef} (Custom)`,
+													},
+												]
+											: []),
+									...WAR_MOVIE_REFS.map((f) => ({ value: f, label: f })),
+								]}
 							/>
 						</Field>
 						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
 							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
-								Mode Trailer memakai vibe & pacing film referensi, tapi karakter tetap original (bukan meniru aktor asli).
+								Mode Trailer memakai vibe & pacing film referensi, tapi karakter
+								tetap original (bukan meniru aktor asli).
+							</div>
+						</div>
+					</div>
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+						<Field label="⌨️ Atau ketik judul film sendiri">
+							<input
+								className="forest-input"
+								value={gen.filmRef}
+								onChange={(e) => gen.setFilmRef(e.target.value)}
+								placeholder="Contoh: Iron Horizon (2026)"
+							/>
+							<div className="flex items-center gap-2 mt-2">
+								<button
+									type="button"
+									className="btn-outline text-[10px] py-1 px-3"
+									onClick={() => gen.setFilmRef(WAR_MOVIE_REFS[0] ?? "")}
+								>
+									Use Dropdown
+								</button>
+								<button
+									type="button"
+									className="btn-ghost text-[10px] py-1 px-3"
+									onClick={() => gen.setFilmRef("")}
+								>
+									Clear Custom
+								</button>
+							</div>
+						</Field>
+						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
+							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
+								Judul custom akan dipakai di semua prompt/SEO (tetap karakter
+								original, tanpa meniru aktor asli).
 							</div>
 						</div>
 					</div>
@@ -102,7 +165,10 @@ export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }
 										id={`war-trailer-role-${i}`}
 										value={c.role}
 										onChange={(v) => gen.updateTrailerCharacter(i, { role: v })}
-										options={TRAILER_CHARACTER_ROLES.map((r) => ({ value: r, label: r }))}
+										options={TRAILER_CHARACTER_ROLES.map((r) => ({
+											value: r,
+											label: r,
+										}))}
 									/>
 									<Sel
 										id={`war-trailer-intro-${i}`}
@@ -112,17 +178,25 @@ export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }
 												introSceneNumber: Number(v),
 											})
 										}
-										options={Array.from({ length: gen.totalScenes }, (_, idx) => {
-											const sn = idx + 1;
-											return { value: String(sn), label: `Intro Scene ${sn}` };
-										})}
+										options={Array.from(
+											{ length: gen.totalScenes },
+											(_, idx) => {
+												const sn = idx + 1;
+												return {
+													value: String(sn),
+													label: `Intro Scene ${sn}`,
+												};
+											},
+										)}
 									/>
 									<input
 										className="forest-input"
 										placeholder="Deskripsi wajah (original)"
 										value={c.faceDescription}
 										onChange={(e) =>
-											gen.updateTrailerCharacter(i, { faceDescription: e.target.value })
+											gen.updateTrailerCharacter(i, {
+												faceDescription: e.target.value,
+											})
 										}
 									/>
 								</div>
@@ -142,7 +216,10 @@ export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }
 							gen.setAiProvider(p);
 							gen.setAiModelId(getDefaultModelId(p));
 						}}
-						options={AI_MODELS_PROVIDER.map((p) => ({ value: p.value, label: p.label }))}
+						options={AI_MODELS_PROVIDER.map((p) => ({
+							value: p.value,
+							label: p.label,
+						}))}
 					/>
 				</Field>
 				<Field label="🧠 AI Model">
@@ -150,7 +227,10 @@ export default function ClipModeSection({ gen }: { gen: WarMusicVideoGenerator }
 						id="war-ai-model"
 						value={gen.aiModelId || getDefaultModelId(gen.aiProvider)}
 						onChange={(v) => gen.setAiModelId(v)}
-						options={getModelOptions(gen.aiProvider).map((m) => ({ value: m.value, label: m.label }))}
+						options={getModelOptions(gen.aiProvider).map((m) => ({
+							value: m.value,
+							label: m.label,
+						}))}
 					/>
 				</Field>
 			</div>

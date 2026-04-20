@@ -18,6 +18,7 @@ type HomeToolKey =
 	| "car-music-video-clip"
 	| "war-music-video-clip"
 	| "relaxing-music-video-clip"
+	| "short-movie"
 	| "seo-channel-optimizer"
 	| "all-in-one-generator";
 
@@ -153,6 +154,14 @@ export default function HomeClient() {
 				description:
 					"Generator prompt untuk relaxing nature drone music clip: time-of-day, timeline 12 scene, scene type, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🌿",
+			},
+			{
+				key: "short-movie",
+				label: "Short Movie",
+				title: "Short Movie — AI Prompt Generator",
+				description:
+					"Generator prompt untuk short movie: custom timeline scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "🎬",
 			},
 			{
 				key: "seo-channel-optimizer",
