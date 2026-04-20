@@ -342,65 +342,81 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 		setIsGeneratingAI(true);
 		try {
 			const systemPrompt =
-				"Kamu adalah penulis trailer film + prompt engineer untuk AI video. Output HARUS JSON valid tanpa markdown.";
-			const userPrompt = `Buat AI video prompt berbentuk JSON dengan schema aiVideoPrompt.v1.
+				"You are an expert film trailer director and AI video prompt engineer. Output MUST be valid JSON only — no markdown fences, no trailing commas, no comments.";
 
-KONTEKS:
-- Tool: car-music-video-clip
-- Mode: film trailer/opening (tanpa DJ, tanpa nightclub, tanpa crowd rave)
-- Referensi film: ${filmRef}
-- Durasi: ${totalMinutes} menit
-- Sec per scene: ${secPerScene}
-- Total scene: ${totalScenes}
-- Visual style: ${visualStyle}
-- Karakter (gunakan persis, tidak meniru aktor asli):
+			const userPrompt = `Generate a ${totalScenes}-scene car film trailer AI video prompt bundle as JSON (schema: aiVideoPrompt.v1).
+
+FILM REFERENCE: "${filmRef}"
+- Inspired by the film's pacing, tension, and visual language — but use ORIGINAL characters and story. Do NOT copy actor names, real faces, or exact film plot.
+
+CHARACTERS (use exactly as described — do not recreate any real actor likeness):
 ${trailerCharacters
-	.map(
-		(c, i) =>
-			`${i + 1}. ${c.name} (${c.role}) — ${c.faceDescription} | introScene=${c.introSceneNumber ?? i + 2}`,
-	)
-	.join("\n")}
+					.map(
+						(c, i) =>
+							`${i + 1}. ${c.name} | role: ${c.role} | face: ${c.faceDescription} | introScene: ${c.introSceneNumber ?? i + 2}`,
+					)
+					.join("\n")}
 
-ATURAN:
-- Buat trailer/opening film berupa cuplikan-cuplikan penting (race, chase, heist, emotional dialogue moment, montage, climax).
-- Karakter harus original (nama & wajah original, tidak meniru aktor/cast film asli).
-- Sisipkan scene "character-intro" bergaya opening credits (close-up wajah, nama + peran) persis di introScene yang ditentukan setiap karakter. Masing-masing karakter tepat 1 kali.
-- Wajib output JSON yang mengikuti struktur aiVideoPrompt.v1, dan field scenes adalah array panjang tepat ${totalScenes}.
-- Di tiap scene wajib ada:
-  - id (1..${totalScenes})
-  - sceneNumber ("Scene X")
-  - time.startSec / endSec sesuai durasi
-  - deliverable.prompt (1 paragraf padat, sangat visual)
-  - deliverable.negativePrompt
-- Jangan menyebut DJ sama sekali.
-- Pacing trailer: establish -> inciting -> character intros -> setpieces -> emotional beat -> climax -> closing.
+SPECS:
+- Total scenes: ${totalScenes} (EXACTLY — no more, no less)
+- Duration per scene: ${secPerScene}s
+- Visual style: ${visualStyle}
+- Genre: car film trailer / opening — NO DJ, NO nightclub, NO rave crowd
 
-OPTIONAL BEAT KEYS: ${TRAILER_BEAT_OPTIONS.join(", ")}
-SETPIECES IDE: ${CAR_TRAILER_SETPIECES.join(" | ")}
-EMOTION IDE: ${TRAILER_EMOTION_BEATS.join(", ")}
-ROLE IDE: ${TRAILER_CHARACTER_ROLES.join(", ")}
+TRAILER PACING (distribute scenes across these beats in order):
+establish → inciting_incident → character_intro(s) → rising_action → setpiece → emotional_beat → climax → closing_shot
 
-SEO PACK (WAJIB):
-- Buat rekomendasi SEO untuk upload YouTube:
-  - seo.title: 1 judul SEO yang terinspirasi dari judul film referensi, tapi original (remix judul, bukan menyalin), menggambarkan isi trailer (berdasarkan semua scenes).
-  - seo.description: deskripsi Indonesia siap tempel, min 900 karakter, 2 baris pertama hook kuat, rangkum story beats, CTA halus, 5-10 hashtag relevan.
-  - seo.tags: array tepat 30 tag (mix broad/niche/long-tail), relevan dengan filmRef + isi scenes + trailer music.
-  - seo.thumbnailPrompt: prompt thumbnail untuk AI image generator, sangat spesifik (komposisi, subject, ekspresi, lighting, warna, background, style, teks overlay 3-5 kata). Tidak boleh pakai nama film asli atau wajah aktor asli.
+CHARACTER INTRO RULE: Insert "character-intro" beat (cinematic close-up + opening credit style) at EXACTLY the introScene number specified per character. Each character gets exactly ONE intro scene.
 
-JSON SCHEMA MINIMAL:
+SCENE CONTINUITY RULES (critical for AI video coherence):
+1. Every scene (except scene 1) MUST start deliverable.prompt with: "Continuing from scene [N-1] — [one sentence describing what was just shown]..."
+2. Location and environment: once established, stays consistent unless a new location is explicitly required by the beat
+3. Characters: same face, same outfit throughout — never change appearance mid-trailer
+4. Camera: end frame of each scene should feel like a natural match cut to the next
+
+OPTIONAL BEATS: ${TRAILER_BEAT_OPTIONS.join(", ")}
+SETPIECE IDEAS: ${CAR_TRAILER_SETPIECES.join(" | ")}
+EMOTION IDEAS: ${TRAILER_EMOTION_BEATS.join(", ")}
+ROLE IDEAS: ${TRAILER_CHARACTER_ROLES.join(", ")}
+
+OUTPUT JSON STRUCTURE:
 {
   "schema": "aiVideoPrompt.v1",
   "tool": "car-music-video-clip",
-  "scenes": [...],
+  "filmRef": "${filmRef}",
+  "characters": [{ "name": "...", "role": "...", "faceDescription": "...", "introSceneNumber": 0 }],
   "seo": {
-    "title": "string",
-    "description": "string",
+    "title": "...",
+    "description": "...",
     "tags": ["..."],
-    "thumbnailPrompt": "string"
-  }
+    "thumbnailPrompt": "..."
+  },
+  "scenes": [
+    {
+      "id": 1,
+      "sceneNumber": "Scene 1",
+      "beat": "establish",
+      "time": { "startSec": 0, "endSec": ${secPerScene} },
+      "deliverable": {
+        "prompt": "...",
+        "negativePrompt": "..."
+      }
+    }
+  ]
 }
 
-Output hanya JSON.`;
+IMPORTANT LEAN JSON RULES:
+- "seo" object exists ONLY ONCE at root level — do NOT include seo inside any scenes[] item
+- scenes[] items contain ONLY: id, sceneNumber, beat, time, deliverable
+- No other fields inside scenes[] items
+
+SEO RULES (root level only, generated ONCE):
+- seo.title: original title inspired by "${filmRef}" but remixed — represents the full trailer story
+- seo.description: Indonesian, min 900 chars, strong hook in first 2 lines, story beats summary, soft CTA, 5-10 hashtags
+- seo.tags: exactly 30 tags (broad + niche + long-tail car/racing/film terms)
+- seo.thumbnailPrompt: specific AI image prompt with composition, pose, lighting, color, background, 3-5 word text overlay — NO real actor names
+
+Output only JSON. No explanation.`;
 
 			const res = await fetch("/api/all-in-one-generator", {
 				method: "POST",
@@ -410,7 +426,7 @@ Output hanya JSON.`;
 					userPrompt,
 					provider: aiProvider,
 					modelId: aiModelId,
-					maxTokens: 8000,
+					maxTokens: 12000,
 				}),
 			});
 			const data = await res.json();
@@ -428,8 +444,11 @@ Output hanya JSON.`;
 			if (bundle.seo) {
 				setSeoPack(bundle.seo);
 			}
-			const prompts = bundle.scenes.map((scene) =>
-				jsonStringify({ ...bundle, scenes: [scene] }),
+			// ── Strip seo dari per-scene output ──
+			// seo cukup sekali di seoPack section, tidak perlu diulang di setiap scene JSON
+			const { seo: _seo, ...bundleWithoutSeo } = bundle as Record<string, unknown>;
+			const prompts = (bundle.scenes as unknown[]).map((scene) =>
+				jsonStringify({ ...bundleWithoutSeo, scenes: [scene] }),
 			);
 			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
 			for (let s = 1; s <= totalScenes; s++) {
