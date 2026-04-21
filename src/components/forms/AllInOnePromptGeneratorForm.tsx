@@ -28,7 +28,7 @@ export default function AllInOnePromptGeneratorForm() {
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 						<div>
 							<div className="flex items-center gap-2 mb-3">
-								<span className="text-sm">🎬</span>
+								<span className="text-sm">🛠️</span>
 								<span className="font-mono text-[9px] tracking-[0.2em] uppercase text-leaf">
 									All-in-One · AI Video Prompt Generator
 								</span>

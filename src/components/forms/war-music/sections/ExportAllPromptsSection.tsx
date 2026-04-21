@@ -20,7 +20,7 @@ export default function ExportAllPromptsSection({
 						type="button"
 						className="btn-amber"
 						onClick={gen.generateAllWithAI}
-						disabled={gen.isGeneratingAI}
+						disabled={gen.isGeneratingAI || !gen.isFilmRefValid}
 					>
 						<span className="inline-flex items-center gap-2">
 							{gen.isGeneratingAI && (
@@ -35,6 +35,9 @@ export default function ExportAllPromptsSection({
 				</button>
 				<button type="button" className="btn-outline" onClick={gen.downloadAllJson}>
 					💾 Download JSON
+				</button>
+				<button type="button" className="btn-outline" onClick={gen.downloadAllZip}>
+					🗜️ Download All (ZIP)
 				</button>
 				<button
 					type="button"

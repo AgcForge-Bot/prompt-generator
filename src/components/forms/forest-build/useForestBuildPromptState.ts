@@ -12,8 +12,15 @@ import {
 } from "@/components/forms/forest-build/constants";
 import { buildScenePrompt } from "./promptBuilder";
 import { computePhases } from "./sceneGenerator";
-import { downloadJsonFile, downloadTextFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
+import {
+	downloadBlobFile,
+	downloadJsonFile,
+	downloadTextFile,
+	jsonBundleFromSceneJsonStrings,
+	jsonStringify,
+} from "@/lib/promptJson";
 import { parseJsonFromModelOutput } from "@/lib/aiJson";
+import { buildZipBlob } from "@/lib/promptZip";
 
 // ─── STORY ARC BEAT BUILDER ──────────────────────────────────────────────────
 // Generates per-scene beat descriptions with shelter progress and TOD
@@ -246,10 +253,14 @@ export default function useForestBuildPromptState({
 			showToast("⚠ Mode 2 (AI) belum dipilih.");
 			return;
 		}
+		if (!dna.storyMovieRefTitle.trim()) {
+			showToast("⚠ Referensi film wajib diisi untuk Mode 2.");
+			return;
+		}
 		setIsGeneratingAI(true);
 		setSeoPack(null);
 		try {
-			const movieTitle = dna.storyMovieRefTitle || "Survival Movie";
+			const movieTitle = dna.storyMovieRefTitle;
 			const movieStory = dna.storyMovieRefStory || "";
 			const castCount =
 				dna.storyCastCountMode === "manual"
@@ -561,6 +572,67 @@ Output only the JSON object. No explanation. No markdown.`;
 		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
+	async function downloadAllZip() {
+		if (!dnaLocked) {
+			showToast("⚠ Kunci DNA dulu!");
+			return;
+		}
+		if (dna.storyMode === "ai-film" && !allPrompts.length) {
+			showToast("⚠ Generate All With AI dulu sebelum download ZIP.");
+			return;
+		}
+
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = scenes.map((sc) =>
+				jsonStringify(buildScenePrompt(sc, dna, globalImages, totalScenes, secPerScene)),
+			);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			const updated = scenes.map((sc, i) => ({
+				...sc,
+				generatedPrompt: prompts[i],
+			}));
+			setScenes(updated);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+
+		const files = [
+			{ path: "prompts.json", text: jsonBundleFromSceneJsonStrings(prompts) },
+			...prompts.map((p, i) => ({
+				path: `scenes/scene-${String(i + 1).padStart(2, "0")}.json`,
+				text: p,
+			})),
+		];
+
+		if (seoPack) {
+			const payload = {
+				schema: "aiSeoPack.v1",
+				tool: "forest-build-primitive-craft",
+				storyMode: dna.storyMode,
+				movieRefTitle: dna.storyMovieRefTitle,
+				createdAt: new Date().toISOString(),
+				seo: seoPack,
+			};
+			const text =
+				`SEO PACK (AI)\n` +
+				`Tool: forest-build-primitive-craft\n` +
+				`Story Mode: ${dna.storyMode}\n` +
+				`Movie Ref: ${dna.storyMovieRefTitle}\n` +
+				`\n` +
+				`TITLE:\n${seoPack.title}\n\n` +
+				`DESCRIPTION:\n${seoPack.description}\n\n` +
+				`TAGS (30):\n${seoPack.tags.join(", ")}\n\n` +
+				`THUMBNAIL PROMPT:\n${seoPack.thumbnailPrompt}\n`;
+			files.push({ path: "seo-pack.json", text: JSON.stringify(payload, null, 2) });
+			files.push({ path: "seo-pack.txt", text });
+		}
+
+		const blob = await buildZipBlob(files);
+		downloadBlobFile(`forest-build-primitive-craft-${Date.now()}.zip`, blob);
+		showToast("💾 ZIP berhasil didownload!");
+	}
+
 	function nextScene() {
 		if (!dnaLocked) return;
 		const next = currentScene < totalScenes ? currentScene + 1 : 1;
@@ -630,6 +702,7 @@ Output only the JSON object. No explanation. No markdown.`;
 		copySeoThumbnailPrompt,
 		copySeoTitle,
 		downloadAllJson,
+		downloadAllZip,
 		downloadSeoPackJson,
 		downloadSeoPackTxt,
 		currentPhaseScenes,

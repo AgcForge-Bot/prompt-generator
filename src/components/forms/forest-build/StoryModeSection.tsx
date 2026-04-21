@@ -24,6 +24,7 @@ export default function StoryModeSection({
 	const [movieRefs, setMovieRefs] = useState<MovieRef[]>(
 		SURVIVAL_MOVIE_REFS as unknown as MovieRef[],
 	);
+	const hasMovieRefs = movieRefs.length > 0;
 
 	function setStoryMode(next: StoryModeKey) {
 		onChange({ ...dna, storyMode: next });
@@ -110,6 +111,11 @@ export default function StoryModeSection({
 									...movieRefs.map((r) => ({ value: r.title, label: r.title })),
 								]}
 							/>
+							{!disabled && !hasMovieRefs && (
+								<div className="font-mono text-[10px] text-amber mt-2">
+									⚠ List referensi film belum tersedia. Coba refresh atau cek API /api/survival-movie-refs.
+								</div>
+							)}
 						</Field>
 						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
 							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
@@ -134,11 +140,16 @@ export default function StoryModeSection({
 								disabled={disabled}
 								placeholder="Contoh: Survive Alone: River Shelter (2026)"
 							/>
+							{!disabled && !dna.storyMovieRefTitle.trim() && !hasMovieRefs && (
+								<div className="font-mono text-[10px] text-amber mt-2">
+									⚠ Isi judul film referensi dulu (dropdown atau custom).
+								</div>
+							)}
 							<div className="flex items-center gap-2 mt-2">
 								<button
 									type="button"
 									className="btn-outline text-[10px] py-1 px-3"
-									disabled={disabled}
+									disabled={disabled || !hasMovieRefs}
 									onClick={() => {
 										const first = movieRefs[0];
 										if (!first) return;

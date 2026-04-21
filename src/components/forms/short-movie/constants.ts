@@ -267,3 +267,40 @@ export const DEFAULT_AI_MODEL_ID: Record<string, string> = {
 	GEMINI: 'gemini-2.5-flash',
 	OPENROUTER: 'google/gemini-2.5-flash',
 }
+
+// ─── NARRATION / DIALOG OPTIONS ──────────────────────────────────────────────
+
+export const NARRATION_MODE_OPTIONS = [
+	{
+		value: 'none',
+		label: '🎬 Pure Visual',
+		desc: 'Tidak ada dialog atau narasi. Cerita disampaikan murni lewat visual, ekspresi, dan aksi.',
+	},
+	{
+		value: 'subtitle',
+		label: '💬 Subtitle Dialog',
+		desc: 'Dialog antar karakter ditampilkan sebagai subtitle on-screen. AI memutuskan kapan dialog natural dan kapan scene lebih baik tanpa dialog.',
+	},
+	{
+		value: 'voiceover',
+		label: '🎙️ Voiceover Narasi',
+		desc: 'Narasi off-screen yang menceritakan atau merefleksikan kejadian. AI memutuskan kapan voiceover natural untuk genre ini.',
+	},
+] as const
+
+export const DIALOG_LANGUAGE_OPTIONS = [
+	{ value: 'English', label: '🇺🇸 English', flag: '🇺🇸' },
+	{ value: 'Spanish', label: '🇪🇸 Spanish', flag: '🇪🇸' },
+	{ value: 'French', label: '🇫🇷 French', flag: '🇫🇷' },
+	{ value: 'Russian', label: '🇷🇺 Russian', flag: '🇷🇺' },
+	{ value: 'Chinese', label: '🇨🇳 Chinese', flag: '🇨🇳' },
+	{ value: 'Indonesian', label: '🇮🇩 Indonesian', flag: '🇮🇩' },
+] as const
+
+// Hint teks yang muncul di UI per narration mode
+export const NARRATION_HINTS: Record<string, string> = {
+	none: 'Cerita disampaikan 100% lewat visual — ekspresi wajah, body language, aksi, dan sinematografi. Cocok untuk semua genre.',
+	subtitle: 'AI akan menambahkan dialog jika natural untuk genre dan momen tertentu. Adegan aksi, horror, atau refleksi mungkin tetap tanpa dialog.',
+	voiceover: 'AI akan menambahkan narasi jika cocok untuk genre. Drama dan romance lebih sering dapat voiceover; action dan horror biasanya tidak.',
+}
+

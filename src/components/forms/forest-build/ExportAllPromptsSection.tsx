@@ -11,6 +11,7 @@ export default function ExportAllPromptsSection({
 	isGeneratingAI,
 	onCopyAll,
 	onDownloadAllJson,
+	onDownloadAllZip,
 	showAllPrompts,
 	setShowAllPrompts,
 	allPrompts,
@@ -23,6 +24,7 @@ export default function ExportAllPromptsSection({
 	isGeneratingAI: boolean;
 	onCopyAll: () => void;
 	onDownloadAllJson: () => void;
+	onDownloadAllZip: () => void;
 	showAllPrompts: boolean;
 	setShowAllPrompts: (v: boolean) => void;
 	allPrompts: string[];
@@ -61,6 +63,9 @@ export default function ExportAllPromptsSection({
 				</button>
 				<button className="btn-ghost" onClick={onDownloadAllJson}>
 					💾 Download JSON
+				</button>
+				<button className="btn-ghost" onClick={onDownloadAllZip}>
+					🗜️ Download All (ZIP)
 				</button>
 				<button
 					className="btn-ghost"

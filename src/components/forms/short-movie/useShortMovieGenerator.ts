@@ -2,10 +2,15 @@
 
 import { useState, useCallback } from "react";
 import { parseJsonFromModelOutput } from "@/lib/aiJson";
-import { downloadJsonFile, downloadTextFile, jsonStringify } from "@/lib/promptJson";
+import {
+	downloadBlobFile,
+	downloadJsonFile,
+	downloadTextFile,
+	jsonStringify,
+} from "@/lib/promptJson";
+import { buildZipBlob } from "@/lib/promptZip";
 import useToast from "@/components/forms/forest-build/useToast";
 import {
-	AI_MODELS,
 	DEFAULT_AI_MODEL_ID,
 	GENRE_CATEGORIES,
 	MOVIE_REFS,
@@ -13,14 +18,17 @@ import {
 import type {
 	AIProviderKey,
 	CastCountMode,
+	DialogLanguageKey,
 	GenderKey,
+	NarrationModeKey,
 	SeoPack,
 	ShortMovieConfig,
 	StoryIntensityKey,
 	VisualStyleKey,
+	ShortMovieGeneratorConfig
 } from "./types";
 
-// ─── DEFAULT CONFIG ───────────────────────────────────────────────────────────
+/// ─── DEFAULT CONFIG ───────────────────────────────────────────────────────────
 
 function getDefaultConfig(): ShortMovieConfig {
 	const defaultGenre = "drama" as const;
@@ -32,6 +40,8 @@ function getDefaultConfig(): ShortMovieConfig {
 		castCountMode: "auto",
 		mainGender: "auto",
 		storyIntensity: "balanced",
+		narrationMode: "none",
+		dialogLanguage: "English",
 		totalMinutes: 10,
 		secPerScene: 10,
 		visualStyle: "cinematic-realistic",
@@ -120,7 +130,7 @@ function buildShortMovieArcBeats(
 
 // ─── MAIN HOOK ───────────────────────────────────────────────────────────────
 
-export default function useShortMovieGenerator() {
+export default function useShortMovieGenerator(): ShortMovieGeneratorConfig {
 	const { toast, show: showToast } = useToast();
 
 	const [config, setConfig] = useState<ShortMovieConfig>(getDefaultConfig);
@@ -190,17 +200,44 @@ export default function useShortMovieGenerator() {
 		setShowAllPrompts(false);
 
 		try {
-			const { genre, movieRefTitle, movieRefStory, castCountMode, mainGender, storyIntensity, visualStyle, aiProvider, aiModelId } = config;
+			const { genre, movieRefTitle, movieRefStory, castCountMode, mainGender, storyIntensity, narrationMode, dialogLanguage, visualStyle, aiProvider, aiModelId } = config;
 			const genreLabel = GENRE_CATEGORIES.find(g => g.key === genre)?.label ?? genre;
 			const castCount = castCountMode === "auto" ? "1 to 4 (AI decides)" : castCountMode;
 			const genderLabel = mainGender === "auto" ? "AI decides" : mainGender;
 			const arcBeats = buildShortMovieArcBeats(totalScenes, config.secPerScene, storyIntensity, genre);
 			const totalDurSec = totalScenes * config.secPerScene;
 
+			// ── Build narration instruction block ──────────────────────────────
+			const narrationBlock = narrationMode === "none"
+				? `NARRATION / DIALOG MODE: PURE VISUAL
+- No dialog, no voiceover, no subtitle text in any scene
+- Story is told entirely through visuals: expression, body language, action, cinematography, and sound design
+- deliverable.dialog field should be null or omitted in all scenes`
+
+				: narrationMode === "subtitle"
+					? `NARRATION / DIALOG MODE: SUBTITLE DIALOG (Language: ${dialogLanguage})
+- User has REQUESTED on-screen subtitle dialog in ${dialogLanguage}
+- HOWEVER: You are the director — use your judgment. Only add dialog when it feels natural and necessary
+- ADD dialog when: the scene involves conversation, argument, confession, key revelation, or emotional exchange between characters
+- SKIP dialog (leave dialog null) when: the scene is action, chase, horror tension, silent reflection, nature establishing shot, montage, or when silence is more powerful
+- If this genre (${genreLabel}) or this specific scene type makes dialog unnatural (e.g. action setpiece, horror dread, visual montage), output dialog: null
+- When dialog IS included: write it as natural ${dialogLanguage} dialogue — realistic, concise, character-specific. Max 2–3 lines per scene.
+- Format in deliverable: "dialog": { "type": "subtitle", "language": "${dialogLanguage}", "lines": ["Character Name: line here", "..."] } OR "dialog": null`
+
+					: `NARRATION / DIALOG MODE: VOICEOVER NARRATION (Language: ${dialogLanguage})
+- User has REQUESTED off-screen voiceover narration in ${dialogLanguage}
+- HOWEVER: You are the director — use your judgment. Only add voiceover when it genuinely enhances the scene
+- ADD voiceover when: the scene benefits from internal monologue, poetic reflection, story narration, or contextual explanation that visual alone cannot convey
+- SKIP voiceover (leave dialog null) when: the scene is kinetic action, intense horror, fast-paced chase, or when silence and natural sound is more powerful
+- If this genre (${genreLabel}) tends to use silence for impact (horror, action, thriller), use voiceover sparingly or not at all
+- When voiceover IS included: write natural ${dialogLanguage} narration — poetic, reflective, or story-advancing. Max 2 sentences per scene.
+- Format in deliverable: "dialog": { "type": "voiceover", "language": "${dialogLanguage}", "speaker": "narrator OR character name", "lines": ["narration text here"] } OR "dialog": null`
+
 			const systemPrompt = `You are an expert short film director, screenwriter, and AI video prompt engineer.
 You write scene-by-scene AI video prompts for short films where EVERY scene is a seamless visual continuation of the previous.
 Output MUST be valid JSON only — no markdown fences, no trailing commas, no code comments.
-Your prompts are highly specific: they describe exactly what the camera sees, who is in frame, what they are doing, the lighting, and the sound.`;
+Your prompts are highly specific: they describe exactly what the camera sees, who is in frame, what they are doing, the lighting, and the sound.
+You have full directorial discretion over dialog and narration — add it only when it enhances the scene, never when it feels forced.`;
 
 			const userPrompt = `Generate a ${totalScenes}-scene SHORT FILM AI video prompt bundle as JSON.
 
@@ -228,6 +265,11 @@ SPECS:
 - Visual style: ${visualStyle}
 - Story intensity: ${storyIntensity}
   ${storyIntensity === "light" ? "→ Minimal conflict, many beautiful and quiet moments, gentle pacing" : storyIntensity === "balanced" ? "→ 1-2 meaningful setbacks with clear resolution, rising and falling tension" : "→ Multiple obstacles, high stakes, dramatic reversals — but coherent and resolved"}
+
+══════════════════════════════════════════════
+NARRATION & DIALOG INSTRUCTIONS:
+${narrationBlock}
+══════════════════════════════════════════════
 
 ══════════════════════════════════════════════
 SCENE-BY-SCENE STORY BLUEPRINT (${totalScenes} scenes × ${config.secPerScene}s = ${totalDurSec}s):
@@ -263,6 +305,8 @@ OUTPUT JSON STRUCTURE (strict):
   "genre": "${genre}",
   "movieRef": "${movieRefTitle}",
   "visualStyle": "${visualStyle}",
+  "narrationMode": "${narrationMode}",
+  "dialogLanguage": "${narrationMode !== "none" ? dialogLanguage : "none"}",
   "totalDurationSec": ${totalDurSec},
   "characters": [
     {
@@ -290,7 +334,8 @@ OUTPUT JSON STRUCTURE (strict):
       "time": { "startSec": 0, "endSec": ${config.secPerScene} },
       "deliverable": {
         "prompt": "...",
-        "negativePrompt": "..."
+        "negativePrompt": "...",
+        "dialog": null
       }
     }
   ]
@@ -299,7 +344,9 @@ OUTPUT JSON STRUCTURE (strict):
 LEAN JSON RULES (critical for performance):
 - "seo" exists ONLY ONCE at root — NEVER inside scenes[] items
 - scenes[] items contain ONLY: id, sceneNumber, beat, phase, time, deliverable
+- deliverable contains: prompt, negativePrompt, dialog (dialog is null OR a dialog object — never omitted)
 - No redundant fields inside scenes[] items
+- dialog field: always present in deliverable, either null or { type, language, lines } or { type, language, speaker, lines }
 
 SEO PACK RULES (root level, generated once):
 - seo.title: Original YouTube title INSPIRED by "${movieRefTitle}" — remixed, not copied. Must represent the entire film's story arc. SEO optimized.
@@ -383,6 +430,46 @@ Output only the JSON object. No explanation text outside the JSON.`;
 		showToast("💾 JSON bundle berhasil didownload!");
 	}
 
+	async function downloadAllZip() {
+		if (!allPrompts.length) return;
+		const files = [
+			{
+				path: "prompts.json",
+				text: JSON.stringify({ prompts: allPrompts }, null, 2),
+			},
+			...allPrompts.map((p, i) => ({
+				path: `scenes/scene-${String(i + 1).padStart(2, "0")}.json`,
+				text: p,
+			})),
+		];
+
+		if (seoPack) {
+			const payload = {
+				schema: "aiSeoPack.v1",
+				tool: "short-movie",
+				genre: config.genre,
+				movieRef: config.movieRefTitle,
+				createdAt: new Date().toISOString(),
+				seo: seoPack,
+			};
+			const text =
+				`SEO PACK — Short Movie\n` +
+				`Genre: ${config.genre}\n` +
+				`Ref: ${config.movieRefTitle}\n` +
+				`\n` +
+				`TITLE:\n${seoPack.title}\n\n` +
+				`DESCRIPTION:\n${seoPack.description}\n\n` +
+				`TAGS (30):\n${seoPack.tags.join(", ")}\n\n` +
+				`THUMBNAIL PROMPT:\n${seoPack.thumbnailPrompt}`;
+			files.push({ path: "seo-pack.json", text: JSON.stringify(payload, null, 2) });
+			files.push({ path: "seo-pack.txt", text });
+		}
+
+		const blob = await buildZipBlob(files);
+		downloadBlobFile(`short-movie-${config.genre}-${Date.now()}.zip`, blob);
+		showToast("💾 ZIP berhasil didownload!");
+	}
+
 	function copySeoTitle() {
 		if (!seoPack?.title) return;
 		navigator.clipboard.writeText(seoPack.title);
@@ -439,7 +526,6 @@ Output only the JSON object. No explanation text outside the JSON.`;
 		// Computed
 		totalScenes,
 		movieOptions: MOVIE_REFS[config.genre] ?? [],
-		aiModelOptions: AI_MODELS[config.aiProvider]?.models ?? [],
 
 		// Generation
 		isGenerating,
@@ -457,6 +543,7 @@ Output only the JSON object. No explanation text outside the JSON.`;
 		copyPrompt,
 		copyAll,
 		downloadAllJson,
+		downloadAllZip,
 		copySeoTitle,
 		copySeoDescription,
 		copySeoTags,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Sel from "@/components/forms/forest-build/Sel";
 import ForestBuildPrimitiveCraftForm from "@/components/forms/ForestBuildPrimitiveCraftForm";
 import AsmrTimelapseConstructorForm from "@/components/forms/AsmrTimelapseConstructorForm";
@@ -11,6 +11,7 @@ import ProductPromoVideoForm from "@/components/forms/ProductPromoVideoForm";
 import SeoChannelOptimizerForm from "@/components/forms/SeoChannelOptimizerForm";
 import AllInOnePromptGeneratorForm from "@/components/forms/AllInOnePromptGeneratorForm";
 import ShortMovieForm from "@/components/forms/ShortMovieForm";
+import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 type HomeToolKey =
 	| "product-promo-video"
@@ -22,6 +23,19 @@ type HomeToolKey =
 	| "short-movie"
 	| "seo-channel-optimizer"
 	| "all-in-one-generator";
+
+const DEFAULT_TOOL: HomeToolKey = "product-promo-video";
+const HOME_TOOL_KEYS = [
+	"product-promo-video",
+	"forest-build-primitive-craft",
+	"asmr-timelapse-constructor",
+	"car-music-video-clip",
+	"war-music-video-clip",
+	"relaxing-music-video-clip",
+	"short-movie",
+	"seo-channel-optimizer",
+	"all-in-one-generator",
+] as const satisfies readonly HomeToolKey[];
 
 type ToolMeta = {
 	key: HomeToolKey;
@@ -122,7 +136,7 @@ export default function HomeClient() {
 				title: "Forest Build Primitive Craft — AI Prompt Generator",
 				description:
 					"Generator prompt AI untuk ASMR Survival Build (Forest Build Primitive Craft). Fokus: cinematic documentary realism + scene-by-scene prompt.",
-				icon: "🌿",
+				icon: "🌳",
 			},
 			{
 				key: "asmr-timelapse-constructor",
@@ -158,10 +172,11 @@ export default function HomeClient() {
 			},
 			{
 				key: "short-movie",
-				label: "Short Movie",
-				title: "Short Movie — AI Prompt Generator",
+				label: "Short Movie — Film Pendek AI",
+				badge: "NEW",
+				title: "Short Movie — AI Short Film Prompt Generator",
 				description:
-					"Generator prompt untuk short movie: custom timeline scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+					"Generate prompt film pendek AI scene-by-scene. Pilih genre & referensi film, AI buat cerita original dengan karakter baru, storyboard menyambung antar scene. SEO pack otomatis.",
 				icon: "🎬",
 			},
 			{
@@ -179,19 +194,30 @@ export default function HomeClient() {
 				title: "All-in-One Generator — AI Prompt Generator",
 				description:
 					"Full AI auto-generate prompt per scene dengan image reference",
-				icon: "🎬",
+				icon: "🛠️",
 			},
 		],
 		[],
 	);
 
-	const [selected, setSelected] = useState<HomeToolKey>("product-promo-video");
+	const [selected, setSelected] = useLocalStorageState<HomeToolKey>(
+		"tools-selected",
+		DEFAULT_TOOL,
+		{
+			validate: (v): v is HomeToolKey =>
+				(HOME_TOOL_KEYS as readonly string[]).includes(String(v)),
+		},
+	);
 
 	const activeMeta = tools.find((t) => t.key === selected) ?? tools[0];
 
 	useEffect(() => {
-		setMetaTitleAndDescription(activeMeta.title, activeMeta.description);
-	}, [activeMeta.title, activeMeta.description]);
+		if (activeMeta) {
+			requestAnimationFrame(() => {
+				setMetaTitleAndDescription(activeMeta.title, activeMeta.description);
+			});
+		}
+	}, [activeMeta.title, activeMeta.description, activeMeta]);
 
 	return (
 		<main className="z-content min-h-screen">

@@ -15,19 +15,47 @@ import {
 import { buildPrompt } from "./promptBuilder";
 import type { AIProviderKey, CarMusicVideoGenerator, ClipModeKey, SceneConfig, SceneTypeKey, SeoPack, TabKey, TrailerCharacter, VisualStyleKey } from "./types";
 import { getDefaultSceneConfig, getDefaultTypes, getSceneTypeLabel, rnd } from "./utils";
-import { downloadJsonFile, downloadTextFile, jsonBundleFromSceneJsonStrings, jsonStringify } from "@/lib/promptJson";
+import {
+	downloadBlobFile,
+	downloadJsonFile,
+	downloadTextFile,
+	jsonBundleFromSceneJsonStrings,
+	jsonStringify,
+} from "@/lib/promptJson";
 import { getDefaultModelId } from "@/lib/modelProviders";
 import { parseJsonFromModelOutput } from "@/lib/aiJson";
+import { buildZipBlob } from "@/lib/promptZip";
 
 export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 	const { toast, show: showToast } = useToast();
 
 	const [clipMode, setClipModeState] = useState<ClipModeKey>("classic");
 	const [filmRef, setFilmRef] = useState<string>(CAR_MOVIE_REFS[0] ?? "Car Movie");
+	const [lastDropdownFilmRef, setLastDropdownFilmRef] = useState<string>(
+		CAR_MOVIE_REFS[0] ?? "Car Movie",
+	);
+	const [hasPickedDropdownFilmRef, setHasPickedDropdownFilmRef] = useState(false);
 	const [aiProvider, setAiProvider] = useState<AIProviderKey>("CLAUDE");
 	const [aiModelId, setAiModelId] = useState<string>(getDefaultModelId("CLAUDE"));
 	const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 	const [seoPack, setSeoPack] = useState<SeoPack | null>(null);
+
+	const isFilmRefValid = clipMode !== "trailer" ? true : filmRef.trim().length > 0;
+
+	function setFilmRefFromDropdown(next: string) {
+		setFilmRef(next);
+		setLastDropdownFilmRef(next);
+		setHasPickedDropdownFilmRef(true);
+	}
+
+	function useDropdownFilmRef() {
+		if (!hasPickedDropdownFilmRef || !lastDropdownFilmRef.trim()) {
+			showToast("⚠ Pilih film dari dropdown dulu.");
+			return;
+		}
+		setFilmRef(lastDropdownFilmRef);
+		showToast("✓ Menggunakan film dari dropdown.");
+	}
 
 	const [trailerCharacters, setTrailerCharacters] = useState<TrailerCharacter[]>(() => [
 		{
@@ -339,6 +367,10 @@ export default function useCarMusicVideoGenerator(): CarMusicVideoGenerator {
 			showToast("⚠ Fitur AI ini khusus untuk Mode Trailer.");
 			return;
 		}
+		if (!filmRef.trim()) {
+			showToast("⚠ Referensi film wajib diisi untuk Mode Trailer.");
+			return;
+		}
 		setIsGeneratingAI(true);
 		try {
 			const systemPrompt =
@@ -465,6 +497,71 @@ Output only JSON. No explanation.`;
 		} finally {
 			setIsGeneratingAI(false);
 		}
+	}
+
+	async function downloadAllZip() {
+		let prompts = allPrompts;
+		if (!prompts.length) {
+			prompts = [];
+			const updated: Record<number, SceneConfig> = { ...sceneConfigs };
+			for (let s = 1; s <= totalScenes; s++) {
+				const sceneType = sceneTypes[s] ?? "dj-party";
+				const config = getSceneConfig(s);
+				const promptObj = buildPrompt({
+					clipMode,
+					filmRef,
+					trailerCharacters,
+					sceneNum: s,
+					totalScenes,
+					secPerScene,
+					sceneType,
+					visualStyle,
+					config,
+				});
+				const prompt = jsonStringify(promptObj);
+				prompts.push(prompt);
+				updated[s] = { ...config, generatedPrompt: prompt };
+			}
+			setSceneConfigs(updated);
+			setAllPrompts(prompts);
+			setShowAllPrompts(true);
+			setPromptOutput(prompts[currentScene - 1] ?? "");
+		}
+
+		const files = [
+			{ path: "prompts.json", text: jsonBundleFromSceneJsonStrings(prompts) },
+			...prompts.map((p, i) => ({
+				path: `scenes/scene-${String(i + 1).padStart(2, "0")}.json`,
+				text: p,
+			})),
+		];
+
+		if (seoPack) {
+			const payload = {
+				schema: "aiSeoPack.v1",
+				tool: "car-music-video-clip",
+				clipMode,
+				filmRef,
+				createdAt: new Date().toISOString(),
+				seo: seoPack,
+			};
+			const text =
+				`SEO PACK (AI)\n` +
+				`Tool: car-music-video-clip\n` +
+				`Mode: ${clipMode}\n` +
+				`Film Ref: ${filmRef}\n` +
+				`\n` +
+				`TITLE:\n${seoPack.title}\n\n` +
+				`DESCRIPTION:\n${seoPack.description}\n\n` +
+				`TAGS (30):\n${seoPack.tags.join(", ")}\n\n` +
+				`THUMBNAIL PROMPT:\n${seoPack.thumbnailPrompt}\n`;
+			files.push({ path: "seo-pack.json", text: JSON.stringify(payload, null, 2) });
+			files.push({ path: "seo-pack.txt", text });
+		}
+
+		const blob = await buildZipBlob(files);
+		downloadBlobFile(`car-music-video-clip-${Date.now()}.zip`, blob);
+		showToast("💾 ZIP berhasil didownload!");
 	}
 
 	function copySeoTitle() {
@@ -760,6 +857,9 @@ Output only JSON. No explanation.`;
 		filmRef,
 		setFilmRef,
 		aiProvider,
+		setFilmRefFromDropdown,
+		useDropdownFilmRef,
+		isFilmRefValid,
 		aiModelId,
 		setAiProvider,
 		setAiModelId,
@@ -802,6 +902,7 @@ Output only JSON. No explanation.`;
 		copyPrompt,
 		copyAll,
 		downloadAllJson,
+		downloadAllZip,
 		generateAllWithAI,
 		generateAll,
 

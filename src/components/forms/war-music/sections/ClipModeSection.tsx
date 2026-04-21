@@ -52,7 +52,7 @@ export default function ClipModeSection({
 							<Sel
 								id="war-film-ref"
 								value={gen.filmRef}
-								onChange={(v) => gen.setFilmRef(v)}
+								onChange={(v) => gen.setFilmRefFromDropdown(v)}
 								options={[
 									...((WAR_MOVIE_REFS as readonly string[]).includes(
 										gen.filmRef,
@@ -69,6 +69,11 @@ export default function ClipModeSection({
 									...WAR_MOVIE_REFS.map((f) => ({ value: f, label: f })),
 								]}
 							/>
+							{!gen.isFilmRefValid && (
+								<div className="font-mono text-[10px] text-amber mt-2">
+									⚠ Referensi film wajib diisi untuk Mode Trailer.
+								</div>
+							)}
 						</Field>
 						<div className="rounded-lg border border-leaf/10 bg-bark/25 p-3">
 							<div className="font-mono text-[10px] text-stone2 leading-relaxed">
@@ -89,7 +94,7 @@ export default function ClipModeSection({
 								<button
 									type="button"
 									className="btn-outline text-[10px] py-1 px-3"
-									onClick={() => gen.setFilmRef(WAR_MOVIE_REFS[0] ?? "")}
+									onClick={gen.useDropdownFilmRef}
 								>
 									Use Dropdown
 								</button>

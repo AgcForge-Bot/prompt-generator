@@ -105,6 +105,9 @@ export type CarMusicVideoGenerator = {
 	setClipMode: (next: ClipModeKey) => void;
 	filmRef: string;
 	setFilmRef: (next: string) => void;
+	setFilmRefFromDropdown: (next: string) => void;
+	useDropdownFilmRef: () => void;
+	isFilmRefValid: boolean;
 	aiProvider: AIProviderKey;
 	aiModelId: string;
 	setAiProvider: (next: AIProviderKey) => void;
@@ -149,6 +152,7 @@ export type CarMusicVideoGenerator = {
 	copyPrompt: () => void;
 	copyAll: () => void;
 	downloadAllJson: () => void;
+	downloadAllZip: () => void;
 	generateAllWithAI: () => void;
 	generateAll: () => void;
 

@@ -31,6 +31,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 		dnaLocked,
 		dnaTab,
 		downloadAllJson,
+		downloadAllZip,
 		downloadSeoPackJson,
 		downloadSeoPackTxt,
 		generateAll,
@@ -87,7 +88,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 						<div>
 							<div className="flex items-center gap-2 mb-3">
-								<span className="text-leaf text-sm">🌿</span>
+								<span className="text-leaf text-sm">🌳</span>
 								<span className="font-mono text-[9px] tracking-[0.2em] uppercase text-leaf">
 									ASMR Survival Build · AI Video Prompt Generator
 								</span>
@@ -241,6 +242,7 @@ export default function ForestBuildPrimitiveCraftForm() {
 					isGeneratingAI={isGeneratingAI}
 					onCopyAll={copyAll}
 					onDownloadAllJson={downloadAllJson}
+					onDownloadAllZip={downloadAllZip}
 					showAllPrompts={showAllPrompts}
 					setShowAllPrompts={setShowAllPrompts}
 					allPrompts={allPrompts}
