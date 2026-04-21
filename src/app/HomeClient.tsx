@@ -10,6 +10,7 @@ import RelaxingMusicVideoForm from "@/components/forms/RelaxingMusicVideoForm";
 import ProductPromoVideoForm from "@/components/forms/ProductPromoVideoForm";
 import SeoChannelOptimizerForm from "@/components/forms/SeoChannelOptimizerForm";
 import AllInOnePromptGeneratorForm from "@/components/forms/AllInOnePromptGeneratorForm";
+import ShortMovieForm from "@/components/forms/ShortMovieForm";
 
 type HomeToolKey =
 	| "product-promo-video"
@@ -259,6 +260,8 @@ export default function HomeClient() {
 							<WarMusicVideoClipForm />
 						) : selected === "relaxing-music-video-clip" ? (
 							<RelaxingMusicVideoForm />
+						) : selected === "short-movie" ? (
+							<ShortMovieForm />
 						) : selected === "seo-channel-optimizer" ? (
 							<SeoChannelOptimizerForm />
 						) : selected === "all-in-one-generator" ? (
