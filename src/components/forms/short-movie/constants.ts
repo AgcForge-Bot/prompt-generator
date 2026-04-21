@@ -38,6 +38,7 @@ export const GENRE_CATEGORIES = [
 	{ key: 'thriller', label: '😰 Thriller', emoji: '😰' },
 	{ key: 'horror', label: '👻 Horror', emoji: '👻' },
 	{ key: 'action', label: '💥 Action', emoji: '💥' },
+	{ key: 'adventure', label: '💥 Adventure', emoji: '🚀' },
 	{ key: 'sci-fi', label: '🚀 Sci-Fi', emoji: '🚀' },
 	{ key: 'comedy', label: '😂 Comedy', emoji: '😂' },
 	{ key: 'fantasy', label: '✨ Fantasy', emoji: '✨' },
@@ -113,6 +114,17 @@ export const MOVIE_REFS: Record<GenreCategoryKey, { title: string; story: string
 		{ title: 'Crouching Tiger Hidden Dragon (2000)', story: 'A legendary warrior and a rebellious young noblewoman are connected by a stolen ancient sword and a secret love.' },
 		{ title: 'The Raid: Redemption (2011)', story: 'A rookie SWAT officer is trapped in a building controlled by a ruthless mob boss and must fight his way to survive.' },
 		{ title: 'Atomic Blonde (2017)', story: 'An elite MI6 agent navigates Cold War Berlin to retrieve a stolen list of double agents — while determining who to trust.' },
+	],
+
+	adventure: [
+		{ title: 'The Revenant (2015)', story: 'Hugh Glass, a legendary frontiersman, is severely injured in a bear attack and is abandoned by his hunting crew. He uses his skills to survive and take revenge on his companion, who betrayed him.' },
+		{ title: 'The Mummy (1999)', story: 'At an archaeological dig in the ancient city of Hamunaptra, an American serving in the French Foreign Legion accidentally awakens a mummy who begins to wreak havoc as he searches for the reincarnation of his long-lost love.' },
+		{ title: 'Society of the Snow (2015)', story: 'The flight of a rugby team crashes on a glacier in the Andes. The few passengers who survive the crash find themselves in one of the world`s toughest environments to survive' },
+		{ title: 'Everest (2015)', story: 'On May 10, 1996, mountain guides Rob Hall and Scott Fischer combine their expedition teams for a final ascent to the summit of Mount Everest. With little warning, a storm strikes the mountain and the climbers must now battle to survive.' },
+		{ title: 'Project Hail Mary (2026)', story: 'A science teacher wakes up alone on a spaceship. As his memory returns, he uncovers a mission to stop a mysterious substance killing Earth`s sun and that an unexpected friendship may be the key.' },
+		{ title: 'Indiana Jones and the Temple of Doom (1984)', story: 'Indiana Jones, a legendary explorer, is sent on a mission to find the lost treasure of the Temple of Doom.' },
+		{ title: 'Jurassic Park (1993)', story: 'An industrialist invites some experts to visit his theme park of cloned dinosaurs. After a power failure, the creatures run loose, putting everyone`s lives, including his grandchildren`s, in danger.' },
+		{ title: 'National Treasure (2004)', story: 'A historian races to find the legendary Templar Treasure before a team of mercenaries.' },
 	],
 
 	'sci-fi': [

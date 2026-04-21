@@ -1,4 +1,4 @@
-"use-client";
+"use client";
 
 import type { ShortMovieGeneratorConfig, AIProviderKey } from "../types";
 import {
@@ -42,7 +42,7 @@ export default function AiProvidersSection({
 					<select
 						className="forest-select"
 						value={
-							gen.config.aiProvider || getDefaultModelId(gen.config.aiProvider)
+							gen.config.aiModelId || getDefaultModelId(gen.config.aiProvider)
 						}
 						onChange={(e) => gen.updateConfig({ aiModelId: e.target.value })}
 					>
