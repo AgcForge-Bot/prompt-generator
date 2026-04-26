@@ -11,6 +11,7 @@ import ProductPromoVideoForm from "@/components/forms/ProductPromoVideoForm";
 import SeoChannelOptimizerForm from "@/components/forms/SeoChannelOptimizerForm";
 import AllInOnePromptGeneratorForm from "@/components/forms/AllInOnePromptGeneratorForm";
 import ShortMovieForm from "@/components/forms/ShortMovieForm";
+import HistoricalReconstructionForm from "@/components/forms/HistoricalReconstructionForm";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 type HomeToolKey =
@@ -21,6 +22,7 @@ type HomeToolKey =
 	| "war-music-video-clip"
 	| "relaxing-music-video-clip"
 	| "short-movie"
+	| "historical-reconstruction-form"
 	| "seo-channel-optimizer"
 	| "all-in-one-generator";
 
@@ -33,6 +35,7 @@ const HOME_TOOL_KEYS = [
 	"war-music-video-clip",
 	"relaxing-music-video-clip",
 	"short-movie",
+	"historical-reconstruction-form",
 	"seo-channel-optimizer",
 	"all-in-one-generator",
 ] as const satisfies readonly HomeToolKey[];
@@ -180,6 +183,14 @@ export default function HomeClient() {
 				icon: "🎬",
 			},
 			{
+				key: "historical-reconstruction-form",
+				label: "Historical Reconstruction Form",
+				title: "Historical Reconstruction Form — Documentary AI Reconstruction",
+				description:
+					"Generator prompt untuk historical reconstruction video: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
+				icon: "🏛️",
+			},
+			{
 				key: "seo-channel-optimizer",
 				label: "SEO Channel Optimizer",
 				badge: "NEW",
@@ -288,6 +299,8 @@ export default function HomeClient() {
 							<RelaxingMusicVideoForm />
 						) : selected === "short-movie" ? (
 							<ShortMovieForm />
+						) : selected === "historical-reconstruction-form" ? (
+							<HistoricalReconstructionForm />
 						) : selected === "seo-channel-optimizer" ? (
 							<SeoChannelOptimizerForm />
 						) : selected === "all-in-one-generator" ? (
