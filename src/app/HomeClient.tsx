@@ -127,7 +127,7 @@ export default function HomeClient() {
 			{
 				key: "product-promo-video",
 				label: "Promo Video Iklan Produk",
-				badge: "NEW",
+				badge: "AD VIDEO",
 				title: "Product Promo Video — AI Prompt Generator",
 				description:
 					"Generator prompt video iklan produk dengan AI. Upload foto produk, pilih kategori, gaya video, model, durasi — generate prompt scene-by-scene siap untuk Kling, Runway, Pika, VEO, dan lainnya.",
@@ -137,6 +137,7 @@ export default function HomeClient() {
 				key: "forest-build-primitive-craft",
 				label: "Forest Build Primitive Craft",
 				title: "Forest Build Primitive Craft — AI Prompt Generator",
+				badge: "ASMR",
 				description:
 					"Generator prompt AI untuk ASMR Survival Build (Forest Build Primitive Craft). Fokus: cinematic documentary realism + scene-by-scene prompt.",
 				icon: "🌳",
@@ -145,6 +146,7 @@ export default function HomeClient() {
 				key: "asmr-timelapse-constructor",
 				label: "ASMR timelapse constuctor",
 				title: "ASMR Timelapse Constructor — AI Prompt Generator",
+				badge: "ASMR",
 				description:
 					"Generator prompt untuk ASMR timelapse constructor: DNA lock, timeline 12 scene, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🏗️",
@@ -153,6 +155,7 @@ export default function HomeClient() {
 				key: "car-music-video-clip",
 				label: "Car Music Video Clip",
 				title: "Car Music Video Clip — AI Prompt Generator",
+				badge: "VIDEO CLIP",
 				description:
 					"Generator prompt untuk car music video clip: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🚗",
@@ -161,6 +164,7 @@ export default function HomeClient() {
 				key: "war-music-video-clip",
 				label: "War Music Video Clip",
 				title: "War Music Video Clip — AI Prompt Generator",
+				badge: "VIDEO CLIP",
 				description:
 					"Generator prompt untuk war cinematic × DJ battle zone: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "⚔️",
@@ -169,6 +173,7 @@ export default function HomeClient() {
 				key: "relaxing-music-video-clip",
 				label: "Relaxing Music Video Clip",
 				title: "Relaxing Music Video Clip — AI Prompt Generator",
+				badge: "VIDEO CLIP & ASMR",
 				description:
 					"Generator prompt untuk relaxing nature drone music clip: time-of-day, timeline 12 scene, scene type, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🌿",
@@ -176,8 +181,8 @@ export default function HomeClient() {
 			{
 				key: "short-movie",
 				label: "Short Movie — Film Pendek AI",
-				badge: "NEW",
 				title: "Short Movie — AI Short Film Prompt Generator",
+				badge: "LONG VIDEO",
 				description:
 					"Generate prompt film pendek AI scene-by-scene. Pilih genre & referensi film, AI buat cerita original dengan karakter baru, storyboard menyambung antar scene. SEO pack otomatis.",
 				icon: "🎬",
@@ -186,6 +191,7 @@ export default function HomeClient() {
 				key: "historical-reconstruction-form",
 				label: "Historical Reconstruction Form",
 				title: "Historical Reconstruction Form — Documentary AI Reconstruction",
+				badge: "LONG VIDEO",
 				description:
 					"Generator prompt untuk historical reconstruction video: timeline 12 scene, tipe adegan, tabs konfigurasi, randomizer, generate/copy/export prompt.",
 				icon: "🏛️",
@@ -193,8 +199,8 @@ export default function HomeClient() {
 			{
 				key: "seo-channel-optimizer",
 				label: "SEO Channel Optimizer",
-				badge: "NEW",
 				title: "SEO Channel Optimizer — AI Prompt Generator",
+				badge: "OPTIMIZATION",
 				description:
 					"Auto generate judul, deskripsi, tags & storyboard full SEO optimization. Analisa skor SEO video YouTube/Facebook seperti VidIQ. Powered by Claude, GPT, Gemini & OpenRouter.",
 				icon: "📊",
@@ -202,6 +208,7 @@ export default function HomeClient() {
 			{
 				key: "all-in-one-generator",
 				label: "All-in-One Generator",
+				badge: "OPTIMIZATION",
 				title: "All-in-One Generator — AI Prompt Generator",
 				description:
 					"Full AI auto-generate prompt per scene dengan image reference",
